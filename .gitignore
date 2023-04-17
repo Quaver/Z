@@ -16,3 +16,6 @@
 
 # Jetbrains Files
 .idea/
+
+# Config File
+config.json

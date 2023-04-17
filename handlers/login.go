@@ -1,4 +1,4 @@
-package handlers
+package login
 
 import (
 	"encoding/base64"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-type LoginData struct {
+type Data struct {
 	// The Steam ID of the user
 	Id string `json:"id"`
 
@@ -24,36 +24,42 @@ type LoginData struct {
 
 // HandleLogin Handles the login of a client
 func HandleLogin(conn net.Conn, r *http.Request) error {
-	data, err := parseLoginData(conn, r)
+	data, err := parseLoginData(r)
 
 	if err != nil {
-		return fmt.Errorf("[%v] failed to login - %v", conn.RemoteAddr(), err)
+		return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
 	}
 
 	fmt.Println(data)
+
+	err = authenticateSteamTicket(data)
+
+	if err != nil {
+		return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
+	}
+
 	return nil
 }
 
 // Parses the raw data into a LoginData struct
-func parseLoginData(conn net.Conn, r *http.Request) (*LoginData, error) {
+func parseLoginData(r *http.Request) (*Data, error) {
 	data := r.URL.Query().Get("login")
 
 	if data == "" {
-		return nil, fmt.Errorf("[%v] failed to login - empty login data", conn.RemoteAddr())
+		return nil, fmt.Errorf("empty login data")
 	}
 
 	decoded, err := base64.StdEncoding.DecodeString(data)
 
 	if err != nil {
-		return nil, fmt.Errorf("[%v] failed to decode login data - %v", conn.RemoteAddr(), err)
+		return nil, fmt.Errorf("failed to decode login data - %v", err)
 	}
 
-	var parsed LoginData
-
+	var parsed Data
 	err = json.Unmarshal(decoded, &parsed)
 
 	if err != nil {
-		return nil, fmt.Errorf("[%v] failed to unmarshal login data - %v", conn.RemoteAddr(), err)
+		return nil, fmt.Errorf("failed to unmarshal login data - %v", err)
 	}
 
 	return &parsed, nil
