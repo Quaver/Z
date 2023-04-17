@@ -1,14 +1,19 @@
-package login
+package handlers
 
 import (
 	"encoding/base64"
 	"encoding/json"
+	"example.com/Quaver/Z/config"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"net"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
-type Data struct {
+// LoginData The data that the user sends to log in
+type LoginData struct {
 	// The Steam ID of the user
 	Id string `json:"id"`
 
@@ -30,8 +35,6 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
 	}
 
-	fmt.Println(data)
-
 	err = authenticateSteamTicket(data)
 
 	if err != nil {
@@ -42,7 +45,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 }
 
 // Parses the raw data into a LoginData struct
-func parseLoginData(r *http.Request) (*Data, error) {
+func parseLoginData(r *http.Request) (*LoginData, error) {
 	data := r.URL.Query().Get("login")
 
 	if data == "" {
@@ -55,7 +58,7 @@ func parseLoginData(r *http.Request) (*Data, error) {
 		return nil, fmt.Errorf("failed to decode login data - %v", err)
 	}
 
-	var parsed Data
+	var parsed LoginData
 	err = json.Unmarshal(decoded, &parsed)
 
 	if err != nil {
@@ -63,4 +66,57 @@ func parseLoginData(r *http.Request) (*Data, error) {
 	}
 
 	return &parsed, nil
+}
+
+// Authenticates the user via Steam. Makes sure the user has a valid id and ticket
+func authenticateSteamTicket(data *LoginData) error {
+	resp, err := resty.New().R().
+		SetQueryParams(map[string]string{
+			"key":    config.Instance.Steam.PublisherKey,
+			"appid":  strconv.Itoa(config.Instance.Steam.AppId),
+			"ticket": strings.Replace(data.PTicket, "-", "", -1),
+		}).
+		Get("https://api.steampowered.com/ISteamUserAuth/AuthenticateUserTicket/v1/")
+
+	if err != nil {
+		return err
+	}
+
+	if resp.IsError() {
+		return fmt.Errorf("%v failed to authenticate steam ticket - %v", resp.StatusCode(), string(resp.Body()))
+	}
+
+	type authenticateSteamTicketResponse struct {
+		Response struct {
+			Params struct {
+				Result          string `json:"result,omitempty"`
+				SteamId         string `json:"steamid,omitempty"`
+				OwnerSteamId    string `json:"ownersteamid,omitempty"`
+				VacBanned       bool   `json:"vacbanned,omitempty"`
+				PublisherBanned bool   `json:"publisherbanned,omitempty"`
+			} `json:"params"`
+			Error interface{} `json:"error,omitempty"`
+		} `json:"response"`
+	}
+
+	var parsed authenticateSteamTicketResponse
+	err = json.Unmarshal(resp.Body(), &parsed)
+
+	if err != nil {
+		return fmt.Errorf("failed to authenticate steam ticket - json unmarshal - %v - %v", err, string(resp.Body()))
+	}
+
+	if parsed.Response.Error != nil || parsed.Response.Params.Result != "OK" {
+		return fmt.Errorf("failed to authenticate steam ticket - invalid response result - %v", string(resp.Body()))
+	}
+
+	if parsed.Response.Params.VacBanned {
+		return fmt.Errorf("failed to authenticate steam ticket - user is vac banned")
+	}
+
+	if parsed.Response.Params.PublisherBanned {
+		return fmt.Errorf("failed to authenticate steam ticket - user is publisher banned")
+	}
+
+	return nil
 }

@@ -22,6 +22,10 @@ type Server struct {
 
 // NewServer Creates and returns a new server object.
 func NewServer(port int) *Server {
+	if port <= 0 {
+		panic(fmt.Sprintf("invalid port: `%v` provided", port))
+	}
+
 	s := Server{
 		Port: port,
 	}
