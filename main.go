@@ -1,6 +1,14 @@
 package main
 
+import "example.com/Quaver/Z/config"
+
 func main() {
-	s := NewServer(3000)
+	err := config.Load()
+
+	if err != nil {
+		panic(err)
+	}
+
+	s := NewServer(config.Instance.Server.Port)
 	s.Start()
 }

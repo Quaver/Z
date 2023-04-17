@@ -1,0 +1,9 @@
+{
+  "server": {
+    "port": 3000
+  },
+  "steam": {
+    "app_id": 980610,
+    "publisher_key": ""
+  }
+}
