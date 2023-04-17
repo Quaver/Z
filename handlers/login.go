@@ -101,6 +101,7 @@ func authenticateSteamTicket(data *LoginData) error {
 				VacBanned       bool   `json:"vacbanned,omitempty"`
 				PublisherBanned bool   `json:"publisherbanned,omitempty"`
 			} `json:"params"`
+			
 			Error interface{} `json:"error,omitempty"`
 		} `json:"response"`
 	}
@@ -157,6 +158,7 @@ func checkSteamAppOwnership(steamId string) error {
 		AppOwnership struct {
 			OwnsApp bool `json:"ownsapp"`
 		} `json:"appownership,omitempty"`
+
 		Error interface{} `json:"error,omitempty"`
 	}
 
