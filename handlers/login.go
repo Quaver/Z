@@ -41,6 +41,12 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
 	}
 
+	err = checkSteamAppOwnership(data.Id)
+
+	if err != nil {
+		return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
+	}
+
 	return nil
 }
 
@@ -122,6 +128,51 @@ func authenticateSteamTicket(data *LoginData) error {
 
 	if parsed.Response.Params.SteamId != data.Id {
 		return fmt.Errorf("%v - response steam id does not match the user provided id (%v vs. %v)", failed, parsed.Response.Params.SteamId, data.Id)
+	}
+
+	return nil
+}
+
+// Checks if the user actually owns the game on Steam
+func checkSteamAppOwnership(steamId string) error {
+	resp, err := resty.New().R().
+		SetQueryParams(map[string]string{
+			"key":     config.Instance.Steam.PublisherKey,
+			"appid":   strconv.Itoa(config.Instance.Steam.AppId),
+			"steamid": steamId,
+		}).
+		Get("https://partner.steam-api.com/ISteamUser/CheckAppOwnership/v2/")
+
+	if err != nil {
+		return err
+	}
+
+	const failed string = "failed to check steam app ownership"
+
+	if resp.IsError() {
+		return fmt.Errorf("%v %v - %v", resp.StatusCode(), failed, string(resp.Body()))
+	}
+
+	type checkSteamAppOwnershipRepsonse struct {
+		AppOwnership struct {
+			OwnsApp bool `json:"ownsapp"`
+		} `json:"appownership,omitempty"`
+		Error interface{} `json:"error,omitempty"`
+	}
+
+	var parsed checkSteamAppOwnershipRepsonse
+	err = json.Unmarshal(resp.Body(), &parsed)
+
+	if err != nil {
+		return fmt.Errorf("%v - json unmarshal - %v - %v", failed, err, string(resp.Body()))
+	}
+
+	if parsed.Error != nil {
+		return fmt.Errorf("%v - %v", failed, string(resp.Body()))
+	}
+
+	if !parsed.AppOwnership.OwnsApp {
+		return fmt.Errorf("%v - user does not own Quaver on Steam", failed)
 	}
 
 	return nil
