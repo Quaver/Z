@@ -153,14 +153,14 @@ func checkSteamAppOwnership(steamId string) error {
 		return fmt.Errorf("%v %v - %v", resp.StatusCode(), failed, string(resp.Body()))
 	}
 
-	type checkSteamAppOwnershipRepsonse struct {
+	type checkSteamAppOwnershipResponse struct {
 		AppOwnership struct {
 			OwnsApp bool `json:"ownsapp"`
 		} `json:"appownership,omitempty"`
 		Error interface{} `json:"error,omitempty"`
 	}
 
-	var parsed checkSteamAppOwnershipRepsonse
+	var parsed checkSteamAppOwnershipResponse
 	err = json.Unmarshal(resp.Body(), &parsed)
 
 	if err != nil {
