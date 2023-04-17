@@ -88,8 +88,10 @@ func authenticateSteamTicket(data *LoginData) error {
 		return err
 	}
 
+	const failed string = "failed to authenticate steam ticket"
+
 	if resp.IsError() {
-		return fmt.Errorf("%v failed to authenticate steam ticket - %v", resp.StatusCode(), string(resp.Body()))
+		return fmt.Errorf("%v %v - %v", failed, resp.StatusCode(), string(resp.Body()))
 	}
 
 	type authenticateSteamTicketResponse struct {
@@ -105,8 +107,6 @@ func authenticateSteamTicket(data *LoginData) error {
 			Error interface{} `json:"error,omitempty"`
 		} `json:"response"`
 	}
-
-	const failed string = "failed to authenticate steam ticket"
 
 	var parsed authenticateSteamTicketResponse
 	err = json.Unmarshal(resp.Body(), &parsed)
