@@ -110,12 +110,18 @@ func authenticateSteamTicket(data *LoginData) error {
 		return fmt.Errorf("failed to authenticate steam ticket - invalid response result - %v", string(resp.Body()))
 	}
 
+	const failed string = "failed to authenticate steam ticket"
+
 	if parsed.Response.Params.VacBanned {
-		return fmt.Errorf("failed to authenticate steam ticket - user is vac banned")
+		return fmt.Errorf("%v - user is vac banned", failed)
 	}
 
 	if parsed.Response.Params.PublisherBanned {
-		return fmt.Errorf("failed to authenticate steam ticket - user is publisher banned")
+		return fmt.Errorf("%v - user is publisher banned", failed)
+	}
+
+	if parsed.Response.Params.SteamId != data.Id {
+		return fmt.Errorf("%v - response steam id does not match the user provided id (%v vs. %v)", failed, parsed.Response.Params.SteamId, data.Id)
 	}
 
 	return nil
