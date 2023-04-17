@@ -101,23 +101,23 @@ func authenticateSteamTicket(data *LoginData) error {
 				VacBanned       bool   `json:"vacbanned,omitempty"`
 				PublisherBanned bool   `json:"publisherbanned,omitempty"`
 			} `json:"params"`
-			
+
 			Error interface{} `json:"error,omitempty"`
 		} `json:"response"`
 	}
+
+	const failed string = "failed to authenticate steam ticket"
 
 	var parsed authenticateSteamTicketResponse
 	err = json.Unmarshal(resp.Body(), &parsed)
 
 	if err != nil {
-		return fmt.Errorf("failed to authenticate steam ticket - json unmarshal - %v - %v", err, string(resp.Body()))
+		return fmt.Errorf("%v - json unmarshal - %v - %v", failed, err, string(resp.Body()))
 	}
 
 	if parsed.Response.Error != nil || parsed.Response.Params.Result != "OK" {
-		return fmt.Errorf("failed to authenticate steam ticket - invalid response result - %v", string(resp.Body()))
+		return fmt.Errorf("%v - invalid response result - %v", failed, string(resp.Body()))
 	}
-
-	const failed string = "failed to authenticate steam ticket"
 
 	if parsed.Response.Params.VacBanned {
 		return fmt.Errorf("%v - user is vac banned", failed)
