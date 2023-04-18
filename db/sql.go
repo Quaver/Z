@@ -1,19 +1,18 @@
 package db
 
 import (
-	"database/sql"
 	"example.com/Quaver/Z/config"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 	"log"
-	"time"
 )
 
 type RowScanner interface {
 	Scan(dest ...interface{}) error
 }
 
-var SQL *sql.DB
+var SQL *sqlx.DB
 
 // InitializeSQL Initializes the SQL database connection
 func InitializeSQL() {
@@ -24,22 +23,18 @@ func InitializeSQL() {
 	credentials := config.Instance.SQL
 	connStr := fmt.Sprintf("%v:%v@tcp(%v)/%v", credentials.Username, credentials.Password, credentials.Host, credentials.Database)
 
-	db, err := sql.Open("mysql", connStr)
+	db, err := sqlx.Connect("mysql", connStr)
 
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
-
-	db.SetConnMaxLifetime(time.Minute * 3)
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(10)
 
 	err = db.Ping()
 
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
-
+	
 	SQL = db
 	log.Println("Successfully connected to SQL database")
 }
