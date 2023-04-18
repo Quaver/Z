@@ -1,11 +1,15 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"example.com/Quaver/Z/config"
+	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/utils"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -47,6 +51,21 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
 	}
 
+	user, err := db.GetUserBySteamId(data.Id)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			// TODO: Send username selection packet
+			log.Printf("[%v] %v logged in but does not have an account yet.\n", conn.RemoteAddr(), data.Id)
+			utils.CloseConnection(conn)
+			return nil
+		default:
+			break
+		}
+	}
+
+	log.Println(user)
 	return nil
 }
 
