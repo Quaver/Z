@@ -10,7 +10,14 @@ import (
 type Configuration struct {
 	Server struct {
 		Port int `json:"port"`
-	}
+	} `json:"server"`
+
+	SQL struct {
+		Host     string `json:"host"`
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Database string `json:"database"`
+	} `json:"sql"`
 
 	Steam struct {
 		AppId        int    `json:"app_id"`

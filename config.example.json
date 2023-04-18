@@ -2,6 +2,12 @@
   "server": {
     "port": 3000
   },
+  "sql": {
+    "host": "",
+    "username": "",
+    "password": "",
+    "database": ""
+  },
   "steam": {
     "app_id": 980610,
     "publisher_key": ""
