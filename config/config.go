@@ -28,12 +28,12 @@ type Configuration struct {
 var Instance *Configuration
 
 // Load Parses the config file into Instance
-func Load() error {
+func Load(path string) error {
 	if Instance != nil {
 		return fmt.Errorf("config already loaded")
 	}
 
-	data, err := os.ReadFile("./config.json")
+	data, err := os.ReadFile(path)
 
 	if err != nil {
 		return err
