@@ -54,14 +54,20 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	user, err := db.GetUserBySteamId(data.Id)
 
 	if err != nil {
-		// TODO: Send username selection packet
 		if err == sql.ErrNoRows {
+			// TODO: Send username selection packet
 			log.Printf("[%v] %v logged in but does not have an account yet.\n", conn.RemoteAddr(), data.Id)
 			utils.CloseConnection(conn)
 			return nil
 		}
-		
+
 		return err
+	}
+
+	if !user.Allowed {
+		// TODO: Send notification packet
+		log.Printf("[%v - #%v] Attempted to login, but they are banned", user.Username, user.Id)
+		utils.CloseConnection(conn)
 	}
 
 	log.Println(user)
