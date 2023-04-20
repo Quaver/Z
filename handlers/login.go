@@ -93,6 +93,12 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return err
 	}
 
+	err = db.UpdateUserLatestActivity(user.Id)
+
+	if err != nil {
+		return err
+	}
+	
 	log.Println(user)
 	return nil
 }

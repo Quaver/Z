@@ -1,5 +1,7 @@
 package db
 
+import "time"
+
 type User struct {
 	Id          int    `db:"id"`
 	SteamId     string `db:"steam_id"`
@@ -22,4 +24,15 @@ func GetUserBySteamId(id string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+// UpdateUserLatestActivity Updates the latest_activity of a user to the current time
+func UpdateUserLatestActivity(id int) error {
+	_, err := SQL.Exec("UPDATE users SET latest_activity = ? WHERE id = ?", time.Now().UnixMilli(), id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
