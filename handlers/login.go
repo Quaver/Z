@@ -66,8 +66,25 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 
 	if !user.Allowed {
 		// TODO: Send notification packet
-		log.Printf("[%v - #%v] Attempted to login, but they are banned", user.Username, user.Id)
+		log.Printf("[%v - #%v] Attempted to login, but they are banned\n", user.Username, user.Id)
 		utils.CloseConnection(conn)
+		return nil
+	}
+
+	err = verifyGameBuild(data)
+
+	if err != nil {
+		// User is logging in from an unknown client
+		if err == sql.ErrNoRows {
+			// TODO: Ban user if applicable (only devs, admins, and contributors are allowed to connect with modified clients)
+			// TODO: Send anti-cheat webhook
+			err = nil // suppress the error. No need to log it out up the chain.
+		}
+
+		// TODO: Send notification packet
+		log.Printf("[%v - #%v] Attempted to login, but is using an invalid client", user.Username, user.Id)
+		utils.CloseConnection(conn)
+		return err
 	}
 
 	log.Println(user)
@@ -199,6 +216,28 @@ func checkSteamAppOwnership(steamId string) error {
 
 	if !parsed.AppOwnership.OwnsApp {
 		return fmt.Errorf("%v - user does not own Quaver on Steam", failed)
+	}
+
+	return nil
+}
+
+// Checks the client signatures to see if the build they are using is valid
+func verifyGameBuild(data *LoginData) error {
+	split := strings.Split(data.Client, "|")
+
+	if len(split) != 5 {
+		return fmt.Errorf("user provided an incorrect amount of client signatures - %v", data.Client)
+	}
+
+	err := db.VerifyGameBuild(db.GameBuild{
+		QuaverAPIDll:          split[1],
+		QuaverServerClientDll: split[2],
+		QuaverServerCommonDll: split[3],
+		QuaverSharedDll:       split[4],
+	})
+
+	if err != nil {
+		return err
 	}
 
 	return nil
