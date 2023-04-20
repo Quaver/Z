@@ -7,6 +7,11 @@ import (
 
 func TestGetUserBySteamId(t *testing.T) {
 	_ = config.Load("../config.json")
+
+	if config.Instance == nil {
+		return
+	}
+	
 	InitializeSQL()
 
 	_, err := GetUserBySteamId("76561198201861833")

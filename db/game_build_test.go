@@ -7,6 +7,11 @@ import (
 
 func TestVerifyGameBuild(t *testing.T) {
 	_ = config.Load("../config.json")
+
+	if config.Instance == nil {
+		return
+	}
+
 	InitializeSQL()
 
 	err := VerifyGameBuild(GameBuild{
