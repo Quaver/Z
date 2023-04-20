@@ -87,6 +87,12 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return err
 	}
 
+	err = db.InsertLoginIpAddress(user.Id, conn.RemoteAddr().String())
+
+	if err != nil {
+		return err
+	}
+
 	log.Println(user)
 	return nil
 }
