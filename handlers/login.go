@@ -99,7 +99,12 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return err
 	}
 
-	log.Println(user)
+	err = updateUserAvatar(user)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -252,6 +257,19 @@ func verifyGameBuild(data *LoginData) error {
 		return err
 	}
 
+	return nil
+}
+
+// Updates the avatar for the user and sets the new one.
+func updateUserAvatar(user *db.User) error {
+	avatar, err := db.UpdateUserSteamAvatar(user.SteamId)
+
+	if err != nil {
+		return err
+	}
+
+	// Make sure the avatar is the most up to date version
+	user.AvatarUrl = avatar
 	return nil
 }
 

@@ -1,6 +1,12 @@
 package db
 
-import "time"
+import (
+	"example.com/Quaver/Z/config"
+	"fmt"
+	"github.com/Philipp15b/go-steamapi"
+	"strconv"
+	"time"
+)
 
 type User struct {
 	Id          int    `db:"id"`
@@ -15,9 +21,11 @@ type User struct {
 }
 
 // GetUserBySteamId Retrieves a user from the database by their Steam id
-func GetUserBySteamId(id string) (*User, error) {
+func GetUserBySteamId(steamId string) (*User, error) {
+	query := "SELECT id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url FROM users WHERE steam_id = ? LIMIT 1"
+
 	var user User
-	err := SQL.Get(&user, "SELECT id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url FROM users WHERE steam_id = ? LIMIT 1", id)
+	err := SQL.Get(&user, query, steamId)
 
 	if err != nil {
 		return nil, err
@@ -35,4 +43,34 @@ func UpdateUserLatestActivity(id int) error {
 	}
 
 	return nil
+}
+
+// UpdateUserSteamAvatar Updates the Steam avatar_url of a given user.
+// Returns a link to the avatar
+func UpdateUserSteamAvatar(steamId string) (string, error) {
+	parsedId, err := strconv.ParseInt(steamId, 10, 64)
+
+	if err != nil {
+		panic(err)
+	}
+
+	summaries, err := steamapi.GetPlayerSummaries([]uint64{uint64(parsedId)}, config.Instance.Steam.PublisherKey)
+
+	if err != nil {
+		return "", err
+	}
+
+	if len(summaries) == 0 {
+		return "", fmt.Errorf("steam player summaries returned 0 users")
+	}
+
+	avatar := summaries[0].LargeAvatarURL
+
+	_, err = SQL.Exec("UPDATE users SET avatar_url = ? WHERE steam_id = ?", avatar, steamId)
+
+	if err != nil {
+		return "", err
+	}
+
+	return avatar, nil
 }
