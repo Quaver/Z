@@ -50,7 +50,7 @@ func TestUpdateUserSteamAvatar(t *testing.T) {
 
 	InitializeSQL()
 
-	err := UpdateUserSteamAvatar("76561198201861833")
+	_, err := UpdateUserSteamAvatar("76561198201861833")
 
 	if err != nil {
 		t.Fatal(err)
