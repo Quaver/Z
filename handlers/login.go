@@ -79,7 +79,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		if err == sql.ErrNoRows {
 			if !canUserUseCustomClient(user) {
 				// TODO: Ban & send webhook
-				log.Printf("[%v - #%v] Attempted to login, but is using an invalid client", user.Username, user.Id)
+				log.Printf("[%v - #%v] Attempted to login, but is using an invalid client\n", user.Username, user.Id)
 				utils.CloseConnection(conn)
 				return nil
 			}
@@ -105,6 +105,8 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+
+	removePreviousLoginSession(user)
 
 	sessions.AddUser(sessions.NewUser(conn, user))
 	log.Printf("[%v #%v] Logged in (%v users online).\n", user.Username, user.Id, sessions.GetOnlineUserCount())
@@ -274,6 +276,17 @@ func updateUserAvatar(user *db.User) error {
 	// Make sure the avatar is the most up to date version
 	user.AvatarUrl = avatar
 	return nil
+}
+
+// Checks to see if the user is already logged in and removes the previous sesion
+func removePreviousLoginSession(user *db.User) {
+	u := sessions.GetUserById(user.Id)
+
+	if u == nil {
+		return
+	}
+
+	sessions.RemoveUser(u)
 }
 
 // Logs a generic login failure
