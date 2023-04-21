@@ -4,6 +4,7 @@ import (
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/utils"
 	"net"
+	"sync"
 )
 
 type User struct {
@@ -15,6 +16,9 @@ type User struct {
 
 	// All user table information from the database
 	Info *db.User
+
+	// Mutex for all operations regarding changes in the user
+	Mutex *sync.Mutex
 }
 
 // NewUser Creates a new user session struct object
@@ -23,5 +27,6 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		Conn:  conn,
 		Token: utils.GenerateRandomString(64),
 		Info:  user,
+		Mutex: &sync.Mutex{},
 	}
 }
