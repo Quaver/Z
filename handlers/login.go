@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/utils"
@@ -74,17 +75,16 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	err = verifyGameBuild(data)
 
 	if err != nil {
-		// User is logging in from an unknown client
 		if err == sql.ErrNoRows {
-			// TODO: Ban user if applicable (only devs, admins, and contributors are allowed to connect with modified clients)
-			// TODO: Send anti-cheat webhook
-			err = nil // suppress the error. No need to log it out up the chain.
+			if !canUserUseCustomClient(user) {
+				// TODO: Ban & send webhook
+				log.Printf("[%v - #%v] Attempted to login, but is using an invalid client", user.Username, user.Id)
+				utils.CloseConnection(conn)
+				return nil
+			}
+		} else {
+			return err
 		}
-
-		// TODO: Send notification packet
-		log.Printf("[%v - #%v] Attempted to login, but is using an invalid client", user.Username, user.Id)
-		utils.CloseConnection(conn)
-		return err
 	}
 
 	err = db.InsertLoginIpAddress(user.Id, conn.RemoteAddr().String())
@@ -273,6 +273,15 @@ func updateUserAvatar(user *db.User) error {
 	return nil
 }
 
+// Logs a generic login failure
 func logFailedLogin(conn net.Conn, err error) error {
 	return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
+}
+
+// Returns if a user is eligible to use a custom client
+func canUserUseCustomClient(user *db.User) bool {
+	return common.HasUserGroup(user.UserGroups, common.UserGroupSwan) ||
+		common.HasUserGroup(user.UserGroups, common.UserGroupDeveloper) ||
+		common.HasUserGroup(user.UserGroups, common.UserGroupAdmin) ||
+		common.HasUserGroup(user.UserGroups, common.UserGroupContributor)
 }
