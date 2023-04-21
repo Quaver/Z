@@ -2,6 +2,7 @@ package main
 
 import (
 	"example.com/Quaver/Z/handlers"
+	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"github.com/gobwas/ws"
@@ -93,6 +94,9 @@ func (s *Server) Start() {
 				case ws.OpPong:
 					s.onPong(conn)
 					break
+				default:
+					fmt.Println("???")
+					break
 				}
 			}
 		}()
@@ -115,7 +119,12 @@ func (s *Server) onBinaryMessage(conn net.Conn, msg []byte) {
 
 // Handles when a connection has been closed
 func (s *Server) onClose(conn net.Conn) {
-	log.Printf("Connection closed: %v\n", conn.RemoteAddr())
+	user := sessions.GetUserByConnection(conn)
+
+	if user != nil {
+		sessions.RemoveUser(user)
+		log.Printf("[%v #%v] Logged out! (%v users online)\n", user.Info.Username, user.Info.Id, sessions.GetOnlineUserCount())
+	}
 }
 
 // Handles when a connection pinged

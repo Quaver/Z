@@ -7,6 +7,7 @@ import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
 	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"github.com/go-resty/resty/v2"
@@ -105,6 +106,8 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return err
 	}
 
+	sessions.AddUser(sessions.NewUser(conn, user))
+	log.Printf("[%v #%v] Logged in! (%v users online)", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil
 }
 
