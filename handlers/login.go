@@ -107,7 +107,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	}
 
 	sessions.AddUser(sessions.NewUser(conn, user))
-	log.Printf("[%v #%v] Logged in! (%v users online)", user.Username, user.Id, sessions.GetOnlineUserCount())
+	log.Printf("[%v #%v] Logged in (%v users online).", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil
 }
 

@@ -75,7 +75,11 @@ func (s *Server) Start() {
 						return
 					}
 
-					continue
+					if err.Error() == "EOF" || strings.Contains(err.Error(), "ws closed") {
+						s.onClose(conn)
+					}
+
+					return
 				}
 
 				switch op {
@@ -93,9 +97,6 @@ func (s *Server) Start() {
 					break
 				case ws.OpPong:
 					s.onPong(conn)
-					break
-				default:
-					fmt.Println("???")
 					break
 				}
 			}
@@ -123,7 +124,7 @@ func (s *Server) onClose(conn net.Conn) {
 
 	if user != nil {
 		sessions.RemoveUser(user)
-		log.Printf("[%v #%v] Logged out! (%v users online)\n", user.Info.Username, user.Info.Id, sessions.GetOnlineUserCount())
+		log.Printf("[%v #%v] Logged out (%v users online).\n", user.Info.Username, user.Info.Id, sessions.GetOnlineUserCount())
 	}
 }
 
