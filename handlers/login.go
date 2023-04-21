@@ -36,19 +36,19 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	data, err := parseLoginData(r)
 
 	if err != nil {
-		return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
+		return logFailedLogin(conn, err)
 	}
 
 	err = authenticateSteamTicket(data)
 
 	if err != nil {
-		return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
+		return logFailedLogin(conn, err)
 	}
 
 	err = checkSteamAppOwnership(data.Id)
 
 	if err != nil {
-		return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
+		return logFailedLogin(conn, err)
 	}
 
 	user, err := db.GetUserBySteamId(data.Id)
@@ -98,7 +98,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	
+
 	log.Println(user)
 	return nil
 }
@@ -253,4 +253,8 @@ func verifyGameBuild(data *LoginData) error {
 	}
 
 	return nil
+}
+
+func logFailedLogin(conn net.Conn, err error) error {
+	return fmt.Errorf("[%v] login failed - %v", conn.RemoteAddr(), err)
 }
