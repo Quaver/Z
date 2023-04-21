@@ -1,6 +1,7 @@
 package db
 
 import (
+	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
 	"fmt"
 	"github.com/Philipp15b/go-steamapi"
@@ -9,15 +10,15 @@ import (
 )
 
 type User struct {
-	Id          int    `db:"id"`
-	SteamId     string `db:"steam_id"`
-	Username    string `db:"username"`
-	Allowed     bool   `db:"allowed"`
-	Privileges  int64  `db:"privileges"` // TODO: USE ENUM
-	UserGroups  int64  `db:"usergroups"` // TODO: USE ENUM
-	MuteEndTime int64  `db:"mute_endtime"`
-	Country     string `db:"country"`
-	AvatarUrl   string `db:"avatar_url"`
+	Id          int               `db:"id"`
+	SteamId     string            `db:"steam_id"`
+	Username    string            `db:"username"`
+	Allowed     bool              `db:"allowed"`
+	Privileges  common.Privileges `db:"privileges"`
+	UserGroups  common.UserGroups `db:"usergroups"`
+	MuteEndTime int64             `db:"mute_endtime"`
+	Country     string            `db:"country"`
+	AvatarUrl   string            `db:"avatar_url"`
 }
 
 // GetUserBySteamId Retrieves a user from the database by their Steam id
