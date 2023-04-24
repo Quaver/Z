@@ -107,8 +107,15 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	}
 
 	removePreviousLoginSession(user)
+	sessionUser := sessions.NewUser(conn, user)
 
-	sessions.AddUser(sessions.NewUser(conn, user))
+	err = sessionUser.UpdateStats()
+
+	if err != nil {
+		return err
+	}
+
+	sessions.AddUser(sessionUser)
 	log.Printf("[%v #%v] Logged in (%v users online).\n", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil
 }
