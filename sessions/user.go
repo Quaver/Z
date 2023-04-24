@@ -43,7 +43,7 @@ func (u *User) UpdateStats() error {
 
 	for i := 1; i < int(common.ModeEnumMaxValue); i++ {
 		mode := common.Mode(i)
-		stats, err := db.GetUserStats(u.Info.Id, mode)
+		stats, err := db.GetUserStats(u.Info.Id, u.Info.Country, mode)
 
 		if err != nil {
 			return err
