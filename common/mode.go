@@ -7,6 +7,7 @@ type Mode int32
 const (
 	ModeKeys4 Mode = iota + 1
 	ModeKeys7
+	ModeEnumMaxValue // Used specifically for looping purposes
 )
 
 // GetModeString Returns a string version of game mode
