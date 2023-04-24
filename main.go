@@ -13,6 +13,7 @@ func main() {
 	}
 
 	db.InitializeSQL()
+	db.InitializeRedis()
 
 	s := NewServer(config.Instance.Server.Port)
 	s.Start()

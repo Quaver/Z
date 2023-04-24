@@ -8,6 +8,11 @@
     "password": "",
     "database": ""
   },
+  "redis": {
+    "host": "127.0.0.1:6379",
+    "password": "",
+    "database": 0
+  },
   "steam": {
     "app_id": 980610,
     "publisher_key": ""

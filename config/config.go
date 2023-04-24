@@ -19,6 +19,12 @@ type Configuration struct {
 		Database string `json:"database"`
 	} `json:"sql"`
 
+	Redis struct {
+		Host     string `json:"host"`
+		Password string `json:"password"`
+		Database int    `json:"database"`
+	}
+
 	Steam struct {
 		AppId        int    `json:"app_id"`
 		PublisherKey string `json:"publisher_key"`
