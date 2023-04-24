@@ -14,8 +14,9 @@ func TestGetUserStats(t *testing.T) {
 	}
 
 	InitializeSQL()
+	InitializeRedis()
 
-	statsKeys4, err := GetUserStats(1, common.ModeKeys4)
+	statsKeys4, err := GetUserStats(1, "US", common.ModeKeys4)
 
 	if err != nil {
 		t.Fatal(err)
@@ -25,7 +26,7 @@ func TestGetUserStats(t *testing.T) {
 		t.Fatalf("expected a non-zero total score value for keys4")
 	}
 
-	statsKeys7, err := GetUserStats(1, common.ModeKeys7)
+	statsKeys7, err := GetUserStats(1, "US", common.ModeKeys7)
 
 	if err != nil {
 		t.Fatal(err)
