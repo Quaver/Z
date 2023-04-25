@@ -4,6 +4,7 @@ import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/utils"
+	"fmt"
 	"net"
 	"sync"
 )
@@ -53,4 +54,9 @@ func (u *User) UpdateStats() error {
 	}
 
 	return nil
+}
+
+// Retrieves the Redis key for the user's session
+func (u *User) getRedisSessionKey() string {
+	return fmt.Sprintf("quaver:server:session:%v", u.Token)
 }
