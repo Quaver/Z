@@ -79,6 +79,17 @@ func GetOnlineUserCount() int {
 	return len(userIdToUser)
 }
 
+// UpdateRedisOnlineUserCount Updates the online user count in Redis
+func UpdateRedisOnlineUserCount() error {
+	_, err := db.Redis.Set(db.RedisCtx, "quaver:server:online_users", GetOnlineUserCount(), 0).Result()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Adds a user to the maps that can be used to look them up
 func addUserToMaps(user *User) {
 	userMutex.Lock()
@@ -97,15 +108,4 @@ func removeUserFromMaps(user *User) {
 	delete(userIdToUser, user.Info.Id)
 	delete(usernameToUser, user.Info.Username)
 	delete(connToUser, user.Conn)
-}
-
-// UpdateRedisOnlineUserCount Updates the online user count in Redis
-func UpdateRedisOnlineUserCount() error {
-	_, err := db.Redis.Set(db.RedisCtx, "quaver:server:online_users", GetOnlineUserCount(), 0).Result()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
