@@ -76,7 +76,11 @@ func (s *Server) Start() {
 					}
 
 					if err.Error() == "EOF" || strings.Contains(err.Error(), "ws closed") {
-						s.onClose(conn)
+						err := s.onClose(conn)
+
+						if err != nil {
+							log.Println(err)
+						}
 					}
 
 					return
@@ -90,7 +94,11 @@ func (s *Server) Start() {
 					s.onBinaryMessage(conn, msg)
 					break
 				case ws.OpClose:
-					s.onClose(conn)
+					err := s.onClose(conn)
+
+					if err != nil {
+						log.Println(err)
+					}
 					break
 				case ws.OpPing:
 					s.onPing(conn)
@@ -119,13 +127,20 @@ func (s *Server) onBinaryMessage(conn net.Conn, msg []byte) {
 }
 
 // Handles when a connection has been closed
-func (s *Server) onClose(conn net.Conn) {
+func (s *Server) onClose(conn net.Conn) error {
 	user := sessions.GetUserByConnection(conn)
 
 	if user != nil {
-		sessions.RemoveUser(user)
+		err := sessions.RemoveUser(user)
+
+		if err != nil {
+			return err
+		}
+
 		log.Printf("[%v #%v] Logged out (%v users online).\n", user.Info.Username, user.Info.Id, sessions.GetOnlineUserCount())
 	}
+
+	return nil
 }
 
 // Handles when a connection pinged

@@ -106,7 +106,12 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return err
 	}
 
-	removePreviousLoginSession(user)
+	err = removePreviousLoginSession(user)
+
+	if err != nil {
+		return err
+	}
+
 	sessionUser := sessions.NewUser(conn, user)
 
 	err = sessionUser.UpdateStats()
@@ -114,8 +119,13 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	
+	err = sessions.AddUser(sessionUser)
 
-	sessions.AddUser(sessionUser)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("[%v #%v] Logged in (%v users online).\n", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil
 }
@@ -286,14 +296,20 @@ func updateUserAvatar(user *db.User) error {
 }
 
 // Checks to see if the user is already logged in and removes the previous sesion
-func removePreviousLoginSession(user *db.User) {
+func removePreviousLoginSession(user *db.User) error {
 	u := sessions.GetUserById(user.Id)
 
 	if u == nil {
-		return
+		return nil
 	}
 
-	sessions.RemoveUser(u)
+	err := sessions.RemoveUser(u)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Logs a generic login failure
