@@ -37,20 +37,14 @@ func NewServer(port int) *Server {
 // Start Starts running the server
 func (s *Server) Start() {
 	if s.IsStarted {
-		log.Println("Server is already started. Cannot start again!")
-		return
+		log.Fatalln("Server is already started. Cannot start again!")
 	}
 
-	err := sessions.UpdateRedisOnlineUserCount()
-
-	if err != nil {
-		panic(err)
-	}
+	clearPreviousSessions()
 
 	log.Printf("Starting server on port: %v\n", s.Port)
 
-	err = http.ListenAndServe(fmt.Sprintf(":%v", s.Port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Upgrade HTTP Connection
+	err := http.ListenAndServe(fmt.Sprintf(":%v", s.Port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
 
 		if err != nil {
@@ -58,7 +52,6 @@ func (s *Server) Start() {
 			return
 		}
 
-		// Login users if necessary
 		if strings.Contains(r.RequestURI, "/?login=") {
 			err := handlers.HandleLogin(conn, r)
 
@@ -96,21 +89,12 @@ func (s *Server) Start() {
 				case ws.OpText:
 					s.onTextMessage(conn, msg)
 					break
-				case ws.OpBinary:
-					s.onBinaryMessage(conn, msg)
-					break
 				case ws.OpClose:
 					err := s.onClose(conn)
 
 					if err != nil {
 						log.Println(err)
 					}
-					break
-				case ws.OpPing:
-					s.onPing(conn)
-					break
-				case ws.OpPong:
-					s.onPong(conn)
 					break
 				}
 			}
@@ -125,11 +109,6 @@ func (s *Server) Start() {
 // Handles new incoming text messages
 func (s *Server) onTextMessage(conn net.Conn, msg []byte) {
 	log.Printf("Text Messsage: %v\n", string(msg))
-}
-
-// Handles new incoming binary messages
-func (s *Server) onBinaryMessage(conn net.Conn, msg []byte) {
-	log.Printf("Binary Messsage: %v\n", &msg)
 }
 
 // Handles when a connection has been closed
@@ -149,12 +128,17 @@ func (s *Server) onClose(conn net.Conn) error {
 	return nil
 }
 
-// Handles when a connection pinged
-func (s *Server) onPing(conn net.Conn) {
-	log.Printf("Ping: %v\n", conn.RemoteAddr())
-}
+// Cleans up the previous sessions (when restarting the server)
+func clearPreviousSessions() {
+	err := sessions.UpdateRedisOnlineUserCount()
 
-// Handles when a connection pinged
-func (s *Server) onPong(conn net.Conn) {
-	log.Printf("Pong: %v\n", conn.RemoteAddr())
+	if err != nil {
+		panic(err)
+	}
+
+	err = sessions.ClearRedisUserTokens()
+
+	if err != nil {
+		panic(err)
+	}
 }
