@@ -24,7 +24,7 @@ var (
 func AddUser(user *User) error {
 	addUserToMaps(user)
 
-	err := updateRedisOnlineUserCount()
+	err := UpdateRedisOnlineUserCount()
 
 	if err != nil {
 
@@ -38,7 +38,7 @@ func AddUser(user *User) error {
 func RemoveUser(user *User) error {
 	removeUserFromMaps(user)
 
-	err := updateRedisOnlineUserCount()
+	err := UpdateRedisOnlineUserCount()
 
 	if err != nil {
 		return err
@@ -99,8 +99,8 @@ func removeUserFromMaps(user *User) {
 	delete(connToUser, user.Conn)
 }
 
-// Updates the online user count in Redis
-func updateRedisOnlineUserCount() error {
+// UpdateRedisOnlineUserCount Updates the online user count in Redis
+func UpdateRedisOnlineUserCount() error {
 	_, err := db.Redis.Set(db.RedisCtx, "quaver:server:online_users", GetOnlineUserCount(), 0).Result()
 
 	if err != nil {

@@ -41,9 +41,15 @@ func (s *Server) Start() {
 		return
 	}
 
+	err := sessions.UpdateRedisOnlineUserCount()
+
+	if err != nil {
+		panic(err)
+	}
+
 	log.Printf("Starting server on port: %v\n", s.Port)
 
-	err := http.ListenAndServe(fmt.Sprintf(":%v", s.Port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	err = http.ListenAndServe(fmt.Sprintf(":%v", s.Port), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Upgrade HTTP Connection
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
 
