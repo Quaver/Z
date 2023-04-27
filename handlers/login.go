@@ -58,6 +58,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	user, err := db.GetUserBySteamId(data.Id)
 
 	if err != nil {
+		// User does not exist yet, so prompt them to select a username for their account.
 		if err == sql.ErrNoRows {
 			sessions.SendPacketToConnection(packets.NewServerChooseUsername(), conn)
 			utils.CloseConnectionDelayed(conn, 250*time.Millisecond)
@@ -69,9 +70,9 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	}
 
 	if !user.Allowed {
-		// TODO: Send notification packet
+		sessions.SendPacketToConnection(packets.NewServerNotificationError("You are banned. You can appeal your ban at: discord.gg/quaver"), conn)
+		utils.CloseConnectionDelayed(conn, 250*time.Millisecond)
 		log.Printf("[%v - #%v] Attempted to login, but they are banned\n", user.Username, user.Id)
-		utils.CloseConnection(conn)
 		return nil
 	}
 
