@@ -26,6 +26,15 @@ type User struct {
 	Stats map[common.Mode]*db.UserStats
 }
 
+type PacketUser struct {
+	Id          int               `json:"id"`
+	SteamId     string            `json:"sid"`
+	Username    string            `json:"u"`
+	UserGroups  common.UserGroups `json:"ug"`
+	MuteEndTime int64             `json:"m"`
+	Country     string            `json:"c"`
+}
+
 // NewUser Creates a new user session struct object
 func NewUser(conn net.Conn, user *db.User) *User {
 	return &User{
@@ -54,6 +63,18 @@ func (u *User) UpdateStats() error {
 	}
 
 	return nil
+}
+
+// SerializeForPacket Serializes the user to be used in a packet
+func (u *User) SerializeForPacket() *PacketUser {
+	return &PacketUser{
+		Id:          u.Info.Id,
+		SteamId:     u.Info.SteamId,
+		Username:    u.Info.Username,
+		UserGroups:  u.Info.UserGroups,
+		MuteEndTime: u.Info.MuteEndTime,
+		Country:     u.Info.Country,
+	}
 }
 
 // Retrieves the Redis key for the user's session

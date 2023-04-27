@@ -7,6 +7,7 @@ import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
 	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
@@ -119,8 +120,14 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	
+
 	err = sessions.AddUser(sessionUser)
+
+	if err != nil {
+		return err
+	}
+
+	err = sessions.SendPacketToUser(packets.NewServerLoginReply(sessionUser), sessionUser)
 
 	if err != nil {
 		return err

@@ -40,6 +40,17 @@ type UserStats struct {
 	CountGradeD              int     `db:"count_grade_d"`
 }
 
+type PacketUserStats struct {
+	GameMode                 common.Mode `json:"m"`
+	GlobalRank               int         `json:"r"`
+	CountryRank              int         `json:"cr"`
+	TotalScore               int64       `json:"ts"`
+	RankedScore              int64       `json:"rs"`
+	OverallAccuracy          float64     `json:"oa"`
+	OverallPerformanceRating float64     `json:"or"`
+	PlayCount                int         `json:"pc"`
+}
+
 // GetUserStats Fetches the user stats for a given game mode from the database.
 func GetUserStats(userId int, country string, mode common.Mode) (*UserStats, error) {
 	modeStr, err := common.GetModeString(mode)
@@ -97,6 +108,20 @@ func GetUserCountryRank(userId int, country string, mode common.Mode) (int, erro
 	}
 
 	return rank, nil
+}
+
+// SerializeForPacket Serializes the user stats object for a packet
+func (stats *UserStats) SerializeForPacket() *PacketUserStats {
+	return &PacketUserStats{
+		GameMode:                 stats.Mode,
+		GlobalRank:               stats.GlobalRank,
+		CountryRank:              stats.CountryRank,
+		TotalScore:               stats.TotalScore,
+		RankedScore:              stats.RankedScore,
+		OverallAccuracy:          stats.OverallAccuracy,
+		OverallPerformanceRating: stats.OverallPerformanceRating,
+		PlayCount:                stats.PlayCount,
+	}
 }
 
 // Gets a rank value in Redis from the database.
