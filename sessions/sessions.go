@@ -100,8 +100,22 @@ func GetOnlineUserIds() []int {
 	for _, user := range userIdToUser {
 		ids = append(ids, user.Info.Id)
 	}
-	
+
 	return ids
+}
+
+// GetSerializedOnlineUsers Returns a list of all online users serialized
+func GetSerializedOnlineUsers() []*PacketUser {
+	userMutex.Lock()
+	defer userMutex.Unlock()
+
+	users := make([]*PacketUser, 0)
+
+	for _, user := range userIdToUser {
+		users = append(users, user.SerializeForPacket())
+	}
+
+	return users
 }
 
 // Adds a user to the maps that can be used to look them up
