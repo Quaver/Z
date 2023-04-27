@@ -90,6 +90,20 @@ func GetOnlineUserCount() int {
 	return len(userIdToUser)
 }
 
+// GetOnlineUserIds Returns a slice of user ids that are online
+func GetOnlineUserIds() []int {
+	userMutex.Lock()
+	defer userMutex.Unlock()
+
+	ids := make([]int, 0)
+
+	for _, user := range userIdToUser {
+		ids = append(ids, user.Info.Id)
+	}
+	
+	return ids
+}
+
 // Adds a user to the maps that can be used to look them up
 func addUserToMaps(user *User) {
 	userMutex.Lock()

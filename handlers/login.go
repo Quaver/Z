@@ -129,6 +129,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	}
 
 	sessions.SendPacketToUser(packets.NewServerLoginReply(sessionUser), sessionUser)
+	sessions.SendPacketToUser(packets.NewServerUsersOnline(sessions.GetOnlineUserIds()), sessionUser)
 	log.Printf("[%v #%v] Logged in (%v users online).\n", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil
 }
