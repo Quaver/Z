@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // LoginData The data that the user sends to log in
@@ -56,11 +57,12 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 
 	user, err := db.GetUserBySteamId(data.Id)
 
+	// 76561198162013525
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// TODO: Send username selection packet
+			_ = sessions.SendPacketToConnection(packets.NewServerChooseUsername(), conn)
+			utils.CloseConnectionDelayed(conn, 250*time.Millisecond)
 			log.Printf("[%v] %v logged in but does not have an account yet.\n", conn.RemoteAddr(), data.Id)
-			utils.CloseConnection(conn)
 			return nil
 		}
 
