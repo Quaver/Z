@@ -313,6 +313,8 @@ func removePreviousLoginSession(user *db.User) error {
 		return err
 	}
 
+	sessions.SendPacketToUser(packets.NewServerNotificationError("You are being logged out due to logging in from a different location"), u)
+	utils.CloseConnectionDelayed(u.Conn, 250*time.Millisecond)
 	return nil
 }
 
