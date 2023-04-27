@@ -127,12 +127,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return err
 	}
 
-	err = sessions.SendPacketToUser(packets.NewServerLoginReply(sessionUser), sessionUser)
-
-	if err != nil {
-		return err
-	}
-
+	_ = sessions.SendPacketToUser(packets.NewServerLoginReply(sessionUser), sessionUser)
 	log.Printf("[%v #%v] Logged in (%v users online).\n", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil
 }
