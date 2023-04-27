@@ -8,43 +8,33 @@ import (
 )
 
 // SendPacketToConnection Sends a packet to a given connection
-func SendPacketToConnection(data interface{}, conn net.Conn) error {
+func SendPacketToConnection(data interface{}, conn net.Conn) {
 	j, err := json.Marshal(data)
 
 	if err != nil {
-		return err
+		log.Println(err)
+		return
 	}
 
 	err = wsutil.WriteServerText(conn, j)
 
 	if err != nil {
-		return err
+		log.Println(err)
+		return
 	}
 
 	log.Printf("SENT - %v", string(j))
-	return nil
 }
 
 // SendPacketToUser Sends a packet to a given user
-func SendPacketToUser(data interface{}, user *User) error {
-	err := SendPacketToConnection(data, user.Conn)
-
-	if err != nil {
-		return err
-	}
-
-	return err
+func SendPacketToUser(data interface{}, user *User) {
+	SendPacketToConnection(data, user.Conn)
+	return
 }
 
 // SendPacketToUsers Sends a packet to a list of users
-func SendPacketToUsers(data interface{}, users ...*User) error {
+func SendPacketToUsers(data interface{}, users ...*User) {
 	for _, user := range users {
-		err := SendPacketToUser(data, user)
-
-		if err != nil {
-			return err
-		}
+		SendPacketToUser(data, user)
 	}
-
-	return nil
 }

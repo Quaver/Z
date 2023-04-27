@@ -57,10 +57,9 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 
 	user, err := db.GetUserBySteamId(data.Id)
 
-	// 76561198162013525
 	if err != nil {
 		if err == sql.ErrNoRows {
-			_ = sessions.SendPacketToConnection(packets.NewServerChooseUsername(), conn)
+			sessions.SendPacketToConnection(packets.NewServerChooseUsername(), conn)
 			utils.CloseConnectionDelayed(conn, 250*time.Millisecond)
 			log.Printf("[%v] %v logged in but does not have an account yet.\n", conn.RemoteAddr(), data.Id)
 			return nil
@@ -129,7 +128,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return err
 	}
 
-	_ = sessions.SendPacketToUser(packets.NewServerLoginReply(sessionUser), sessionUser)
+	sessions.SendPacketToUser(packets.NewServerLoginReply(sessionUser), sessionUser)
 	log.Printf("[%v #%v] Logged in (%v users online).\n", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil
 }
