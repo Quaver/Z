@@ -17,7 +17,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // LoginData The data that the user sends to log in
@@ -61,7 +60,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		// User does not exist yet, so prompt them to select a username for their account.
 		if err == sql.ErrNoRows {
 			sessions.SendPacketToConnection(packets.NewServerChooseUsername(), conn)
-			utils.CloseConnectionDelayed(conn, 250*time.Millisecond)
+			utils.CloseConnectionDelayed(conn)
 			log.Printf("[%v] %v logged in but does not have an account yet.\n", conn.RemoteAddr(), data.Id)
 			return nil
 		}
@@ -71,7 +70,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 
 	if !user.Allowed {
 		sessions.SendPacketToConnection(packets.NewServerNotificationError("You are banned. You can appeal your ban at: discord.gg/quaver"), conn)
-		utils.CloseConnectionDelayed(conn, 250*time.Millisecond)
+		utils.CloseConnectionDelayed(conn)
 		log.Printf("[%v - #%v] Attempted to login, but they are banned\n", user.Username, user.Id)
 		return nil
 	}
@@ -314,7 +313,7 @@ func removePreviousLoginSession(user *db.User) error {
 	}
 
 	sessions.SendPacketToUser(packets.NewServerNotificationError("You are being logged out due to logging in from a different location"), u)
-	utils.CloseConnectionDelayed(u.Conn, 250*time.Millisecond)
+	utils.CloseConnectionDelayed(u.Conn)
 	return nil
 }
 

@@ -16,8 +16,8 @@ func CloseConnection(conn net.Conn) {
 }
 
 // CloseConnectionDelayed Closes the connection after a specified amount of time
-func CloseConnectionDelayed(conn net.Conn, d time.Duration) {
-	time.AfterFunc(d, func() {
+func CloseConnectionDelayed(conn net.Conn) {
+	time.AfterFunc(250*time.Millisecond, func() {
 		CloseConnection(conn)
 	})
 }
