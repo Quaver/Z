@@ -335,8 +335,8 @@ func sendLoginPackets(user *sessions.User) error {
 	}
 
 	sessions.SendPacketToUser(packets.NewServerFriendsList(friends), user)
-
-	// Twitch Connection
+	sessions.SendPacketToUser(packets.NewServerTwitchConnection(user.Info.TwitchUsername.String), user)
+	
 	// Join Chat Channels
 	// Broadcast Online Status
 	// Alert that they're muted
