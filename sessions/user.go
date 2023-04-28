@@ -28,6 +28,9 @@ type User struct {
 
 	// The last time the user was pinged
 	LastPingTimestamp int64
+
+	// The last time the user sent a successful pong
+	LastPongTimestamp int64
 }
 
 type PacketUser struct {
@@ -48,6 +51,7 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		Mutex:             &sync.Mutex{},
 		Stats:             map[common.Mode]*db.UserStats{},
 		LastPingTimestamp: time.Now().UnixMilli(),
+		LastPongTimestamp: time.Now().UnixMilli(),
 	}
 }
 

@@ -159,6 +159,17 @@ func startBackgroundWorker() {
 					user.LastPingTimestamp = time.Now().UnixMilli()
 				}
 
+				// User hasn't responded to pings in a while, so disconnect them
+				if time.Now().UnixMilli()-user.LastPongTimestamp >= 120_000 {
+					err := handlers.HandleLogout(user.Conn)
+
+					if err != nil {
+						log.Println(err)
+					}
+
+					log.Printf("[%v - %v] Disconnected due to being unresponsive to pings (timeout)\n", user.Info.Username, user.Info.Id)
+					continue
+				}
 			}
 
 			time.Sleep(500 * time.Millisecond)

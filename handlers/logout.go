@@ -3,6 +3,7 @@ package handlers
 import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/utils"
 	"log"
 	"net"
 )
@@ -21,5 +22,6 @@ func HandleLogout(conn net.Conn) error {
 		log.Printf("[%v #%v] Logged out (%v users online).\n", user.Info.Username, user.Info.Id, sessions.GetOnlineUserCount())
 	}
 
+	utils.CloseConnection(conn)
 	return nil
 }
