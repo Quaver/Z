@@ -128,22 +128,11 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return err
 	}
 
-	sessions.SendPacketToUser(packets.NewServerLoginReply(sessionUser), sessionUser)
-	sessions.SendPacketToUser(packets.NewServerUsersOnline(sessions.GetOnlineUserIds()), sessionUser)
-	sessions.SendPacketToUser(packets.NewServerUserInfo(sessions.GetSerializedOnlineUsers()), sessionUser)
-
-	friends, err := db.GetUserFriendsList(sessionUser.Info.Id)
+	err = sendLoginPackets(sessionUser)
 
 	if err != nil {
 		return err
 	}
-	
-	sessions.SendPacketToUser(packets.NewServerFriendsList(friends), sessionUser)
-
-	// Twitch Connection
-	// Join Chat Channels
-	// Broadcast Online Status
-	// Alert that they're muted
 
 	log.Printf("[%v #%v] Logged in (%v users online).\n", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil
@@ -330,6 +319,27 @@ func removePreviousLoginSession(user *db.User) error {
 
 	sessions.SendPacketToUser(packets.NewServerNotificationError("You are being logged out due to logging in from a different location"), u)
 	utils.CloseConnectionDelayed(u.Conn)
+	return nil
+}
+
+// Sends initial packets to log the user in
+func sendLoginPackets(user *sessions.User) error {
+	sessions.SendPacketToUser(packets.NewServerLoginReply(user), user)
+	sessions.SendPacketToUser(packets.NewServerUsersOnline(sessions.GetOnlineUserIds()), user)
+	sessions.SendPacketToUser(packets.NewServerUserInfo(sessions.GetSerializedOnlineUsers()), user)
+
+	friends, err := db.GetUserFriendsList(user.Info.Id)
+
+	if err != nil {
+		return err
+	}
+
+	sessions.SendPacketToUser(packets.NewServerFriendsList(friends), user)
+
+	// Twitch Connection
+	// Join Chat Channels
+	// Broadcast Online Status
+	// Alert that they're muted
 	return nil
 }
 
