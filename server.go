@@ -113,16 +113,10 @@ func (s *Server) onTextMessage(conn net.Conn, msg []byte) {
 
 // Handles when a connection has been closed
 func (s *Server) onClose(conn net.Conn) error {
-	user := sessions.GetUserByConnection(conn)
+	err := handlers.HandleLogout(conn)
 
-	if user != nil {
-		err := sessions.RemoveUser(user)
-
-		if err != nil {
-			return err
-		}
-
-		log.Printf("[%v #%v] Logged out (%v users online).\n", user.Info.Username, user.Info.Id, sessions.GetOnlineUserCount())
+	if err != nil {
+		return err
 	}
 
 	return nil
