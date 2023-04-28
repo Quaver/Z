@@ -104,6 +104,20 @@ func GetOnlineUserIds() []int {
 	return ids
 }
 
+// GetOnlineUsers Returns a slice of users
+func GetOnlineUsers() []*User {
+	userMutex.Lock()
+	defer userMutex.Unlock()
+
+	users := make([]*User, 0)
+
+	for _, user := range userIdToUser {
+		users = append(users, user)
+	}
+
+	return users
+}
+
 // GetSerializedOnlineUsers Returns a list of all online users serialized
 func GetSerializedOnlineUsers() []*PacketUser {
 	userMutex.Lock()

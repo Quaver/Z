@@ -38,3 +38,10 @@ func SendPacketToUsers(data interface{}, users ...*User) {
 		SendPacketToUser(data, user)
 	}
 }
+
+// SendPacketToAllUsers Sends a packet to every online user
+func SendPacketToAllUsers(data interface{}) {
+	for _, user := range GetOnlineUsers() {
+		SendPacketToUser(data, user)
+	}
+}
