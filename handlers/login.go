@@ -131,6 +131,20 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	sessions.SendPacketToUser(packets.NewServerLoginReply(sessionUser), sessionUser)
 	sessions.SendPacketToUser(packets.NewServerUsersOnline(sessions.GetOnlineUserIds()), sessionUser)
 	sessions.SendPacketToUser(packets.NewServerUserInfo(sessions.GetSerializedOnlineUsers()), sessionUser)
+
+	friends, err := db.GetUserFriendsList(sessionUser.Info.Id)
+
+	if err != nil {
+		return err
+	}
+	
+	sessions.SendPacketToUser(packets.NewServerFriendsList(friends), sessionUser)
+
+	// Twitch Connection
+	// Join Chat Channels
+	// Broadcast Online Status
+	// Alert that they're muted
+
 	log.Printf("[%v #%v] Logged in (%v users online).\n", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil
 }
