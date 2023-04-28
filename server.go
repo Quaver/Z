@@ -1,7 +1,9 @@
 package main
 
 import (
+	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/handlers"
+	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
@@ -11,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Server struct {
@@ -41,6 +44,7 @@ func (s *Server) Start() {
 	}
 
 	clearPreviousSessions()
+	startBackgroundWorker()
 
 	log.Printf("Starting server on port: %v\n", s.Port)
 
@@ -135,4 +139,29 @@ func clearPreviousSessions() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// Handles all operations that happen in the background at intervals to keep the server clean.
+func startBackgroundWorker() {
+	go func() {
+		for {
+			users := sessions.GetOnlineUsers()
+
+			for _, user := range users {
+				// Disregard bot users
+				if common.HasUserGroup(user.Info.UserGroups, common.UserGroupBot) {
+					continue
+				}
+
+				// Ping the user periodically
+				if time.Now().UnixMilli()-user.LastPingTimestamp >= 40_000 {
+					sessions.SendPacketToUser(packets.NewServerPing(), user)
+					user.LastPingTimestamp = time.Now().UnixMilli()
+				}
+
+			}
+
+			time.Sleep(500 * time.Millisecond)
+		}
+	}()
 }

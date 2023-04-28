@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 )
 
 type User struct {
@@ -24,6 +25,9 @@ type User struct {
 
 	// Player statistics from the database
 	Stats map[common.Mode]*db.UserStats
+
+	// The last time the user was pinged
+	LastPingTimestamp int64
 }
 
 type PacketUser struct {
@@ -38,11 +42,12 @@ type PacketUser struct {
 // NewUser Creates a new user session struct object
 func NewUser(conn net.Conn, user *db.User) *User {
 	return &User{
-		Conn:  conn,
-		Token: utils.GenerateRandomString(64),
-		Info:  user,
-		Mutex: &sync.Mutex{},
-		Stats: map[common.Mode]*db.UserStats{},
+		Conn:              conn,
+		Token:             utils.GenerateRandomString(64),
+		Info:              user,
+		Mutex:             &sync.Mutex{},
+		Stats:             map[common.Mode]*db.UserStats{},
+		LastPingTimestamp: time.Now().UnixMilli(),
 	}
 }
 
