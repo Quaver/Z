@@ -31,6 +31,9 @@ type User struct {
 
 	// The last time the user sent a successful pong
 	LastPongTimestamp int64
+
+	// The last detected processes that were discovered on the user
+	LastDetectedProcesses []int
 }
 
 type PacketUser struct {
