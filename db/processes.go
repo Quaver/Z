@@ -3,6 +3,7 @@ package db
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"strings"
 )
 
 type Process struct {
@@ -12,7 +13,7 @@ type Process struct {
 
 // GetMD5 Returns an MD5 of Process.Name
 func (p *Process) GetMD5() string {
-	hash := md5.Sum([]byte(p.Name))
+	hash := md5.Sum([]byte(strings.ToLower(p.Name)))
 	return hex.EncodeToString(hash[:])
 }
 
