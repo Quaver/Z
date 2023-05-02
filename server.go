@@ -112,7 +112,7 @@ func (s *Server) Start() {
 
 // Handles new incoming text messages
 func (s *Server) onTextMessage(conn net.Conn, msg []byte) {
-	log.Printf("Text Messsage: %v\n", string(msg))
+	handlers.HandleIncomingPackets(conn, string(msg))
 }
 
 // Handles when a connection has been closed
