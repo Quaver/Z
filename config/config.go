@@ -29,6 +29,10 @@ type Configuration struct {
 		AppId        int    `json:"app_id"`
 		PublisherKey string `json:"publisher_key"`
 	} `json:"steam"`
+
+	DiscordWebhooks struct {
+		AntiCheat string `json:"anti_cheat"`
+	} `json:"discord_webhooks"`
 }
 
 var Instance *Configuration

@@ -69,7 +69,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	}
 
 	if !user.Allowed {
-		sessions.SendPacketToConnection(packets.NewServerNotificationError("You are banned. You can appeal your ban at: discord.gg/quaver"), conn)
+		sessions.SendPacketToConnection(packets.NewServerNotificationError("You are banned. You can appeal your ban at: webhooks.gg/quaver"), conn)
 		utils.CloseConnectionDelayed(conn)
 		log.Printf("[%v - #%v] Attempted to login, but they are banned\n", user.Username, user.Id)
 		return nil
