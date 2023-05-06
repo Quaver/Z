@@ -80,8 +80,8 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			if !canUserUseCustomClient(user) {
-				handleInvalidClientUsage(conn, user, data.Client)
+			if !canUserUseCustomGameBuild(user) {
+				handleCustomGameBuildUsage(conn, user, data.Client)
 				return nil
 			}
 		} else {
@@ -375,7 +375,7 @@ func logFailedLogin(conn net.Conn, err error) error {
 }
 
 // Returns if a user is eligible to use a custom client
-func canUserUseCustomClient(user *db.User) bool {
+func canUserUseCustomGameBuild(user *db.User) bool {
 	return common.HasUserGroup(user.UserGroups, common.UserGroupSwan) ||
 		common.HasUserGroup(user.UserGroups, common.UserGroupDeveloper) ||
 		common.HasUserGroup(user.UserGroups, common.UserGroupAdmin) ||
@@ -383,10 +383,10 @@ func canUserUseCustomClient(user *db.User) bool {
 }
 
 // Sends webhook and disconnects a user for invalid client usage
-func handleInvalidClientUsage(conn net.Conn, user *db.User, client string) {
+func handleCustomGameBuildUsage(conn net.Conn, user *db.User, client string) {
 	clientStr := fmt.Sprintf("```json\n%v```", formatInvalidGameBuild(client))
-	webhooks.SendAntiCheat(user.Username, user.GetProfileUrl(), user.AvatarUrl, "Invalid Client", clientStr)
+	webhooks.SendAntiCheat(user.Username, user.GetProfileUrl(), user.AvatarUrl, "Invalid Game Build", clientStr)
 
 	utils.CloseConnection(conn)
-	log.Printf("[%v - #%v] Attempted to login, but is using an invalid client: \n", user.Username, user.Id)
+	log.Printf("[%v - #%v] Attempted to login, but is using an game build: \n", user.Username, user.Id)
 }
