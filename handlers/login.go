@@ -10,6 +10,7 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
+	"example.com/Quaver/Z/webhooks"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"log"
@@ -80,9 +81,11 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			if !canUserUseCustomClient(user) {
-				// TODO: Ban & send webhook
-				log.Printf("[%v - #%v] Attempted to login, but is using an invalid client\n", user.Username, user.Id)
+				clientStr := fmt.Sprintf("```json\n%v```", formatInvalidGameBuild(data.Client))
+				webhooks.SendAntiCheat(user.Username, user.GetProfileUrl(), user.AvatarUrl, "Invalid Client", clientStr)
+
 				utils.CloseConnection(conn)
+				log.Printf("[%v - #%v] Attempted to login, but is using an invalid client: \n", user.Username, user.Id)
 				return nil
 			}
 		} else {
@@ -288,6 +291,33 @@ func verifyGameBuild(data *LoginData) error {
 	}
 
 	return nil
+}
+
+// Formats an invalid client build into a readable json
+func formatInvalidGameBuild(client string) string {
+	split := strings.Split(client, "|")
+
+	if len(split) != 5 {
+		return client
+	}
+
+	data, err := json.MarshalIndent(struct {
+		QuaverAPIDll          string `json:"quaver_api_dll"`
+		QuaverServerClientDll string `json:"quaver_server_client_dll"`
+		QuaverServerCommonDll string `json:"quaver_server_common_dll"`
+		QuaverSharedDll       string `json:"quaver_shared_dll"`
+	}{
+		QuaverAPIDll:          split[1],
+		QuaverServerClientDll: split[2],
+		QuaverServerCommonDll: split[3],
+		QuaverSharedDll:       split[4],
+	}, "", "    ")
+
+	if err != nil {
+		return client
+	}
+
+	return string(data)
 }
 
 // Updates the avatar for the user and sets the new one.
