@@ -47,7 +47,7 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	user.LastDetectedProcesses = detected
 	webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.GetProfileUrl(), user.Info.AvatarUrl, user.LastDetectedProcesses)
 
-	log.Printf("[%v - #%v] Detected %v flagged process \n", user.Info.Username, user.Info.Id, len(detected))
+	log.Printf("[%v - #%v] Detected %v flagged processes \n", user.Info.Username, user.Info.Id, len(detected))
 }
 
 // Goes through both the db processes and packet processes and checks if any are found

@@ -32,19 +32,13 @@ func Initialize() {
 	log.Printf("Initialized anti-cheat webhook: %v\n", antiCheat.ID().String())
 }
 
-func SendAntiCheatProcessLog(username string, url string, icon string, processes []string) {
-	formatted := ""
-
-	for i, proc := range processes {
-		formatted += fmt.Sprintf("**%v. %v**\n", i+1, proc)
-	}
-
+func SendAntiCheat(username string, url string, icon string, reason string, text string) {
 	embed := discord.NewEmbedBuilder().
 		SetAuthor(username, url, icon).
 		SetDescription(antiCheatDescription).
 		SetFields(discord.EmbedField{
-			Name:  "Detected Processes",
-			Value: formatted,
+			Name:  reason,
+			Value: text,
 		}).
 		SetThumbnail(quaverLogo).
 		SetFooter("Quaver", quaverLogo).
@@ -55,6 +49,16 @@ func SendAntiCheatProcessLog(username string, url string, icon string, processes
 	_, err := antiCheat.CreateEmbeds([]discord.Embed{embed})
 
 	if err != nil {
-		log.Printf("Failed to send anti-cheat process log webhook: %v\n", err)
+		log.Printf("Failed to send anti-cheat webhook: %v\n", err)
 	}
+}
+
+func SendAntiCheatProcessLog(username string, url string, icon string, processes []string) {
+	formatted := ""
+
+	for i, proc := range processes {
+		formatted += fmt.Sprintf("**%v. %v**\n", i+1, proc)
+	}
+
+	SendAntiCheat(username, url, icon, "Detected Processes", formatted)
 }
