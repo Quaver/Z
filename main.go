@@ -3,6 +3,7 @@ package main
 import (
 	"example.com/Quaver/Z/config"
 	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/webhooks"
 )
 
 func main() {
@@ -14,6 +15,7 @@ func main() {
 
 	db.InitializeSQL()
 	db.InitializeRedis()
+	webhooks.Initialize()
 
 	s := NewServer(config.Instance.Server.Port)
 	s.Start()
