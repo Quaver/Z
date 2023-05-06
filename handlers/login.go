@@ -81,11 +81,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			if !canUserUseCustomClient(user) {
-				clientStr := fmt.Sprintf("```json\n%v```", formatInvalidGameBuild(data.Client))
-				webhooks.SendAntiCheat(user.Username, user.GetProfileUrl(), user.AvatarUrl, "Invalid Client", clientStr)
-
-				utils.CloseConnection(conn)
-				log.Printf("[%v - #%v] Attempted to login, but is using an invalid client: \n", user.Username, user.Id)
+				handleInvalidClientUsage(conn, user, data.Client)
 				return nil
 			}
 		} else {
@@ -384,4 +380,13 @@ func canUserUseCustomClient(user *db.User) bool {
 		common.HasUserGroup(user.UserGroups, common.UserGroupDeveloper) ||
 		common.HasUserGroup(user.UserGroups, common.UserGroupAdmin) ||
 		common.HasUserGroup(user.UserGroups, common.UserGroupContributor)
+}
+
+// Sends webhook and disconnects a user for invalid client usage
+func handleInvalidClientUsage(conn net.Conn, user *db.User, client string) {
+	clientStr := fmt.Sprintf("```json\n%v```", formatInvalidGameBuild(client))
+	webhooks.SendAntiCheat(user.Username, user.GetProfileUrl(), user.AvatarUrl, "Invalid Client", clientStr)
+
+	utils.CloseConnection(conn)
+	log.Printf("[%v - #%v] Attempted to login, but is using an invalid client: \n", user.Username, user.Id)
 }
