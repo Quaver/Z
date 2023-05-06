@@ -4,6 +4,7 @@ import (
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/webhooks"
 	"golang.org/x/exp/slices"
 	"log"
 	"time"
@@ -20,6 +21,7 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	packetProcs := packet.ParseProcessList()
 
 	if packetProcs == nil || len(packetProcs) == 0 {
+		webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.GetProfileUrl(), user.Info.AvatarUrl, []string{"NO PROCESSES PROVIDED"})
 		log.Printf("[%v - %v] Sent a Pong packet without any process list\n", user.Info.Id, user.Info.Username)
 		return
 	}
@@ -34,7 +36,7 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	detected := detectProcesses(dbProcs, packetProcs)
 
 	if len(detected) == 0 {
-		user.LastDetectedProcesses = []int{}
+		user.LastDetectedProcesses = []string{}
 		return
 	}
 
@@ -43,12 +45,14 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	}
 
 	user.LastDetectedProcesses = detected
-	log.Printf("%v %v provided: %v processes | %v detected\n", user.Info.Username, user.Info.Id, len(packetProcs), len(detected))
+	webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.GetProfileUrl(), user.Info.AvatarUrl, user.LastDetectedProcesses)
+
+	log.Printf("[%v - #%v] Detected %v flagged process \n", user.Info.Username, user.Info.Id, len(detected))
 }
 
 // Goes through both the db processes and packet processes and checks if any are found
-func detectProcesses(dbProcesses []*db.Process, packetProcesses []packets.Process) []int {
-	detectedIds := make([]int, 0)
+func detectProcesses(dbProcesses []*db.Process, packetProcesses []packets.Process) []string {
+	detected := make([]string, 0)
 
 	for _, dbProcess := range dbProcesses {
 		md5 := dbProcess.GetMD5()
@@ -58,12 +62,12 @@ func detectProcesses(dbProcesses []*db.Process, packetProcesses []packets.Proces
 				continue
 			}
 
-			if !slices.Contains(detectedIds, dbProcess.Id) {
-				detectedIds = append(detectedIds, dbProcess.Id)
+			if !slices.Contains(detected, dbProcess.Name) {
+				detected = append(detected, dbProcess.Name)
 				break
 			}
 		}
 	}
 
-	return detectedIds
+	return detected
 }

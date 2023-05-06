@@ -33,7 +33,7 @@ type User struct {
 	LastPongTimestamp int64
 
 	// The last detected processes that were discovered on the user
-	LastDetectedProcesses []int
+	LastDetectedProcesses []string
 }
 
 type PacketUser struct {
