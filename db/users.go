@@ -23,6 +23,11 @@ type User struct {
 	TwitchUsername sql.NullString    `db:"twitch_username"`
 }
 
+// GetProfileUrl Returns the full profile url for the user
+func (u *User) GetProfileUrl() string {
+	return fmt.Sprintf("https://quavergame.com/u/%v", u.Id)
+}
+
 // GetUserBySteamId Retrieves a user from the database by their Steam id
 func GetUserBySteamId(steamId string) (*User, error) {
 	query := "SELECT id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username FROM users WHERE steam_id = ? LIMIT 1"
