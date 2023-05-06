@@ -28,6 +28,8 @@ func Initialize() {
 	if err != nil {
 		panic(err)
 	}
+
+	log.Printf("Initialized anti-cheat webhook: %v\n", antiCheat.ID().String())
 }
 
 func SendAntiCheatProcessLog(username string, url string, icon string, processes []string) {
