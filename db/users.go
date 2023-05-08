@@ -25,7 +25,7 @@ type User struct {
 
 // GetProfileUrl Returns the full profile url for the user
 func (u *User) GetProfileUrl() string {
-	return fmt.Sprintf("https://quavergame.com/u/%v", u.Id)
+	return fmt.Sprintf("https://quavergame.com/user/%v", u.Id)
 }
 
 // GetUserBySteamId Retrieves a user from the database by their Steam id
