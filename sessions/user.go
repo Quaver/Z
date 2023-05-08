@@ -27,13 +27,13 @@ type User struct {
 	stats map[common.Mode]*db.UserStats
 
 	// The last time the user was pinged
-	LastPingTimestamp int64
+	lastPingTimestamp int64
 
 	// The last time the user sent a successful pong
-	LastPongTimestamp int64
+	lastPongTimestamp int64
 
 	// The last detected processes that were discovered on the user
-	LastDetectedProcesses []string
+	lastDetectedProcesses []string
 }
 
 type PacketUser struct {
@@ -53,8 +53,8 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		Info:              user,
 		mutex:             &sync.Mutex{},
 		stats:             map[common.Mode]*db.UserStats{},
-		LastPingTimestamp: time.Now().UnixMilli(),
-		LastPongTimestamp: time.Now().UnixMilli(),
+		lastPingTimestamp: time.Now().UnixMilli(),
+		lastPongTimestamp: time.Now().UnixMilli(),
 	}
 }
 
@@ -83,6 +83,54 @@ func (u *User) GetStats() map[common.Mode]*db.UserStats {
 	defer u.mutex.Unlock()
 
 	return u.stats
+}
+
+// GetLastPingTimestamp Retrieves the last ping timestamp
+func (u *User) GetLastPingTimestamp() int64 {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.lastPingTimestamp
+}
+
+// SetLastPingTimestamp Sets the last ping timestamp to the current time
+func (u *User) SetLastPingTimestamp() {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	u.lastPingTimestamp = time.Now().UnixMilli()
+}
+
+// GetLastPongTimestamp Retrieves the last pong timestamp
+func (u *User) GetLastPongTimestamp() int64 {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.lastPongTimestamp
+}
+
+// SetLastPongTimestamp Sets the last pong timestamp to the current time
+func (u *User) SetLastPongTimestamp() {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	u.lastPongTimestamp = time.Now().UnixMilli()
+}
+
+// GetLastDetectedProcesses Gets the last detected processes for the user
+func (u *User) GetLastDetectedProcesses() []string {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.lastDetectedProcesses
+}
+
+// SetLastDetectedProcesses Sets the last detected processes for the user
+func (u *User) SetLastDetectedProcesses(processes []string) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	u.lastDetectedProcesses = processes
 }
 
 // SerializeForPacket Serializes the user to be used in a packet

@@ -154,13 +154,13 @@ func startBackgroundWorker() {
 				}
 
 				// Ping the user periodically
-				if time.Now().UnixMilli()-user.LastPingTimestamp >= 40_000 {
+				if time.Now().UnixMilli()-user.GetLastPingTimestamp() >= 40_000 {
 					sessions.SendPacketToUser(packets.NewServerPing(), user)
-					user.LastPingTimestamp = time.Now().UnixMilli()
+					user.SetLastPingTimestamp()
 				}
 
 				// User hasn't responded to pings in a while, so disconnect them
-				if time.Now().UnixMilli()-user.LastPongTimestamp >= 120_000 {
+				if time.Now().UnixMilli()-user.GetLastPongTimestamp() >= 120_000 {
 					err := handlers.HandleLogout(user.Conn)
 
 					if err != nil {

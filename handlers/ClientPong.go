@@ -7,7 +7,6 @@ import (
 	"example.com/Quaver/Z/webhooks"
 	"golang.org/x/exp/slices"
 	"log"
-	"time"
 )
 
 // Handles when a user sends a pong packet
@@ -16,7 +15,7 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 		return
 	}
 
-	user.LastPongTimestamp = time.Now().UnixMilli()
+	user.SetLastPongTimestamp()
 
 	packetProcs := packet.ParseProcessList()
 
@@ -36,16 +35,16 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	detected := detectProcesses(dbProcs, packetProcs)
 
 	if len(detected) == 0 {
-		user.LastDetectedProcesses = []string{}
+		user.SetLastDetectedProcesses([]string{})
 		return
 	}
 
-	if slices.Equal(detected, user.LastDetectedProcesses) {
+	if slices.Equal(detected, user.GetLastDetectedProcesses()) {
 		return
 	}
 
-	user.LastDetectedProcesses = detected
-	webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.Id, user.Info.GetProfileUrl(), user.Info.AvatarUrl, user.LastDetectedProcesses)
+	user.SetLastDetectedProcesses(detected)
+	webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.Id, user.Info.GetProfileUrl(), user.Info.AvatarUrl, detected)
 
 	log.Printf("[%v - #%v] Detected %v flagged processes \n", user.Info.Username, user.Info.Id, len(detected))
 }
