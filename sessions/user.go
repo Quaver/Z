@@ -58,8 +58,16 @@ func NewUser(conn net.Conn, user *db.User) *User {
 	}
 }
 
-// UpdateStats Updates the statistics for the user
-func (u *User) UpdateStats() error {
+// GetStats Retrieves the stats for the user
+func (u *User) GetStats() map[common.Mode]*db.UserStats {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.stats
+}
+
+// SetStats Updates the statistics for the user
+func (u *User) SetStats() error {
 	u.mutex.Lock()
 	defer u.mutex.Unlock()
 
@@ -75,14 +83,6 @@ func (u *User) UpdateStats() error {
 	}
 
 	return nil
-}
-
-// GetStats Retrieves the stats for the user
-func (u *User) GetStats() map[common.Mode]*db.UserStats {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
-
-	return u.stats
 }
 
 // GetLastPingTimestamp Retrieves the last ping timestamp

@@ -115,7 +115,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 
 	sessionUser := sessions.NewUser(conn, user)
 
-	err = sessionUser.UpdateStats()
+	err = sessionUser.SetStats()
 
 	if err != nil {
 		return err

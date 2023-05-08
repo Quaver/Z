@@ -19,7 +19,7 @@ func TestPopulateUserStats(t *testing.T) {
 
 	user := NewUser(nil, &db.User{Id: 1})
 
-	err := user.UpdateStats()
+	err := user.SetStats()
 
 	if err != nil {
 		t.Fatal(err)
