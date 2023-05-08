@@ -22,7 +22,7 @@ func NewServerLoginReply(user *sessions.User) *ServerLoginReply {
 	return &ServerLoginReply{
 		Packet:       Packet{Id: PacketIdServerLoginReply},
 		User:         user.SerializeForPacket(),
-		SessionToken: user.Token,
+		SessionToken: user.GetToken(),
 		Stats:        statSlice,
 	}
 }

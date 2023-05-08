@@ -15,7 +15,7 @@ type User struct {
 	Conn net.Conn
 
 	// The token used to identify the user for requests.
-	Token string
+	token string
 
 	// All user table information from the database
 	Info *db.User
@@ -49,13 +49,18 @@ type PacketUser struct {
 func NewUser(conn net.Conn, user *db.User) *User {
 	return &User{
 		Conn:              conn,
-		Token:             utils.GenerateRandomString(64),
+		token:             utils.GenerateRandomString(64),
 		Info:              user,
 		mutex:             &sync.Mutex{},
 		stats:             map[common.Mode]*db.UserStats{},
 		lastPingTimestamp: time.Now().UnixMilli(),
 		lastPongTimestamp: time.Now().UnixMilli(),
 	}
+}
+
+// GetToken Returns the user token
+func (u *User) GetToken() string {
+	return u.token
 }
 
 // GetStats Retrieves the stats for the user
@@ -150,5 +155,5 @@ func (u *User) SerializeForPacket() *PacketUser {
 
 // Retrieves the Redis key for the user's session
 func (u *User) getRedisSessionKey() string {
-	return fmt.Sprintf("quaver:server:session:%v", u.Token)
+	return fmt.Sprintf("quaver:server:session:%v", u.token)
 }

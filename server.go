@@ -139,6 +139,8 @@ func clearPreviousSessions() {
 	if err != nil {
 		panic(err)
 	}
+
+	log.Println("Cleared previous redis sessions")
 }
 
 // Handles all operations that happen in the background at intervals to keep the server clean.
