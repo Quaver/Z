@@ -15,6 +15,7 @@ func TestPopulateUserStats(t *testing.T) {
 	}
 
 	db.InitializeSQL()
+	db.InitializeRedis()
 
 	user := NewUser(nil, &db.User{Id: 1})
 
@@ -24,8 +25,10 @@ func TestPopulateUserStats(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(user.Stats) != int(common.ModeEnumMaxValue)-1 {
-		t.Fatalf("expected (%v) mode stats. only fetched %v", int(common.ModeEnumMaxValue)-1, len(user.Stats))
+	stats := user.GetStats()
+
+	if len(stats) != int(common.ModeEnumMaxValue)-1 {
+		t.Fatalf("expected (%v) mode stats. only fetched %v", int(common.ModeEnumMaxValue)-1, len(stats))
 	}
 
 	db.CloseSQLConnection()

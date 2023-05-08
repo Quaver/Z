@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	// Mutex used for thread-safe access to users
+	// mutex used for thread-safe access to users
 	userMutex = &sync.Mutex{}
 
 	// A map to users with the key being their user id

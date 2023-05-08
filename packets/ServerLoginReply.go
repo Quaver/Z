@@ -15,7 +15,7 @@ type ServerLoginReply struct {
 func NewServerLoginReply(user *sessions.User) *ServerLoginReply {
 	statSlice := make([]*db.PacketUserStats, 0)
 
-	for _, value := range user.Stats {
+	for _, value := range user.GetStats() {
 		statSlice = append(statSlice, value.SerializeForPacket())
 	}
 

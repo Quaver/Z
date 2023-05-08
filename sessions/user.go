@@ -20,11 +20,11 @@ type User struct {
 	// All user table information from the database
 	Info *db.User
 
-	// Mutex for all operations regarding changes in the user
-	Mutex *sync.Mutex
+	// mutex for all operations regarding changes in the user
+	mutex *sync.Mutex
 
 	// Player statistics from the database
-	Stats map[common.Mode]*db.UserStats
+	stats map[common.Mode]*db.UserStats
 
 	// The last time the user was pinged
 	LastPingTimestamp int64
@@ -51,8 +51,8 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		Conn:              conn,
 		Token:             utils.GenerateRandomString(64),
 		Info:              user,
-		Mutex:             &sync.Mutex{},
-		Stats:             map[common.Mode]*db.UserStats{},
+		mutex:             &sync.Mutex{},
+		stats:             map[common.Mode]*db.UserStats{},
 		LastPingTimestamp: time.Now().UnixMilli(),
 		LastPongTimestamp: time.Now().UnixMilli(),
 	}
@@ -60,8 +60,8 @@ func NewUser(conn net.Conn, user *db.User) *User {
 
 // UpdateStats Updates the statistics for the user
 func (u *User) UpdateStats() error {
-	u.Mutex.Lock()
-	defer u.Mutex.Unlock()
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
 
 	for i := 1; i < int(common.ModeEnumMaxValue); i++ {
 		mode := common.Mode(i)
@@ -71,14 +71,25 @@ func (u *User) UpdateStats() error {
 			return err
 		}
 
-		u.Stats[mode] = stats
+		u.stats[mode] = stats
 	}
 
 	return nil
 }
 
+// GetStats Retrieves the stats for the user
+func (u *User) GetStats() map[common.Mode]*db.UserStats {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.stats
+}
+
 // SerializeForPacket Serializes the user to be used in a packet
 func (u *User) SerializeForPacket() *PacketUser {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
 	return &PacketUser{
 		Id:          u.Info.Id,
 		SteamId:     u.Info.SteamId,
