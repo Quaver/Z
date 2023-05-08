@@ -327,7 +327,7 @@ func canUserUseCustomGameBuild(user *db.User) bool {
 // Sends webhook and disconnects a user for invalid client usage
 func handleCustomGameBuildUsage(conn net.Conn, user *db.User, client string) {
 	clientStr := fmt.Sprintf("```json\n%v```", formatCustomGameBuild(client))
-	webhooks.SendAntiCheat(user.Username, user.GetProfileUrl(), user.AvatarUrl, "Invalid Game Build", clientStr)
+	webhooks.SendAntiCheat(user.Username, user.Id, user.GetProfileUrl(), user.AvatarUrl, "Invalid Game Build", clientStr)
 
 	utils.CloseConnection(conn)
 	log.Printf("[%v - #%v] Attempted to login, but is using an game build: \n", user.Username, user.Id)

@@ -32,13 +32,21 @@ func Initialize() {
 	log.Printf("Initialized anti-cheat webhook: %v\n", antiCheat.ID().String())
 }
 
-func SendAntiCheat(username string, url string, icon string, reason string, text string) {
+func SendAntiCheat(username string, userId int, url string, icon string, reason string, text string) {
+	viewProfile := fmt.Sprintf("[View Profile](%v)", url)
+	banUser := fmt.Sprintf("[Ban User](https://a.quavergame.com/ban/%v)", userId)
+	editUser := fmt.Sprintf("[Edit User](https://a.quavergame.com/edituser/%v)", userId)
+
 	embed := discord.NewEmbedBuilder().
 		SetAuthor(username, url, icon).
 		SetDescription(antiCheatDescription).
 		SetFields(discord.EmbedField{
 			Name:  reason,
 			Value: text,
+		}, discord.EmbedField{
+			Name:   "Admin Actions",
+			Value:  fmt.Sprintf("%v | %v | %v", viewProfile, banUser, editUser),
+			Inline: nil,
 		}).
 		SetThumbnail(quaverLogo).
 		SetFooter("Quaver", quaverLogo).
@@ -53,12 +61,12 @@ func SendAntiCheat(username string, url string, icon string, reason string, text
 	}
 }
 
-func SendAntiCheatProcessLog(username string, url string, icon string, processes []string) {
+func SendAntiCheatProcessLog(username string, userId int, url string, icon string, processes []string) {
 	formatted := ""
 
 	for i, proc := range processes {
 		formatted += fmt.Sprintf("**%v. %v**\n", i+1, proc)
 	}
 
-	SendAntiCheat(username, url, icon, "Detected Processes", formatted)
+	SendAntiCheat(username, userId, url, icon, "Detected Processes", formatted)
 }

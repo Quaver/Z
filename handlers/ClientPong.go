@@ -21,7 +21,7 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	packetProcs := packet.ParseProcessList()
 
 	if packetProcs == nil || len(packetProcs) == 0 {
-		webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.GetProfileUrl(), user.Info.AvatarUrl, []string{"NO PROCESSES PROVIDED"})
+		webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.Id, user.Info.GetProfileUrl(), user.Info.AvatarUrl, []string{"NO PROCESSES PROVIDED"})
 		log.Printf("[%v - %v] Sent a Pong packet without any process list\n", user.Info.Id, user.Info.Username)
 		return
 	}
@@ -45,7 +45,7 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	}
 
 	user.LastDetectedProcesses = detected
-	webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.GetProfileUrl(), user.Info.AvatarUrl, user.LastDetectedProcesses)
+	webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.Id, user.Info.GetProfileUrl(), user.Info.AvatarUrl, user.LastDetectedProcesses)
 
 	log.Printf("[%v - #%v] Detected %v flagged processes \n", user.Info.Username, user.Info.Id, len(detected))
 }

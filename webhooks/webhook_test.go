@@ -24,7 +24,7 @@ func TestSendAntiCheat(t *testing.T) {
 
 	Initialize()
 
-	SendAntiCheatProcessLog("Test", "https://quavergame.com/user/Quaver", quaverLogo, []string{
+	SendAntiCheatProcessLog("Quaver", 11, "https://quavergame.com/user/Quaver", quaverLogo, []string{
 		"L33t H4x",
 		"h3ll0 1f ur r34d1ng",
 	})
