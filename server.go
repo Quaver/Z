@@ -140,6 +140,12 @@ func clearPreviousSessions() {
 		panic(err)
 	}
 
+	err = sessions.ClearRedisUserClientStatuses()
+
+	if err != nil {
+		panic(err)
+	}
+	
 	log.Println("Cleared previous redis sessions")
 }
 

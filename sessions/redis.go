@@ -19,17 +19,18 @@ func UpdateRedisOnlineUserCount() error {
 // ClearRedisUserTokens Clears all the user session tokens from Redis.
 // This should only be done once on server start.
 func ClearRedisUserTokens() error {
-	keys, err := db.Redis.Keys(db.RedisCtx, "quaver:server:session:*").Result()
+	err := clearRedisKeys("quaver:server:session:*")
 
 	if err != nil {
 		return err
 	}
 
-	if len(keys) == 0 {
-		return nil
-	}
+	return nil
+}
 
-	_, err = db.Redis.Del(db.RedisCtx, keys...).Result()
+// ClearRedisUserClientStatuses Clears all the client statuses from Redis
+func ClearRedisUserClientStatuses() error {
+	err := clearRedisKeys("quaver:server:user_status:*")
 
 	if err != nil {
 		return err
@@ -82,6 +83,27 @@ func addUserClientStatusToRedis(user *User) error {
 // Removes the user's client status from redis
 func removeUserClientStatusFromRedis(user *User) error {
 	_, err := db.Redis.Del(db.RedisCtx, user.getRedisClientStatusKey()).Result()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Clears a given pattern of redis keys from the database
+func clearRedisKeys(pattern string) error {
+	keys, err := db.Redis.Keys(db.RedisCtx, pattern).Result()
+
+	if err != nil {
+		return err
+	}
+
+	if len(keys) == 0 {
+		return nil
+	}
+
+	_, err = db.Redis.Del(db.RedisCtx, keys...).Result()
 
 	if err != nil {
 		return err
