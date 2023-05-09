@@ -3,6 +3,7 @@ package sessions
 import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/objects"
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"net"
@@ -34,6 +35,9 @@ type User struct {
 
 	// The last detected processes that were discovered on the user
 	lastDetectedProcesses []string
+
+	// The current client status of the user
+	status *objects.ClientStatus
 }
 
 type PacketUser struct {
@@ -55,6 +59,14 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		stats:             map[common.Mode]*db.UserStats{},
 		lastPingTimestamp: time.Now().UnixMilli(),
 		lastPongTimestamp: time.Now().UnixMilli(),
+		status: &objects.ClientStatus{
+			Status:    0,
+			MapId:     -1,
+			MapMd5:    "",
+			GameMode:  common.ModeKeys4,
+			Content:   "",
+			Modifiers: 0,
+		},
 	}
 }
 
@@ -136,6 +148,22 @@ func (u *User) SetLastDetectedProcesses(processes []string) {
 	defer u.mutex.Unlock()
 
 	u.lastDetectedProcesses = processes
+}
+
+// GetClientStatus Gets the current user client status
+func (u *User) GetClientStatus() *objects.ClientStatus {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.status
+}
+
+// SetClientStatus Sets the current user client status
+func (u *User) SetClientStatus(status *objects.ClientStatus) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	u.status = status
 }
 
 // SerializeForPacket Serializes the user to be used in a packet
