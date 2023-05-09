@@ -6,6 +6,7 @@ import (
 	"example.com/Quaver/Z/objects"
 	"example.com/Quaver/Z/utils"
 	"fmt"
+	"log"
 	"net"
 	"sync"
 	"time"
@@ -161,9 +162,14 @@ func (u *User) GetClientStatus() *objects.ClientStatus {
 // SetClientStatus Sets the current user client status
 func (u *User) SetClientStatus(status *objects.ClientStatus) {
 	u.mutex.Lock()
-	defer u.mutex.Unlock()
-
 	u.status = status
+	u.mutex.Unlock()
+
+	err := addUserClientStatusToRedis(u)
+
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 // SerializeForPacket Serializes the user to be used in a packet
@@ -181,7 +187,12 @@ func (u *User) SerializeForPacket() *PacketUser {
 	}
 }
 
-// Retrieves the Redis key for the user's session
+// Returns the Redis key for the user's session
 func (u *User) getRedisSessionKey() string {
 	return fmt.Sprintf("quaver:server:session:%v", u.token)
+}
+
+// Returns the Redis key for the user's client
+func (u *User) getRedisClientStatusKey() string {
+	return fmt.Sprintf("quaver:server:user_status:%v", u.Info.Id)
 }

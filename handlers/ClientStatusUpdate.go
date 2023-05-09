@@ -16,7 +16,5 @@ func handleClientStatusUpdate(user *sessions.User, packet *packets.ClientStatusU
 		return
 	}
 
-	// TODO: Save status in Redis
-
 	user.SetClientStatus(&packet.Status)
 }

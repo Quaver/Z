@@ -28,7 +28,7 @@ func ClearRedisUserTokens() error {
 	if len(keys) == 0 {
 		return nil
 	}
-	
+
 	_, err = db.Redis.Del(db.RedisCtx, keys...).Result()
 
 	if err != nil {
@@ -52,6 +52,36 @@ func addUserTokenToRedis(user *User) error {
 // Removes a user's session token from redis
 func removeUserTokenFromRedis(user *User) error {
 	_, err := db.Redis.Del(db.RedisCtx, user.getRedisSessionKey()).Result()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Adds a user's client status to redis
+func addUserClientStatusToRedis(user *User) error {
+	userStatus := user.GetClientStatus()
+
+	status := []string{
+		"s", strconv.Itoa(int(userStatus.Status)),
+		"m", strconv.Itoa(int(userStatus.GameMode)),
+		"c", userStatus.Content,
+	}
+
+	_, err := db.Redis.HSet(db.RedisCtx, user.getRedisClientStatusKey(), status).Result()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Removes the user's client status from redis
+func removeUserClientStatusFromRedis(user *User) error {
+	_, err := db.Redis.Del(db.RedisCtx, user.getRedisClientStatusKey()).Result()
 
 	if err != nil {
 		return err

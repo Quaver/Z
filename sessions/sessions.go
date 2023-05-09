@@ -55,6 +55,12 @@ func RemoveUser(user *User) error {
 		return err
 	}
 
+	err = removeUserClientStatusFromRedis(user)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
