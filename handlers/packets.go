@@ -30,6 +30,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientPong(user, unmarshalPacket[packets.ClientPong](msg))
 	case packets.PacketIdClientStatusUpdate:
 		handleClientStatusUpdate(user, unmarshalPacket[packets.ClientStatusUpdate](msg))
+	case packets.PacketIdClientRequestUserInfo:
+		handleClientRequestUserInfo(user, unmarshalPacket[packets.ClientRequestUserInfo](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}
