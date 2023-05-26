@@ -1,19 +1,17 @@
 package chat
 
 import (
-	"example.com/Quaver/Z/sessions"
 	"github.com/disgoorg/disgo/webhook"
 	"log"
 )
 
 type Channel struct {
-	Name           string           `json:"name"`
-	Description    string           `json:"description"`
-	AdminOnly      bool             `json:"admin_only"`
-	AutoJoin       bool             `json:"auto_join"`
-	DiscordWebhook string           `json:"discord_webhook"`
-	Participants   []*sessions.User `json:"-"`
-	WebhookClient  webhook.Client   `json:"-"`
+	Name           string         `json:"name"`
+	Description    string         `json:"description"`
+	AdminOnly      bool           `json:"admin_only"`
+	AutoJoin       bool           `json:"auto_join"`
+	DiscordWebhook string         `json:"discord_webhook"`
+	WebhookClient  webhook.Client `json:"-"`
 }
 
 // NewChannel Creates a new chat channel instance
@@ -24,7 +22,6 @@ func NewChannel(name string, description string, adminOnly bool, autoJoin bool, 
 		AdminOnly:      adminOnly,
 		AutoJoin:       autoJoin,
 		DiscordWebhook: discordWebhook,
-		Participants:   []*sessions.User{},
 		WebhookClient:  nil,
 	}
 

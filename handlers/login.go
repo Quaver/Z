@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
 	"example.com/Quaver/Z/db"
@@ -381,9 +382,18 @@ func sendLoginPackets(user *sessions.User) error {
 	sessions.SendPacketToUser(packets.NewServerTwitchConnection(user.Info.TwitchUsername.String), user)
 	sessions.SendPacketToAllUsers(packets.NewServerUserConnected(user.SerializeForPacket()))
 
-	// Join Chat Channels
-	// Alert that they're muted
+	joinChatChannels(user)
 	return nil
+}
+
+// Joins an available chat channel
+func joinChatChannels(user *sessions.User) {
+	channels := chat.GetAvailableChannels(user.Info.UserGroups)
+
+	for _, channel := range channels {
+		sessions.SendPacketToUser(packets.NewServerAvailableChatChannel(channel.Name, channel.Description), user)
+		// TODO: Join chat channel
+	}
 }
 
 // Logs a generic login failure
