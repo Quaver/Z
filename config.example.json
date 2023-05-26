@@ -19,5 +19,21 @@
   },
   "discord_webhooks": {
     "anti_cheat": ""
-  }
+  },
+  "chat_channels": [
+    {
+      "name": "#admin",
+      "description": "Super secret channel for the evil dictators",
+      "admin_only": true,
+      "auto_join": true,
+      "discord_webhook": ""
+    },
+    {
+      "name": "#quaver",
+      "description": "General discussion about Quaver",
+      "admin_only": false,
+      "auto_join": true,
+      "discord_webhook": ""
+    }
+  ]
 }

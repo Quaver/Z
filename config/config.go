@@ -33,6 +33,14 @@ type Configuration struct {
 	DiscordWebhooks struct {
 		AntiCheat string `json:"anti_cheat"`
 	} `json:"discord_webhooks"`
+
+	ChatChannels []struct {
+		Name           string `json:"name"`
+		Description    string `json:"description"`
+		AdminOnly      bool   `json:"admin_only"`
+		AutoJoin       bool   `json:"auto_join"`
+		DiscordWebhook string `json:"discord_webhook"`
+	} `json:"chat_channels"`
 }
 
 var Instance *Configuration
