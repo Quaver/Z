@@ -18,3 +18,14 @@ const (
 func HasUserGroup(groupsCombo UserGroups, group UserGroups) bool {
 	return groupsCombo&group != 0
 }
+
+// HasAnyUserGroup Returns if a combination of group contains any of a slice of groups
+func HasAnyUserGroup(groupsCombo UserGroups, groups []UserGroups) bool {
+	for _, group := range groups {
+		if HasUserGroup(groupsCombo, group) {
+			return true
+		}
+	}
+
+	return false
+}
