@@ -2,6 +2,7 @@ package chat
 
 import (
 	"example.com/Quaver/Z/config"
+	"log"
 	"sync"
 )
 
@@ -26,6 +27,7 @@ func addChannel(channel *Channel) {
 	defer mutex.Unlock()
 
 	channels[channel.Name] = channel
+	log.Printf("Initialized chat channel: %v\n", channel.Name)
 }
 
 // Removes a channel from channels
