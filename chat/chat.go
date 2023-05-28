@@ -3,19 +3,20 @@ package chat
 import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
+	"example.com/Quaver/Z/sessions"
 	"log"
 	"sync"
 )
 
 var (
-	channels map[string]*Channel
-	mutex    *sync.Mutex
+	channels  map[string]*Channel
+	chatMutex *sync.Mutex
 )
 
 // Initialize Initializes the chat channels
 func Initialize() {
 	channels = make(map[string]*Channel)
-	mutex = &sync.Mutex{}
+	chatMutex = &sync.Mutex{}
 
 	for _, channel := range config.Instance.ChatChannels {
 		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, channel.DiscordWebhook))
@@ -24,8 +25,8 @@ func Initialize() {
 
 // GetAvailableChannels Returns the available channels that the user is able to join
 func GetAvailableChannels(userGroups common.UserGroups) []*Channel {
-	mutex.Lock()
-	defer mutex.Unlock()
+	chatMutex.Lock()
+	defer chatMutex.Unlock()
 
 	hasAdminChannelAccess := common.HasAnyUserGroup(userGroups, []common.UserGroups{
 		common.UserGroupSwan,
@@ -45,10 +46,21 @@ func GetAvailableChannels(userGroups common.UserGroups) []*Channel {
 	return availableChannels
 }
 
+// SendPublicMessage Sends a message to a public chat channel
+func SendPublicMessage(sender *sessions.User, channel *Channel, message string) {
+	channel.SendMessage(sender, message)
+}
+
+// SendPrivateMessage Sends a private message to a user
+func SendPrivateMessage(sender *sessions.User, receiver *sessions.User, message string) {
+	// TODO: Send Discord Webhook
+	// TODO: Log In Database
+}
+
 // Adds a channel to channels
 func addChannel(channel *Channel) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	chatMutex.Lock()
+	defer chatMutex.Unlock()
 
 	channels[channel.Name] = channel
 	log.Printf("Initialized chat channel: %v\n", channel.Name)
@@ -56,8 +68,8 @@ func addChannel(channel *Channel) {
 
 // Removes a channel from channels
 func removeChannel(channel *Channel) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	chatMutex.Lock()
+	defer chatMutex.Unlock()
 
 	// TODO: Remove all users from the channel
 	delete(channels, channel.Name)

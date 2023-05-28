@@ -5,6 +5,7 @@ import (
 	"example.com/Quaver/Z/sessions"
 	"github.com/disgoorg/disgo/webhook"
 	"log"
+	"sync"
 )
 
 type Channel struct {
@@ -15,6 +16,7 @@ type Channel struct {
 	DiscordWebhook string                 `json:"discord_webhook"`
 	WebhookClient  webhook.Client         `json:"-"`
 	Participants   map[int]*sessions.User `json:"-"`
+	mutex          *sync.Mutex
 }
 
 // NewChannel Creates a new chat channel instance
@@ -27,6 +29,7 @@ func NewChannel(name string, description string, adminOnly bool, autoJoin bool, 
 		DiscordWebhook: discordWebhook,
 		WebhookClient:  nil,
 		Participants:   map[int]*sessions.User{},
+		mutex:          &sync.Mutex{},
 	}
 
 	channel.initializeWebhook()
@@ -57,8 +60,8 @@ func (channel *Channel) initializeWebhook() {
 
 // AddUser Adds a user to the channel
 func (channel *Channel) AddUser(user *sessions.User) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	channel.mutex.Lock()
+	defer channel.mutex.Unlock()
 
 	channel.Participants[user.Info.Id] = user
 	sessions.SendPacketToUser(packets.NewServerJoinedChatChannel(channel.Name), user)
@@ -66,9 +69,28 @@ func (channel *Channel) AddUser(user *sessions.User) {
 
 // RemoveUser Removes a user from the channel
 func (channel *Channel) RemoveUser(user *sessions.User) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	channel.mutex.Lock()
+	defer channel.mutex.Unlock()
 
 	delete(channel.Participants, user.Info.Id)
 	sessions.SendPacketToUser(packets.NewServerPing(), user)
+}
+
+// SendMessage Sends a message to all the users in the channel
+func (channel *Channel) SendMessage(sender *sessions.User, message string) {
+	channel.mutex.Lock()
+	defer channel.mutex.Unlock()
+
+	packet := packets.NewServerChatMessage(sender.Info.Id, sender.Info.Username, channel.Name, message)
+
+	for _, user := range channel.Participants {
+		if user == sender {
+			continue
+		}
+
+		sessions.SendPacketToUser(packet, user)
+	}
+
+	// TODO: Send Discord Webhook
+	// TODO: Log In Database
 }
