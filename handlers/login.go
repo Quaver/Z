@@ -404,7 +404,10 @@ func joinChatChannels(user *sessions.User) {
 
 	for _, channel := range channels {
 		sessions.SendPacketToUser(packets.NewServerAvailableChatChannel(channel.Name, channel.Description), user)
-		// TODO: Join chat channel
+
+		if channel.AutoJoin {
+			channel.AddUser(user)
+		}
 	}
 }
 
