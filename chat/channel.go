@@ -98,7 +98,11 @@ func (channel *Channel) SendMessage(sender *sessions.User, message string) {
 
 	channel.sendWebhook(sender, message)
 
-	// TODO: Log In Database
+	err := db.InsertPublicChatMessage(sender.Info.Id, channel.Name, message)
+
+	if err != nil {
+		log.Printf("Failed to insert chat message to DB: %v\n", err)
+	}
 }
 
 // Sends a webhook to Discord
@@ -119,11 +123,5 @@ func (channel *Channel) sendWebhook(sender *sessions.User, message string) {
 
 	if err != nil {
 		log.Printf("Failed to send webhook to channel: %v - %v\n", channel.Name, err)
-	}
-
-	err = db.InsertPublicChatMessage(sender.Info.Id, channel.Name, message)
-
-	if err != nil {
-		log.Printf("Failed to insert chat message to DB: %v\n", err)
 	}
 }
