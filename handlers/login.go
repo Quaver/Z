@@ -164,6 +164,10 @@ func parseLoginData(r *http.Request) (*LoginData, error) {
 
 // Authenticates the user via Steam. Makes sure the user has a valid id and ticket
 func authenticateSteamTicket(data *LoginData) error {
+	if config.Instance.BypassSteamLogin {
+		return nil
+	}
+
 	resp, err := resty.New().R().
 		SetQueryParams(map[string]string{
 			"key":    config.Instance.Steam.PublisherKey,
@@ -224,6 +228,10 @@ func authenticateSteamTicket(data *LoginData) error {
 
 // Checks if the user actually owns the game on Steam
 func checkSteamAppOwnership(steamId string) error {
+	if config.Instance.BypassSteamLogin {
+		return nil
+	}
+
 	resp, err := resty.New().R().
 		SetQueryParams(map[string]string{
 			"key":     config.Instance.Steam.PublisherKey,
@@ -336,6 +344,10 @@ func handleCustomGameBuildUsage(conn net.Conn, user *db.User, client string) {
 
 // Updates the avatar for the user and sets the new one.
 func updateUserAvatar(user *db.User) error {
+	if config.Instance.BypassSteamLogin {
+		return nil
+	}
+
 	avatar, err := db.UpdateUserSteamAvatar(user.SteamId)
 
 	if err != nil {

@@ -12,6 +12,8 @@ type Configuration struct {
 		Port int `json:"port"`
 	} `json:"server"`
 
+	BypassSteamLogin bool `json:"bypass_steam_login"`
+
 	SQL struct {
 		Host     string `json:"host"`
 		Username string `json:"username"`

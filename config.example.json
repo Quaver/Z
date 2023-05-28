@@ -2,6 +2,7 @@
   "server": {
     "port": 3000
   },
+  "bypass_steam_login": false,
   "sql": {
     "host": "",
     "username": "",
