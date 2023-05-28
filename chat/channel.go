@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/webhooks"
@@ -118,5 +119,11 @@ func (channel *Channel) sendWebhook(sender *sessions.User, message string) {
 
 	if err != nil {
 		log.Printf("Failed to send webhook to channel: %v - %v\n", channel.Name, err)
+	}
+
+	err = db.InsertPublicChatMessage(sender.Info.Id, channel.Name, message)
+
+	if err != nil {
+		log.Printf("Failed to insert chat message to DB: %v\n", err)
 	}
 }
