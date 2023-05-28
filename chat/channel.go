@@ -3,9 +3,13 @@ package chat
 import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/webhooks"
+	"fmt"
+	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/webhook"
 	"log"
 	"sync"
+	"time"
 )
 
 type Channel struct {
@@ -91,6 +95,28 @@ func (channel *Channel) SendMessage(sender *sessions.User, message string) {
 		sessions.SendPacketToUser(packet, user)
 	}
 
-	// TODO: Send Discord Webhook
+	channel.sendWebhook(sender, message)
+
 	// TODO: Log In Database
+}
+
+// Sends a webhook to Discord
+func (channel *Channel) sendWebhook(sender *sessions.User, message string) {
+	if channel.WebhookClient == nil {
+		return
+	}
+
+	embed := discord.NewEmbedBuilder().
+		SetAuthor(fmt.Sprintf("%v → %v", sender.Info.Username, channel.Name), sender.Info.GetProfileUrl(), sender.Info.AvatarUrl).
+		SetDescription(message).
+		SetFooter("Quaver", webhooks.QuaverLogo).
+		SetTimestamp(time.Now()).
+		SetColor(0x00FFFF).
+		Build()
+
+	_, err := channel.WebhookClient.CreateEmbeds([]discord.Embed{embed})
+
+	if err != nil {
+		log.Printf("Failed to send webhook to channel: %v - %v\n", channel.Name, err)
+	}
 }

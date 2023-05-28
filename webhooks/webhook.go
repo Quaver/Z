@@ -13,7 +13,7 @@ var (
 	antiCheat webhook.Client
 )
 
-const quaverLogo string = "https://i.imgur.com/DkJhqvT.jpg"
+const QuaverLogo string = "https://i.imgur.com/DkJhqvT.jpg"
 const antiCheatDescription string = "**❌ Anti-cheat Triggered!**"
 
 func Initialize() {
@@ -48,8 +48,8 @@ func SendAntiCheat(username string, userId int, url string, icon string, reason 
 			Value:  fmt.Sprintf("%v | %v | %v", viewProfile, banUser, editUser),
 			Inline: nil,
 		}).
-		SetThumbnail(quaverLogo).
-		SetFooter("Quaver", quaverLogo).
+		SetThumbnail(QuaverLogo).
+		SetFooter("Quaver", QuaverLogo).
 		SetTimestamp(time.Now()).
 		SetColor(0xFF0000).
 		Build()
