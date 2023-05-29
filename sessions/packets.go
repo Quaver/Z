@@ -12,7 +12,7 @@ func SendPacketToConnection(data interface{}, conn net.Conn) {
 	j, err := json.Marshal(data)
 
 	if err != nil {
-		log.Println(err)
+		// log.Println(err)
 		return
 	}
 
