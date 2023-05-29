@@ -3,7 +3,10 @@ package chat
 import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
+	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/webhooks"
 	"log"
 	"sync"
 )
@@ -53,8 +56,15 @@ func SendPublicMessage(sender *sessions.User, channel *Channel, message string) 
 
 // SendPrivateMessage Sends a private message to a user
 func SendPrivateMessage(sender *sessions.User, receiver *sessions.User, message string) {
-	// TODO: Send Discord Webhook
-	// TODO: Log In Database
+	sessions.SendPacketToUser(packets.NewServerChatMessage(sender.Info.Id, sender.Info.Username, receiver.Info.Username, message), receiver)
+	webhooks.SendChatMessage(nil, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver.Info.Username, message)
+
+	err := db.InsertPrivateChatMessage(sender.Info.Id, receiver.Info.Id, receiver.Info.Username, message)
+
+	if err != nil {
+		log.Printf("Error inserting private chat into DB: %v\n", err)
+		return
+	}
 }
 
 // Adds a channel to channels

@@ -70,3 +70,20 @@ func SendAntiCheatProcessLog(username string, userId int, url string, icon strin
 
 	SendAntiCheat(username, userId, url, icon, "Detected Processes", formatted)
 }
+
+// SendChatMessage Sends a chat message webhook to Discord
+func SendChatMessage(webhook webhook.Client, senderUsername string, senderProfileUrl string, senderAvatarUrl, receiverName string, message string) {
+	embed := discord.NewEmbedBuilder().
+		SetAuthor(fmt.Sprintf("%v → %v", senderUsername, receiverName), senderProfileUrl, senderAvatarUrl).
+		SetDescription(message).
+		SetFooter("Quaver", QuaverLogo).
+		SetTimestamp(time.Now()).
+		SetColor(0x00FFFF).
+		Build()
+
+	_, err := webhook.CreateEmbeds([]discord.Embed{embed})
+
+	if err != nil {
+		log.Printf("Failed to send webhook to channel: %v - %v\n", receiverName, err)
+	}
+}

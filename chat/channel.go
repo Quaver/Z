@@ -5,12 +5,9 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/webhooks"
-	"fmt"
-	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/webhook"
 	"log"
 	"sync"
-	"time"
 )
 
 type Channel struct {
@@ -108,6 +105,11 @@ func (channel *Channel) SendMessage(sender *sessions.User, message string) {
 	}
 }
 
+// Sends a discord webhook
+func (channel *Channel) sendWebhook(sender *sessions.User, message string) {
+	webhooks.SendChatMessage(channel.WebhookClient, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, channel.Name, message)
+}
+
 // Removes all users from the channel
 func (channel *Channel) removeAllUsers() {
 	channel.mutex.Lock()
@@ -115,26 +117,5 @@ func (channel *Channel) removeAllUsers() {
 
 	for _, user := range channel.Participants {
 		channel.RemoveUser(user)
-	}
-}
-
-// Sends a webhook to Discord
-func (channel *Channel) sendWebhook(sender *sessions.User, message string) {
-	if channel.WebhookClient == nil {
-		return
-	}
-
-	embed := discord.NewEmbedBuilder().
-		SetAuthor(fmt.Sprintf("%v → %v", sender.Info.Username, channel.Name), sender.Info.GetProfileUrl(), sender.Info.AvatarUrl).
-		SetDescription(message).
-		SetFooter("Quaver", webhooks.QuaverLogo).
-		SetTimestamp(time.Now()).
-		SetColor(0x00FFFF).
-		Build()
-
-	_, err := channel.WebhookClient.CreateEmbeds([]discord.Embed{embed})
-
-	if err != nil {
-		log.Printf("Failed to send webhook to channel: %v - %v\n", channel.Name, err)
 	}
 }
