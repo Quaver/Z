@@ -71,6 +71,16 @@ func removeChannel(channel *Channel) {
 	chatMutex.Lock()
 	defer chatMutex.Unlock()
 
-	// TODO: Remove all users from the channel
+	channel.removeAllUsers()
 	delete(channels, channel.Name)
+}
+
+// RemoveUserFromAllChannels Removes a user from every single channel if they are in them
+func RemoveUserFromAllChannels(user *sessions.User) {
+	chatMutex.Lock()
+	defer chatMutex.Unlock()
+
+	for _, channel := range channels {
+		channel.RemoveUser(user)
+	}
 }

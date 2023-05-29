@@ -77,7 +77,10 @@ func (channel *Channel) RemoveUser(user *sessions.User) {
 	channel.mutex.Lock()
 	defer channel.mutex.Unlock()
 
-	delete(channel.Participants, user.Info.Id)
+	if _, ok := channel.Participants[user.Info.Id]; ok {
+		delete(channel.Participants, user.Info.Id)
+	}
+
 	sessions.SendPacketToUser(packets.NewServerPing(), user)
 }
 
@@ -102,6 +105,16 @@ func (channel *Channel) SendMessage(sender *sessions.User, message string) {
 
 	if err != nil {
 		log.Printf("Failed to insert chat message to DB: %v\n", err)
+	}
+}
+
+// Removes all users from the channel
+func (channel *Channel) removeAllUsers() {
+	channel.mutex.Lock()
+	defer channel.mutex.Unlock()
+
+	for _, user := range channel.Participants {
+		channel.RemoveUser(user)
 	}
 }
 
