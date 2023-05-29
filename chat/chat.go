@@ -67,6 +67,16 @@ func SendPrivateMessage(sender *sessions.User, receiver *sessions.User, message 
 	}
 }
 
+// RemoveUserFromAllChannels Removes a user from every single channel if they are in them
+func RemoveUserFromAllChannels(user *sessions.User) {
+	chatMutex.Lock()
+	defer chatMutex.Unlock()
+
+	for _, channel := range channels {
+		channel.RemoveUser(user)
+	}
+}
+
 // Adds a channel to channels
 func addChannel(channel *Channel) {
 	chatMutex.Lock()
@@ -83,14 +93,4 @@ func removeChannel(channel *Channel) {
 
 	channel.removeAllUsers()
 	delete(channels, channel.Name)
-}
-
-// RemoveUserFromAllChannels Removes a user from every single channel if they are in them
-func RemoveUserFromAllChannels(user *sessions.User) {
-	chatMutex.Lock()
-	defer chatMutex.Unlock()
-
-	for _, channel := range channels {
-		channel.RemoveUser(user)
-	}
 }
