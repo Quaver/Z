@@ -172,6 +172,14 @@ func (u *User) SetClientStatus(status *objects.ClientStatus) {
 	}
 }
 
+// IsMuted Returns if the user is muted
+func (u *User) IsMuted() bool {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.Info.MuteEndTime > time.Now().UnixMilli()
+}
+
 // SerializeForPacket Serializes the user to be used in a packet
 func (u *User) SerializeForPacket() *PacketUser {
 	u.mutex.Lock()

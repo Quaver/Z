@@ -59,7 +59,10 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		return
 	}
 
-	// TODO: Check if the user is muted
+	if sender.IsMuted() {
+		return
+	}
+
 	// TODO: Track spam messages and mute user for spamming
 	// TODO: Censor message
 
