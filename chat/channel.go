@@ -96,8 +96,6 @@ func (channel *Channel) SendMessage(sender *sessions.User, message string) {
 		sessions.SendPacketToUser(packet, user)
 	}
 
-	channel.sendWebhook(sender, message)
-
 	err := db.InsertPublicChatMessage(sender.Info.Id, channel.Name, message)
 
 	if err != nil {

@@ -10,26 +10,43 @@ import (
 )
 
 var (
-	antiCheat webhook.Client
+	AntiCheat   webhook.Client
+	PrivateChat webhook.Client
 )
 
 const QuaverLogo string = "https://i.imgur.com/DkJhqvT.jpg"
 const antiCheatDescription string = "**❌ Anti-cheat Triggered!**"
 
 func Initialize() {
-	if antiCheat != nil {
-		panic("webhooks already initialized")
+	hooks := []string{
+		config.Instance.DiscordWebhooks.AntiCheat,
+		config.Instance.DiscordWebhooks.PrivateChat,
 	}
 
-	var err error
+	for _, hook := range hooks {
+		if hook == "" {
+			continue
+		}
 
-	antiCheat, err = webhook.NewWithURL(config.Instance.DiscordWebhooks.AntiCheat)
+		var webhookClient webhook.Client
 
-	if err != nil {
-		panic(err)
+		switch hook {
+		case config.Instance.DiscordWebhooks.AntiCheat:
+			webhookClient = AntiCheat
+		case config.Instance.DiscordWebhooks.PrivateChat:
+			webhookClient = PrivateChat
+		}
+
+		var err error
+
+		webhookClient, err = webhook.NewWithURL(hook)
+
+		if err != nil {
+			panic(err)
+		}
+
+		log.Printf("Initialized Webhook: %v\n", webhookClient.ID().String())
 	}
-
-	log.Printf("Initialized anti-cheat webhook: %v\n", antiCheat.ID().String())
 }
 
 func SendAntiCheat(username string, userId int, url string, icon string, reason string, text string) {
@@ -54,7 +71,7 @@ func SendAntiCheat(username string, userId int, url string, icon string, reason 
 		SetColor(0xFF0000).
 		Build()
 
-	_, err := antiCheat.CreateEmbeds([]discord.Embed{embed})
+	_, err := AntiCheat.CreateEmbeds([]discord.Embed{embed})
 
 	if err != nil {
 		log.Printf("Failed to send anti-cheat webhook: %v\n", err)

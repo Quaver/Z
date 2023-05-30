@@ -33,7 +33,8 @@ type Configuration struct {
 	} `json:"steam"`
 
 	DiscordWebhooks struct {
-		AntiCheat string `json:"anti_cheat"`
+		AntiCheat   string `json:"anti_cheat"`
+		PrivateChat string `json:"private_chat"`
 	} `json:"discord_webhooks"`
 
 	ChatChannels []struct {

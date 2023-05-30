@@ -7,6 +7,7 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/webhooks"
+	"github.com/disgoorg/disgo/webhook"
 	"log"
 	"sync"
 )
@@ -49,13 +50,53 @@ func GetAvailableChannels(userGroups common.UserGroups) []*Channel {
 	return availableChannels
 }
 
-// SendPublicMessage Sends a message to a public chat channel
-func SendPublicMessage(sender *sessions.User, channel *Channel, message string) {
+// SendMessage Sends a message to a given a receiver
+func SendMessage(sender *sessions.User, receiver string, message string) {
+	chatMutex.Lock()
+	defer chatMutex.Unlock()
+
+	if receiver == "" || message == "" {
+		return
+	}
+
+	// TODO: Check if the user is muted
+	// TODO: Track spam messages and mute user for spamming
+	// TODO: Censor message
+
+	var discordWebhook webhook.Client
+
+	if receiver[0] == '#' {
+		channel := channels[receiver]
+
+		if channel == nil {
+			return
+		}
+
+		sendPublicMessage(sender, channel, message)
+		discordWebhook = channel.WebhookClient
+	} else {
+		receivingUser := sessions.GetUserByUsername(receiver)
+
+		if receivingUser == nil {
+			return
+		}
+
+		sendPrivateMessage(sender, receivingUser, message)
+		discordWebhook = webhooks.PrivateChat
+	}
+
+	if discordWebhook != nil {
+		webhooks.SendChatMessage(discordWebhook, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
+	}
+}
+
+// Sends a message to a public chat channel
+func sendPublicMessage(sender *sessions.User, channel *Channel, message string) {
 	channel.SendMessage(sender, message)
 }
 
-// SendPrivateMessage Sends a private message to a user
-func SendPrivateMessage(sender *sessions.User, receiver *sessions.User, message string) {
+// Sends a private message to a user
+func sendPrivateMessage(sender *sessions.User, receiver *sessions.User, message string) {
 	sessions.SendPacketToUser(packets.NewServerChatMessage(sender.Info.Id, sender.Info.Username, receiver.Info.Username, message), receiver)
 	webhooks.SendChatMessage(nil, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver.Info.Username, message)
 
