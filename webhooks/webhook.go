@@ -46,6 +46,11 @@ func Initialize() {
 }
 
 func SendAntiCheat(username string, userId int, url string, icon string, reason string, text string) {
+	if AntiCheat == nil {
+		log.Printf("Cannot send nil Anti-Cheat webhook\n")
+		return
+	}
+
 	viewProfile := fmt.Sprintf("[View Profile](%v)", url)
 	banUser := fmt.Sprintf("[Ban User](https://a.quavergame.com/ban/%v)", userId)
 	editUser := fmt.Sprintf("[Edit User](https://a.quavergame.com/edituser/%v)", userId)
@@ -86,6 +91,11 @@ func SendAntiCheatProcessLog(username string, userId int, url string, icon strin
 
 // SendChatMessage Sends a chat message webhook to Discord
 func SendChatMessage(webhook webhook.Client, senderUsername string, senderProfileUrl string, senderAvatarUrl, receiverName string, message string) {
+	if webhook == nil {
+		log.Printf("Cannot send nil webhook to receiver: %v\n", receiverName)
+		return
+	}
+
 	embed := discord.NewEmbedBuilder().
 		SetAuthor(fmt.Sprintf("%v → %v", senderUsername, receiverName), senderProfileUrl, senderAvatarUrl).
 		SetDescription(message).
