@@ -98,7 +98,6 @@ func sendPublicMessage(sender *sessions.User, channel *Channel, message string) 
 // Sends a private message to a user
 func sendPrivateMessage(sender *sessions.User, receiver *sessions.User, message string) {
 	sessions.SendPacketToUser(packets.NewServerChatMessage(sender.Info.Id, sender.Info.Username, receiver.Info.Username, message), receiver)
-	webhooks.SendChatMessage(nil, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver.Info.Username, message)
 
 	err := db.InsertPrivateChatMessage(sender.Info.Id, receiver.Info.Id, receiver.Info.Username, message)
 
