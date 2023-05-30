@@ -19,7 +19,8 @@
     "publisher_key": ""
   },
   "discord_webhooks": {
-    "anti_cheat": ""
+    "anti_cheat": "",
+    "private_chat": ""
   },
   "chat_channels": [
     {

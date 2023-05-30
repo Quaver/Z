@@ -28,24 +28,20 @@ func Initialize() {
 			continue
 		}
 
-		var webhookClient webhook.Client
+		var err error
 
 		switch hook {
 		case config.Instance.DiscordWebhooks.AntiCheat:
-			webhookClient = AntiCheat
+			AntiCheat, err = webhook.NewWithURL(hook)
 		case config.Instance.DiscordWebhooks.PrivateChat:
-			webhookClient = PrivateChat
+			PrivateChat, err = webhook.NewWithURL(hook)
 		}
-
-		var err error
-
-		webhookClient, err = webhook.NewWithURL(hook)
 
 		if err != nil {
 			panic(err)
 		}
 
-		log.Printf("Initialized Webhook: %v\n", webhookClient.ID().String())
+		log.Printf("Initialized Webhook: %v\n", hook)
 	}
 }
 
