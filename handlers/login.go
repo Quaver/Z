@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // LoginData The data that the user sends to log in
@@ -36,8 +37,15 @@ type LoginData struct {
 	Client string `json:"client"`
 }
 
+var (
+	loginMutex = &sync.Mutex{}
+)
+
 // HandleLogin Handles the login of a client
 func HandleLogin(conn net.Conn, r *http.Request) error {
+	loginMutex.Lock()
+	defer loginMutex.Unlock()
+
 	data, err := parseLoginData(r)
 
 	if err != nil {
