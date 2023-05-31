@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"example.com/Quaver/Z/objects"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 )
@@ -15,8 +16,8 @@ func handleClientRequestUserInfo(user *sessions.User, packet *packets.ClientRequ
 	sessions.SendPacketToUser(packets.NewServerUserInfo(userInfo), user)
 }
 
-func getSerializedUsersFromUserIds(userIds []int) []*sessions.PacketUser {
-	var userInfo []*sessions.PacketUser
+func getSerializedUsersFromUserIds(userIds []int) []*objects.PacketUser {
+	var userInfo []*objects.PacketUser
 
 	for _, id := range userIds {
 		user := sessions.GetUserById(id)

@@ -82,3 +82,14 @@ func UpdateUserSteamAvatar(steamId string) (string, error) {
 
 	return avatar, nil
 }
+
+// MuteUser Mutes a user for a given duration
+func MuteUser(id int, endTime int64) error {
+	_, err := SQL.Exec("UPDATE users SET mute_end_time = ? WHERE id = ?", endTime, id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

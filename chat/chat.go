@@ -10,6 +10,7 @@ import (
 	"github.com/disgoorg/disgo/webhook"
 	"log"
 	"sync"
+	"time"
 )
 
 var (
@@ -32,17 +33,10 @@ func GetAvailableChannels(userGroups common.UserGroups) []*Channel {
 	chatMutex.Lock()
 	defer chatMutex.Unlock()
 
-	hasAdminChannelAccess := common.HasAnyUserGroup(userGroups, []common.UserGroups{
-		common.UserGroupSwan,
-		common.UserGroupDeveloper,
-		common.UserGroupAdmin,
-		common.UserGroupModerator,
-	})
-
 	var availableChannels []*Channel
 
 	for _, channel := range channels {
-		if !channel.AdminOnly || (channel.AdminOnly && hasAdminChannelAccess) {
+		if !channel.AdminOnly || (channel.AdminOnly && isChatModerator(userGroups)) {
 			availableChannels = append(availableChannels, channel)
 		}
 	}
@@ -63,8 +57,12 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		return
 	}
 
-	// TODO: Track spam messages and mute user for spamming
-	// TODO: Censor message
+	sender.IncrementSpammedMessagesCount()
+
+	if sender.GetSpammedMessagesCount() >= 10 && !isChatModerator(sender.Info.UserGroups) {
+		_ = sender.MuteUser(time.Minute * 30)
+		return
+	}
 
 	var discordWebhook webhook.Client
 
@@ -136,4 +134,14 @@ func removeChannel(channel *Channel) {
 
 	channel.removeAllUsers()
 	delete(channels, channel.Name)
+}
+
+// Returns if the user is a moderator of the chat
+func isChatModerator(userGroups common.UserGroups) bool {
+	return common.HasAnyUserGroup(userGroups, []common.UserGroups{
+		common.UserGroupSwan,
+		common.UserGroupDeveloper,
+		common.UserGroupAdmin,
+		common.UserGroupModerator,
+	})
 }

@@ -388,7 +388,8 @@ func removePreviousLoginSession(user *db.User) error {
 
 // Sends initial packets to log the user in
 func sendLoginPackets(user *sessions.User) error {
-	sessions.SendPacketToUser(packets.NewServerLoginReply(user), user)
+	user.GetStats()
+	sessions.SendPacketToUser(packets.NewServerLoginReply(user.SerializeForPacket(), user.GetStatsSlice(), user.GetToken()), user)
 	sessions.SendPacketToUser(packets.NewServerUsersOnline(sessions.GetOnlineUserIds()), user)
 	sessions.SendPacketToUser(packets.NewServerUserInfo(sessions.GetSerializedOnlineUsers()), user)
 

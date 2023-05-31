@@ -1,6 +1,7 @@
 package sessions
 
 import (
+	"example.com/Quaver/Z/objects"
 	"net"
 	"sync"
 )
@@ -125,11 +126,11 @@ func GetOnlineUsers() []*User {
 }
 
 // GetSerializedOnlineUsers Returns a list of all online users serialized
-func GetSerializedOnlineUsers() []*PacketUser {
+func GetSerializedOnlineUsers() []*objects.PacketUser {
 	userMutex.Lock()
 	defer userMutex.Unlock()
 
-	users := make([]*PacketUser, 0)
+	users := make([]*objects.PacketUser, 0)
 
 	for _, user := range userIdToUser {
 		users = append(users, user.SerializeForPacket())

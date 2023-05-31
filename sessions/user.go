@@ -4,6 +4,7 @@ import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
+	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"log"
@@ -39,15 +40,9 @@ type User struct {
 
 	// The current client status of the user
 	status *objects.ClientStatus
-}
 
-type PacketUser struct {
-	Id          int               `json:"id"`
-	SteamId     string            `json:"sid"`
-	Username    string            `json:"u"`
-	UserGroups  common.UserGroups `json:"ug"`
-	MuteEndTime int64             `json:"m"`
-	Country     string            `json:"c"`
+	// A count of the amount of messages the user has spammed in the past x amount of time. Used for muting purposes.
+	spammedChatMessages int
 }
 
 // NewUser Creates a new user session struct object
@@ -82,6 +77,16 @@ func (u *User) GetStats() map[common.Mode]*db.UserStats {
 	defer u.mutex.Unlock()
 
 	return u.stats
+}
+
+func (u *User) GetStatsSlice() []*db.PacketUserStats {
+	statSlice := make([]*db.PacketUserStats, 0)
+
+	for _, value := range u.GetStats() {
+		statSlice = append(statSlice, value.SerializeForPacket())
+	}
+
+	return statSlice
 }
 
 // SetStats Updates the statistics for the user
@@ -172,6 +177,30 @@ func (u *User) SetClientStatus(status *objects.ClientStatus) {
 	}
 }
 
+// GetSpammedMessagesCount Gets the amount of messages the user has spammed
+func (u *User) GetSpammedMessagesCount() int {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.spammedChatMessages
+}
+
+// IncrementSpammedMessagesCount Increments the amount of spammed messages by 1.
+func (u *User) IncrementSpammedMessagesCount() {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	u.spammedChatMessages++
+}
+
+// ResetSpammedMessagesCount Resets the amount of spammed messages back to zero
+func (u *User) ResetSpammedMessagesCount() {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	u.spammedChatMessages = 0
+}
+
 // IsMuted Returns if the user is muted
 func (u *User) IsMuted() bool {
 	u.mutex.Lock()
@@ -180,12 +209,31 @@ func (u *User) IsMuted() bool {
 	return u.Info.MuteEndTime > time.Now().UnixMilli()
 }
 
-// SerializeForPacket Serializes the user to be used in a packet
-func (u *User) SerializeForPacket() *PacketUser {
+// MuteUser Mutes a user for a specified duration
+func (u *User) MuteUser(duration time.Duration) error {
 	u.mutex.Lock()
 	defer u.mutex.Unlock()
 
-	return &PacketUser{
+	endTime := time.Now().UnixMilli() + duration.Milliseconds()
+
+	err := db.MuteUser(u.Info.Id, endTime)
+
+	if err != nil {
+		log.Printf("Failed to update user mute time: %v\n", err)
+		return err
+	}
+
+	u.Info.MuteEndTime = endTime
+	SendPacketToUser(packets.NewServerPing(), u)
+	return nil
+}
+
+// SerializeForPacket Serializes the user to be used in a packet
+func (u *User) SerializeForPacket() *objects.PacketUser {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return &objects.PacketUser{
 		Id:          u.Info.Id,
 		SteamId:     u.Info.SteamId,
 		Username:    u.Info.Username,

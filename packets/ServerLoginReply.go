@@ -2,27 +2,21 @@ package packets
 
 import (
 	"example.com/Quaver/Z/db"
-	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/objects"
 )
 
 type ServerLoginReply struct {
 	Packet
-	User         *sessions.PacketUser  `json:"u"`
+	User         *objects.PacketUser   `json:"u"`
 	SessionToken string                `json:"t"`
 	Stats        []*db.PacketUserStats `json:"s"`
 }
 
-func NewServerLoginReply(user *sessions.User) *ServerLoginReply {
-	statSlice := make([]*db.PacketUserStats, 0)
-
-	for _, value := range user.GetStats() {
-		statSlice = append(statSlice, value.SerializeForPacket())
-	}
-
+func NewServerLoginReply(user *objects.PacketUser, stats []*db.PacketUserStats, token string) *ServerLoginReply {
 	return &ServerLoginReply{
 		Packet:       Packet{Id: PacketIdServerLoginReply},
-		User:         user.SerializeForPacket(),
-		SessionToken: user.GetToken(),
-		Stats:        statSlice,
+		User:         user,
+		SessionToken: token,
+		Stats:        stats,
 	}
 }
