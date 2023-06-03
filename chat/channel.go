@@ -67,6 +67,7 @@ func (channel *Channel) AddUser(user *sessions.User) {
 
 	// TODO: Check for spectator / multiplayer
 	if channel.AdminOnly && !isChatModerator(user.Info.UserGroups) {
+		sessions.SendPacketToUser(packets.NewServerFailedToJoinChatChannel(channel.Name), user)
 		return
 	}
 
