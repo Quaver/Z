@@ -388,10 +388,12 @@ func removePreviousLoginSession(user *db.User) error {
 
 // Sends initial packets to log the user in
 func sendLoginPackets(user *sessions.User) error {
-	user.GetStats()
 	sessions.SendPacketToUser(packets.NewServerLoginReply(user.SerializeForPacket(), user.GetStatsSlice(), user.GetToken()), user)
 	sessions.SendPacketToUser(packets.NewServerUsersOnline(sessions.GetOnlineUserIds()), user)
 	sessions.SendPacketToUser(packets.NewServerUserInfo(sessions.GetSerializedOnlineUsers()), user)
+	sessions.SendPacketToUser(packets.NewServerTwitchConnection(user.Info.TwitchUsername.String), user)
+	sessions.SendPacketToAllUsers(packets.NewServerUserConnected(user.SerializeForPacket()))
+	joinChatChannels(user)
 
 	friends, err := db.GetUserFriendsList(user.Info.Id)
 
@@ -400,10 +402,6 @@ func sendLoginPackets(user *sessions.User) error {
 	}
 
 	sessions.SendPacketToUser(packets.NewServerFriendsList(friends), user)
-	sessions.SendPacketToUser(packets.NewServerTwitchConnection(user.Info.TwitchUsername.String), user)
-	sessions.SendPacketToAllUsers(packets.NewServerUserConnected(user.SerializeForPacket()))
-
-	joinChatChannels(user)
 	return nil
 }
 
