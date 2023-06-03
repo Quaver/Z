@@ -78,7 +78,7 @@ func (channel *Channel) RemoveUser(user *sessions.User) {
 		delete(channel.Participants, user.Info.Id)
 	}
 
-	log.Println("REMOVED USER FRM CHANNEL")
+	sessions.SendPacketToUser(packets.NewServerLeftChatChannel(channel.Name), user)
 }
 
 // SendMessage Sends a message to all the users in the channel
