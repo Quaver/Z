@@ -44,6 +44,18 @@ func GetAvailableChannels(userGroups common.UserGroups) []*Channel {
 	return availableChannels
 }
 
+// GetChannelByName Gets a chat channel by its name
+func GetChannelByName(name string) *Channel {
+	chatMutex.Lock()
+	defer chatMutex.Unlock()
+
+	if _, ok := channels[name]; ok {
+		return channels[name]
+	}
+
+	return nil
+}
+
 // SendMessage Sends a message to a given a receiver
 func SendMessage(sender *sessions.User, receiver string, message string) {
 	chatMutex.Lock()
