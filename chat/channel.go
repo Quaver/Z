@@ -65,6 +65,11 @@ func (channel *Channel) AddUser(user *sessions.User) {
 	channel.mutex.Lock()
 	defer channel.mutex.Unlock()
 
+	// TODO: Check for spectator / multiplayer
+	if channel.AdminOnly && !isChatModerator(user.Info.UserGroups) {
+		return
+	}
+
 	channel.Participants[user.Info.Id] = user
 	sessions.SendPacketToUser(packets.NewServerJoinedChatChannel(channel.Name), user)
 }

@@ -36,6 +36,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientRequestUserInfo(user, unmarshalPacket[packets.ClientRequestUserInfo](msg))
 	case packets.PacketIdClientRequestLeaveChatChannel:
 		handleClientRequestLeaveChatChannel(user, unmarshalPacket[packets.ClientRequestLeaveChatChannel](msg))
+	case packets.PacketIdClientRequestJoinChatChannel:
+		handleClientRequestJoinChatChannel(user, unmarshalPacket[packets.ClientRequestJoinChatChannel](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}
