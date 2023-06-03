@@ -3,7 +3,7 @@ package packets
 type PacketId int
 
 const (
-	PacketIdInvalid = iota
+	PacketIdInvalid = iota // UNUSED
 	PacketIdServerPing
 	PacketIdClientPong
 	PacketIdServerLoginReply
@@ -17,7 +17,7 @@ const (
 	PacketIdServerLeftChatChannelPacket
 	PacketIdClientRequestJoinChatChannel
 	PacketIdServerFailedToJoinChannelPacket
-	PacketIdServerMuteEndTimePacket
+	PacketIdServerMuteEndTimePacket // UNUSED
 	PacketIdServerNotification
 	PacketIdClientStatusUpdate
 	PacketIdServerUsersOnline
