@@ -145,7 +145,7 @@ func clearPreviousSessions() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	log.Println("Cleared previous redis sessions")
 }
 
@@ -159,6 +159,12 @@ func startBackgroundWorker() {
 				// Disregard bot users
 				if common.HasUserGroup(user.Info.UserGroups, common.UserGroupBot) {
 					continue
+				}
+
+				// Clear user's chat spam rate
+				if time.Now().UnixMilli()-user.GetSpammedChatLastTimeCleared() >= 10_000 {
+					user.ResetSpammedMessagesCount()
+					user.SetSpammedChatLastTimeCleared(time.Now().UnixMilli())
 				}
 
 				// Ping the user periodically

@@ -43,6 +43,9 @@ type User struct {
 
 	// A count of the amount of messages the user has spammed in the past x amount of time. Used for muting purposes.
 	spammedChatMessages int
+
+	// The last time the user's spammed messages were checked
+	spammedChatLastTimeCleared int64
 }
 
 // NewUser Creates a new user session struct object
@@ -199,6 +202,21 @@ func (u *User) ResetSpammedMessagesCount() {
 	defer u.mutex.Unlock()
 
 	u.spammedChatMessages = 0
+}
+
+// GetSpammedChatLastTimeCleared Gets the last time the user's chat spam rate was cleared
+func (u *User) GetSpammedChatLastTimeCleared() int64 {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.spammedChatLastTimeCleared
+}
+
+// SetSpammedChatLastTimeCleared Sets the time the user's chat spam rate was cleared
+func (u *User) SetSpammedChatLastTimeCleared(time int64) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+	u.spammedChatLastTimeCleared = time
 }
 
 // IsMuted Returns if the user is muted
