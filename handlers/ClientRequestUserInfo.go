@@ -12,11 +12,12 @@ func handleClientRequestUserInfo(user *sessions.User, packet *packets.ClientRequ
 		return
 	}
 
-	userInfo := getSerializedUsersFromUserIds(packet.UserIds)
+	userInfo := getPacketUsersFromUserIds(packet.UserIds)
 	sessions.SendPacketToUser(packets.NewServerUserInfo(userInfo), user)
 }
 
-func getSerializedUsersFromUserIds(userIds []int) []*objects.PacketUser {
+// Converts a slice of user ids into their respective packet users.
+func getPacketUsersFromUserIds(userIds []int) []*objects.PacketUser {
 	var userInfo []*objects.PacketUser
 
 	for _, id := range userIds {

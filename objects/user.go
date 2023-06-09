@@ -1,6 +1,8 @@
 package objects
 
-import "example.com/Quaver/Z/common"
+import (
+	"example.com/Quaver/Z/common"
+)
 
 type PacketUser struct {
 	Id          int               `json:"id"`
