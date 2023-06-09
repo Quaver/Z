@@ -25,7 +25,7 @@ const (
 	PacketIdServerUserInfo
 	PacketIdClientRequestUserStatus
 	PacketIdServerUserStatus
-	PacketIdServerFailedToLogin
+	PacketIdServerFailedToLogin // UNUSED
 	PacketIdServerChooseUsername
 	PacketIdClientLobbyJoin
 	PacketIdClientLobbyLeave
