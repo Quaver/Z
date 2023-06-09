@@ -2,7 +2,6 @@ package multiplayer
 
 import (
 	"example.com/Quaver/Z/sessions"
-	"log"
 	"sync"
 )
 
@@ -31,7 +30,6 @@ func AddUserToLobby(user *sessions.User) {
 	defer lobby.mutex.Unlock()
 
 	lobby.users[user.Info.Id] = user
-	log.Printf("[%v - #%v] joined the multiplayer lobby\n", user.Info.Username, user.Info.Id)
 }
 
 // RemoveUserFromLobby Removes a user from the multiplayer lobby
@@ -40,5 +38,4 @@ func RemoveUserFromLobby(user *sessions.User) {
 	defer lobby.mutex.Unlock()
 
 	delete(lobby.users, user.Info.Id)
-	log.Printf("[%v - #%v] left the multiplayer lobby\n", user.Info.Username, user.Info.Id)
 }
