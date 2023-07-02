@@ -40,8 +40,8 @@ type MultiplayerGame struct {
 	IsHostSelectingMap        bool                        `json:"hsm"`   // If the host is currently selecting a map
 	IsMapsetShared            bool                        `json:"ims"`   // If the mapset is temporarily uploaded and shared by the host
 	IsTournamentMode          bool                        `json:"trn"`   // If the game is currently in tournament mode
-	FilterMinDifficultyRating int                         `json:"mind"`  // The minimum difficulty rating allowed for maps in the game
-	FilterMaxDifficultyRating int                         `json:"maxd"`  // The maximum difficulty rating allowed for maps in the game
+	FilterMinDifficultyRating float32                     `json:"mind"`  // The minimum difficulty rating allowed for maps in the game
+	FilterMaxDifficultyRating float32                     `json:"maxd"`  // The maximum difficulty rating allowed for maps in the game
 	FilterMaxSongLength       int                         `json:"maxl"`  // The maximum length allowed for maps in the lobby
 	FilterAllowedGameModes    []common.Mode               `json:"ag"`    // The game modes that are allowed to be selected in the game
 	FilterMinLongNotePercent  int                         `json:"lnmin"` // The minimum long note percentage for the map
