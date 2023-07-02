@@ -44,6 +44,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientLobbyJoin(user, unmarshalPacket[packets.ClientLobbyJoin](msg))
 	case packets.PacketIdClientLobbyLeave:
 		handleClientLobbyLeave(user, unmarshalPacket[packets.ClientLobbyLeave](msg))
+	case packets.PacketIdClientCreateGame:
+		handleClientCreateGame(user, unmarshalPacket[packets.ClientCreateGame](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}
