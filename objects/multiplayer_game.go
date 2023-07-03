@@ -4,6 +4,7 @@ import "example.com/Quaver/Z/common"
 
 type MultiplayerGame struct {
 	Id                        int                         `json:"gid"`   // The id of the game in the database
+	GameId                    string                      `json:"id"`    // A unique identifier for the game
 	Name                      string                      `json:"n"`     // The name of the game
 	CreationPassword          string                      `json:"pw"`    // The password of the game during creation
 	HasPassword               bool                        `json:"hp"`    // If the game has a password on it
@@ -44,4 +45,20 @@ type MultiplayerGame struct {
 	FilterMinLongNotePercent  int                         `json:"lnmin"` // The minimum long note percentage for the map
 	FilterMaxLongNotePercent  int                         `json:"lnmax"` // The maximum long note percentage for the map
 	FilterMinAudioRate        float64                     `json:"mr"`    // The minimum audio rate allowed for free mod
+}
+
+func (mg *MultiplayerGame) SetDefaults() {
+	mg.PlayerIds = []int{}
+	mg.PlayersWithoutMap = []int{}
+	mg.PlayersReady = []int{}
+	mg.PlayerModifiers = []MultiplayerGamePlayerMods{}
+	mg.PlayersRedTeam = []int{}
+	mg.PlayersBlueTeam = []int{}
+	mg.PlayerWins = []MultiplayerGamePlayerWins{}
+	mg.FilterAllowedGameModes = []common.Mode{}
+
+	mg.FilterMaxDifficultyRating = 999999999
+	mg.FilterMaxSongLength = 999999999
+	mg.FilterMaxLongNotePercent = 100
+	mg.FilterMinAudioRate = 0.5
 }

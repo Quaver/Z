@@ -16,6 +16,7 @@ type Game struct {
 // NewGame Creates a new multiplayer game from a game
 func NewGame(gameData *objects.MultiplayerGame) (*Game, error) {
 	game := Game{Data: gameData}
+	game.Data.GameId = utils.GenerateRandomString(32)
 
 	if game.Data.CreationPassword != "" {
 		game.Data.HasPassword = true
@@ -23,10 +24,11 @@ func NewGame(gameData *objects.MultiplayerGame) (*Game, error) {
 		game.Data.CreationPassword = ""
 	}
 
+	game.Data.SetDefaults()
 	game.ValidateSettings()
 
 	var err error
-	game.Data.Id, err = db.InsertMultiplayerGame(game.Data.Name)
+	game.Data.Id, err = db.InsertMultiplayerGame(game.Data.Name, game.Data.GameId)
 
 	if err != nil {
 		return nil, err

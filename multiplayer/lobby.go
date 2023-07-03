@@ -1,6 +1,7 @@
 package multiplayer
 
 import (
+	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"log"
 	"sync"
@@ -33,6 +34,10 @@ func AddUserToLobby(user *sessions.User) {
 	defer lobby.mutex.Unlock()
 
 	lobby.users[user.Info.Id] = user
+
+	for _, game := range lobby.games {
+		sendLobbyUsersGameInfoPacket(game, false)
+	}
 }
 
 // RemoveUserFromLobby Removes a user from the multiplayer lobby
@@ -51,6 +56,8 @@ func AddGameToLobby(game *Game) {
 	defer lobby.mutex.Unlock()
 
 	lobby.games[game.Data.Id] = game
+	sendLobbyUsersGameInfoPacket(game, false)
+
 	log.Printf("Multiplayer Game `%v (#%v)` was created.\n", game.Data.Name, game.Data.Id)
 }
 
@@ -62,4 +69,19 @@ func RemoveGameFromLobby(game *Game) {
 
 	delete(lobby.games, game.Data.Id)
 	log.Printf("Multiplayer game `%v (%v)` was disbanded.\n", game.Data.Name, game.Data.Id)
+}
+
+// SendLobbyUsersGameInfoPacket Sends all the users in the lobby a packet with game information
+// Be careful of deadlocks when calling this. Make sure not to call the mutex twice.
+func sendLobbyUsersGameInfoPacket(game *Game, lock bool) {
+	if lock {
+		lobby.mutex.Lock()
+		defer lobby.mutex.Unlock()
+	}
+
+	packet := packets.NewServerMultiplayerGameInfo(game.Data)
+
+	for _, user := range lobby.users {
+		sessions.SendPacketToUser(packet, user)
+	}
 }
