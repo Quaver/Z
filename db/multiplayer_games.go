@@ -1,14 +1,13 @@
 package db
 
 import (
-	"example.com/Quaver/Z/utils"
 	"time"
 )
 
 // InsertMultiplayerGame Inserts a multiplayer game into the database. Returns the id of the game
-func InsertMultiplayerGame(name string) (int, error) {
+func InsertMultiplayerGame(name string, uniqueGameId string) (int, error) {
 	query := "INSERT INTO multiplayer_games (unique_id, name, type, time_created) VALUES (?, ?, ?, ?)"
-	result, err := SQL.Exec(query, utils.GenerateRandomString(16), name, 0, time.Now().UnixMilli())
+	result, err := SQL.Exec(query, uniqueGameId, name, 0, time.Now().UnixMilli())
 
 	if err != nil {
 		return -1, err
