@@ -49,7 +49,6 @@ func RemoveUserFromLobby(user *sessions.User) {
 }
 
 // AddGameToLobby Adds a game to the multiplayer lobby list
-// TODO: Send game info to lobby players
 // TODO: Place user in game
 func AddGameToLobby(game *Game) {
 	lobby.mutex.Lock()
