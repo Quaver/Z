@@ -1,0 +1,64 @@
+package multiplayer
+
+import (
+	"example.com/Quaver/Z/common"
+	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/objects"
+	"example.com/Quaver/Z/utils"
+	"math"
+)
+
+type Game struct {
+	Data     *objects.MultiplayerGame
+	Password string // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
+}
+
+// NewGame Creates a new multiplayer game from a game
+func NewGame(gameData *objects.MultiplayerGame) (*Game, error) {
+	game := Game{Data: gameData}
+
+	if game.Data.CreationPassword != "" {
+		game.Data.HasPassword = true
+		game.Password = game.Data.CreationPassword
+		game.Data.CreationPassword = ""
+	}
+
+	game.ValidateSettings()
+
+	var err error
+	game.Data.Id, err = db.InsertMultiplayerGame(game.Data.Name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &game, nil
+}
+
+// ValidateSettings Checks the multiplayer settings to see if they are in an acceptable range
+func (game *Game) ValidateSettings() {
+	data := game.Data
+
+	data.Name = utils.TruncateString(data.Name, 50)
+	data.HasPassword = game.Password != ""
+	data.MaxPlayers = utils.Clamp(data.MaxPlayers, 2, 16)
+	data.Ruleset = utils.Clamp(data.Ruleset, objects.MultiplayerGameRulesetFreeForAll, objects.MultiplayerGameRulesetTeam)
+	data.FreeModType = utils.Clamp(data.FreeModType, objects.MultiplayerGameFreeModNone, objects.MultiplayerGameFreeModRegular|objects.MultiplayerGameFreeModRate)
+
+	data.MapMD5 = utils.TruncateString(data.MapMD5, 32)
+	data.MapMD5Alternative = utils.TruncateString(data.MapMD5Alternative, 32)
+	data.MapName = utils.TruncateString(data.MapName, 250)
+	data.MapGameMode = utils.Clamp(data.MapGameMode, common.ModeKeys4, common.ModeKeys7)
+
+	data.FilterMinDifficultyRating = utils.Clamp(data.FilterMinDifficultyRating, 0, math.MaxInt32)
+	data.FilterMaxDifficultyRating = utils.Clamp(data.FilterMaxDifficultyRating, 0, math.MaxInt32)
+	data.FilterMaxSongLength = utils.Clamp(data.FilterMaxSongLength, 0, math.MaxInt32)
+	data.FilterMinLongNotePercent = utils.Clamp(data.FilterMinLongNotePercent, 0, 100)
+	data.FilterMaxLongNotePercent = utils.Clamp(data.FilterMaxLongNotePercent, 0, 100)
+	data.FilterMinAudioRate = utils.Clamp(data.FilterMinAudioRate, 0.5, 2.0)
+
+	// There is a maximum of 21 rates allowed in the game. So if we don't have all of them, then just clear it.
+	if len(data.MapAllDifficultyRatings) < 21 {
+		data.MapAllDifficultyRatings = []float64{}
+	}
+}

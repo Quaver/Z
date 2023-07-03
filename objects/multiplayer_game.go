@@ -3,10 +3,9 @@ package objects
 import "example.com/Quaver/Z/common"
 
 type MultiplayerGame struct {
-	Id                        string                      `json:"id"`    // A unique identifier for the game
-	GameId                    int                         `json:"gid"`   // The id of the game in the database
-	Type                      MultiplayerGameType         `json:"t"`     // The type of multiplayer game this is
+	Id                        int                         `json:"gid"`   // The id of the game in the database
 	Name                      string                      `json:"n"`     // The name of the game
+	CreationPassword          string                      `json:"pw"`    // The password of the game during creation
 	HasPassword               bool                        `json:"hp"`    // If the game has a password on it
 	MaxPlayers                int                         `json:"mp"`    // The maximum amount of players allowed in the game
 	MapMD5                    string                      `json:"md5"`   // The MD5 hash of the currently played map
@@ -33,10 +32,8 @@ type MultiplayerGame struct {
 	MatchCountdownTimestamp   int64                       `json:"cst"`   // A unix timestamp of the time the match countdown has started
 	GlobalModifiers           int64                       `json:"md"`    // The modifiers that are used globally for every player in the match
 	FreeModType               MultiplayerGameFreeMod      `json:"fm"`    // The type of free mod that is active for the match.
-	HealthType                MultiplayerGameHealth       `json:"ht"`    // The way health is handled in the match
 	TeamRedWins               int                         `json:"rtw"`   // The amount of wins the red team has
 	TeamBlueWins              int                         `json:"btw"`   // The amount of wins the blue team has
-	LifeCount                 int                         `json:"lv"`    // The amount of lives each player starts with in the match
 	IsHostSelectingMap        bool                        `json:"hsm"`   // If the host is currently selecting a map
 	IsMapsetShared            bool                        `json:"ims"`   // If the mapset is temporarily uploaded and shared by the host
 	IsTournamentMode          bool                        `json:"trn"`   // If the game is currently in tournament mode
