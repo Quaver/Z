@@ -46,6 +46,9 @@ type User struct {
 
 	// The last time the user's spammed messages were checked
 	spammedChatLastTimeCleared int64
+
+	// The id of the multiplayer game if the user is inside of one
+	multiplayerGameId int
 }
 
 // NewUser Creates a new user session struct object
@@ -217,6 +220,13 @@ func (u *User) SetSpammedChatLastTimeCleared(time int64) {
 	u.mutex.Lock()
 	defer u.mutex.Unlock()
 	u.spammedChatLastTimeCleared = time
+}
+
+// SetMultiplayerGameId Sets the id of the multiplayer game if the user is inside of one
+func (u *User) SetMultiplayerGameId(id int) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+	u.multiplayerGameId = id
 }
 
 // IsMuted Returns if the user is muted

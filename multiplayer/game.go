@@ -4,6 +4,8 @@ import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
+	"example.com/Quaver/Z/packets"
+	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"math"
 	"sync"
@@ -15,6 +17,10 @@ type Game struct {
 	CreatorId int    // The id of the user who created the game
 	mutex     *sync.Mutex
 }
+
+const (
+	maxPlayerCount int = 16 // The maximum amount of players allowed in a game
+)
 
 // NewGame Creates a new multiplayer game from a game
 func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
@@ -40,14 +46,35 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 	return &game, nil
 }
 
-// AddUser Adds a user to the multiplayer game
-func (game *Game) AddUser() {
+// AddPlayer Adds a user to the multiplayer game
+func (game *Game) AddPlayer(userId int, password string) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
 
-}
+	user := sessions.GetUserById(userId)
 
-// RemoveUser Removes a user from the multiplayer game
-func (game *Game) RemoveUser() {
+	if user == nil {
+		return
+	}
 
+	if len(game.Data.PlayerIds) >= maxPlayerCount {
+		return
+	}
+
+	// TODO: Add password bypass for Swan
+	if game.Data.HasPassword && game.Password != password {
+		return
+	}
+
+	game.Data.PlayerIds = append(game.Data.PlayerIds, user.Info.Id)
+	game.Data.PlayerModifiers = append(game.Data.PlayerModifiers, objects.MultiplayerGamePlayerMods{Id: user.Info.Id})
+	game.Data.PlayerWins = append(game.Data.PlayerWins, objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
+
+	user.SetMultiplayerGameId(game.Data.Id)
+	RemoveUserFromLobby(user)
+
+	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
+	sendLobbyUsersGameInfoPacket(game, true)
 }
 
 // validateSettings Checks the multiplayer settings to see if they are in an acceptable range
