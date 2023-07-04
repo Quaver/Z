@@ -6,25 +6,29 @@ import (
 	"example.com/Quaver/Z/objects"
 	"example.com/Quaver/Z/utils"
 	"math"
+	"sync"
 )
 
 type Game struct {
 	Data      *objects.MultiplayerGame
 	Password  string // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
 	CreatorId int    // The id of the user who created the game
+	mutex     *sync.Mutex
 }
 
 // NewGame Creates a new multiplayer game from a game
 func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
-	game := Game{Data: gameData}
-	game.Data.GameId = utils.GenerateRandomString(32)
-	game.CreatorId = creatorId
-
-	// We don't want the password to be exposed in the JSON of the multiplayer game, so we are using another property to hide it.
-	if game.Data.CreationPassword != "" {
-		game.Password = game.Data.CreationPassword
-		game.Data.CreationPassword = ""
+	game := Game{
+		Data:      gameData,
+		CreatorId: creatorId,
+		mutex:     &sync.Mutex{},
+		Password:  gameData.CreationPassword,
 	}
+
+	game.Data.GameId = utils.GenerateRandomString(32)
+	game.Data.CreationPassword = ""
+	game.Data.SetDefaults()
+	game.validateSettings()
 
 	var err error
 	game.Data.Id, err = db.InsertMultiplayerGame(game.Data.Name, game.Data.GameId)
@@ -33,10 +37,17 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		return nil, err
 	}
 
-	game.Data.SetDefaults()
-	game.validateSettings()
-
 	return &game, nil
+}
+
+// AddUser Adds a user to the multiplayer game
+func (game *Game) AddUser() {
+
+}
+
+// RemoveUser Removes a user from the multiplayer game
+func (game *Game) RemoveUser() {
+
 }
 
 // validateSettings Checks the multiplayer settings to see if they are in an acceptable range
