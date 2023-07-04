@@ -61,8 +61,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 		return
 	}
 
-	// TODO: Add password bypass for Swan
-	if game.Data.HasPassword && game.Password != password {
+	if game.Data.HasPassword && game.Password != password && !common.HasUserGroup(user.Info.UserGroups, common.UserGroupSwan) {
 		return
 	}
 
