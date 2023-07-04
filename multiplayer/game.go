@@ -7,6 +7,7 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
+	"log"
 	"math"
 	"sync"
 )
@@ -69,11 +70,51 @@ func (game *Game) AddPlayer(userId int, password string) {
 	game.Data.PlayerModifiers = append(game.Data.PlayerModifiers, objects.MultiplayerGamePlayerMods{Id: user.Info.Id})
 	game.Data.PlayerWins = append(game.Data.PlayerWins, objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
 
-	user.SetMultiplayerGameId(game.Data.Id)
 	RemoveUserFromLobby(user)
-
+	user.SetMultiplayerGameId(game.Data.Id)
 	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
+
+	if len(game.Data.PlayerIds) == 1 {
+		game.SetHost(user.Info.Id, false)
+	}
+
 	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// SetHost Sets the host of the game
+func (game *Game) SetHost(userId int, lock bool) {
+	if lock {
+		game.mutex.Lock()
+		defer game.mutex.Unlock()
+	}
+
+	user := sessions.GetUserById(userId)
+
+	if user == nil {
+		return
+	}
+
+	if user.GetMultiplayerGameId() != game.Data.Id {
+		log.Printf("[MP #%v] Tried to give host to user `%v (%v)`, but they are not in the game\n", game.Data.Id, user.Info.Username, user.Info.Id)
+		return
+	}
+
+	game.Data.HostId = userId
+	game.sendPacketToPlayers(packets.NewServerGameChangeHost(game.Data.HostId))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// Sends a packet to all players in the game.
+func (game *Game) sendPacketToPlayers(packet interface{}) {
+	for _, id := range game.Data.PlayerIds {
+		user := sessions.GetUserById(id)
+
+		if user == nil {
+			continue
+		}
+
+		sessions.SendPacketToUser(packet, user)
+	}
 }
 
 // validateSettings Checks the multiplayer settings to see if they are in an acceptable range

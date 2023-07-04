@@ -222,6 +222,14 @@ func (u *User) SetSpammedChatLastTimeCleared(time int64) {
 	u.spammedChatLastTimeCleared = time
 }
 
+// GetMultiplayerGameId Gets the id of the multiplayer game the user is currently inside of (if any)
+func (u *User) GetMultiplayerGameId() int {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+
+	return u.multiplayerGameId
+}
+
 // SetMultiplayerGameId Sets the id of the multiplayer game if the user is inside of one
 func (u *User) SetMultiplayerGameId(id int) {
 	u.mutex.Lock()
