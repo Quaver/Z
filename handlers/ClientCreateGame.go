@@ -13,8 +13,7 @@ func handleClientCreateGame(user *sessions.User, packet *packets.ClientCreateGam
 		return
 	}
 
-	game, err := multiplayer.NewGame(packet.Game)
-	game.Data.HostId = user.Info.Id
+	game, err := multiplayer.NewGame(packet.Game, user.Info.Id)
 
 	if err != nil {
 		log.Printf("Error creating multiplayer game: %v\n", err)

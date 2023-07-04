@@ -9,17 +9,20 @@ import (
 )
 
 type Game struct {
-	Data     *objects.MultiplayerGame
-	Password string // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
+	Data      *objects.MultiplayerGame
+	Password  string // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
+	CreatorId int    // The id of the user who created the game
 }
 
 // NewGame Creates a new multiplayer game from a game
-func NewGame(gameData *objects.MultiplayerGame) (*Game, error) {
+func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 	game := Game{Data: gameData}
 	game.Data.GameId = utils.GenerateRandomString(32)
+	game.CreatorId = creatorId
 
+	// We don't want the password to be exposed in the JSON of the multiplayer game, so we are using another property
+	// to hide it.
 	if game.Data.CreationPassword != "" {
-		game.Data.HasPassword = true
 		game.Password = game.Data.CreationPassword
 		game.Data.CreationPassword = ""
 	}
