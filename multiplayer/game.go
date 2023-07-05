@@ -73,6 +73,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 	game.Data.PlayerWins = append(game.Data.PlayerWins, objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
 
 	user.SetMultiplayerGameId(game.Data.Id)
+	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
 	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
 
 	if len(game.Data.PlayerIds) == 1 {
