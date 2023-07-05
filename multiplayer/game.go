@@ -72,7 +72,6 @@ func (game *Game) AddPlayer(userId int, password string) {
 	game.Data.PlayerModifiers = append(game.Data.PlayerModifiers, objects.MultiplayerGamePlayerMods{Id: user.Info.Id})
 	game.Data.PlayerWins = append(game.Data.PlayerWins, objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
 
-	RemoveUserFromLobby(user)
 	user.SetMultiplayerGameId(game.Data.Id)
 	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
 
@@ -80,6 +79,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 		game.SetHost(user.Info.Id, false)
 	}
 
+	RemoveUserFromLobby(user)
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
