@@ -59,10 +59,12 @@ func (game *Game) AddPlayer(userId int, password string) {
 	}
 
 	if len(game.Data.PlayerIds) >= maxPlayerCount {
+		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorFull), user)
 		return
 	}
 
 	if game.Data.HasPassword && game.Password != password && !common.HasUserGroup(user.Info.UserGroups, common.UserGroupSwan) {
+		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorPassword), user)
 		return
 	}
 
@@ -79,6 +81,23 @@ func (game *Game) AddPlayer(userId int, password string) {
 	}
 
 	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// RemovePlayer Removes a player from the multiplayer game and disbands the game if necessary
+func (game *Game) RemovePlayer(userId int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	user := sessions.GetUserById(userId)
+
+	if user == nil {
+		return
+	}
+
+	user.SetMultiplayerGameId(0)
+
+	// Remove from player ids
+	// Remove from player modifiers
 }
 
 // SetHost Sets the host of the game
@@ -100,6 +119,7 @@ func (game *Game) SetHost(userId int, lock bool) {
 	}
 
 	game.Data.HostId = userId
+
 	game.sendPacketToPlayers(packets.NewServerGameChangeHost(game.Data.HostId))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
