@@ -167,6 +167,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.PlayersWithoutMap = []int{}
 	game.Data.PlayersReady = []int{}
 
+	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
