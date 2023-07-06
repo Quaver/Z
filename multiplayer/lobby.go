@@ -80,6 +80,20 @@ func GetGameById(id int) *Game {
 	return lobby.games[id]
 }
 
+// GetGameByIdString Retrieves a game by its stringified id
+func GetGameByIdString(id string) *Game {
+	lobby.mutex.Lock()
+	defer lobby.mutex.Unlock()
+
+	for _, game := range lobby.games {
+		if game.Data.GameId == id {
+			return game
+		}
+	}
+
+	return nil
+}
+
 // SendLobbyUsersGameInfoPacket Sends all the users in the lobby a packet with game information
 // Be careful of deadlocks when calling this. Make sure not to call the mutex twice.
 func sendLobbyUsersGameInfoPacket(game *Game, lock bool) {

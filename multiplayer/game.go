@@ -58,6 +58,12 @@ func (game *Game) AddPlayer(userId int, password string) {
 		return
 	}
 
+	currentGame := GetGameById(user.GetMultiplayerGameId())
+
+	if currentGame != nil && currentGame.Data.Id != game.Data.Id {
+		currentGame.RemovePlayer(user.Info.Id)
+	}
+
 	if len(game.Data.PlayerIds) >= maxPlayerCount {
 		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorFull), user)
 		return
