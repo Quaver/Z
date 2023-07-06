@@ -109,7 +109,7 @@ func (game *Game) RemovePlayer(userId int) {
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
-		RemoveGameFromLobby(game)
+		//RemoveGameFromLobby(game)
 		return
 	}
 
@@ -168,6 +168,17 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.PlayersReady = []int{}
 
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// SetPlayerDoesntHaveMap Sets that a player does not have the map downloaded
+func (game *Game) SetPlayerDoesntHaveMap(userId int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	game.Data.PlayersWithoutMap = append(game.Data.PlayersWithoutMap, userId)
+
+	game.sendPacketToPlayers(packets.NewServerGamePlayerNoMap(userId))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 

@@ -52,6 +52,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientJoinGame(user, unmarshalPacket[packets.ClientJoinGame](msg))
 	case packets.PacketIdClientChangeGameMap:
 		handleClientChangeGameMap(user, unmarshalPacket[packets.ClientChangeGameMap](msg))
+	case packets.PacketIdClientGamePlayerNoMap:
+		handleClientGamePlayerNoMap(user, unmarshalPacket[packets.ClientGamePlayerNoMap](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}
