@@ -113,8 +113,8 @@ func (game *Game) RemovePlayer(userId int) {
 		return
 	}
 
-	// TODO: Send leave game packet to other users
 	game.SetHost(game.Data.PlayerIds[0], false)
+	game.sendPacketToPlayers(packets.NewServerUserLeftGame(user.Info.Id))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
