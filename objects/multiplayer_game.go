@@ -17,7 +17,7 @@ type MultiplayerGame struct {
 	MapGameMode               common.Mode                 `json:"gm"`    // The game mode for the currently selected map
 	MapJudgementCount         int                         `json:"jc"`    // The amount of judgements possible in the map
 	MapDifficultyRating       float64                     `json:"d"`     // The difficulty rating of the currently selected map
-	MapAllDifficultyRatings   []float64                   `json:"adr"`   // The difficulty rating for all rates of the map. Host provides this for scoring on unsubmitted maps
+	MapDifficultyRatingAll    []float64                   `json:"adr"`   // The difficulty rating for all rates of the map. Host provides this for scoring on unsubmitted maps
 	Ruleset                   MultiplayerGameRuleset      `json:"r"`     // The rules of the match (free-for-all, team, etc)
 	IsHostRotation            bool                        `json:"hr"`    // Whether the server will control host rotation for the game
 	InProgress                bool                        `json:"inp"`   // IF the match is currently in progress
@@ -55,8 +55,7 @@ func (mg *MultiplayerGame) SetDefaults() {
 	mg.PlayersRedTeam = []int{}
 	mg.PlayersBlueTeam = []int{}
 	mg.PlayerWins = []MultiplayerGamePlayerWins{}
-	mg.FilterAllowedGameModes = []common.Mode{}
-
+	mg.FilterAllowedGameModes = []common.Mode{common.ModeKeys4, common.ModeKeys7}
 	mg.FilterMaxDifficultyRating = 999999999
 	mg.FilterMaxSongLength = 999999999
 	mg.FilterMaxLongNotePercent = 100

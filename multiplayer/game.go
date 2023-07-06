@@ -142,6 +142,34 @@ func (game *Game) SetHost(userId int, lock bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// ChangeMap Changes the multiplayer map. Non-nil requester checks if they are the host
+func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChangeGameMap) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if game.Data.InProgress {
+		return
+	}
+
+	if requester != nil && requester.Info.Id != game.Data.HostId {
+		return
+	}
+
+	game.Data.MapMD5 = packet.MD5
+	game.Data.MapMD5Alternative = packet.AlternativeMD5
+	game.Data.MapId = packet.MapId
+	game.Data.MapsetId = packet.MapsetId
+	game.Data.MapName = packet.Name
+	game.Data.MapGameMode = packet.Mode
+	game.Data.MapDifficultyRating = packet.DifficultyRating
+	game.Data.MapDifficultyRatingAll = packet.DifficultyRatingAll
+	game.Data.MapJudgementCount = packet.JudgementCount
+	game.Data.PlayersWithoutMap = []int{}
+	game.Data.PlayersReady = []int{}
+
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Sends a packet to all players in the game.
 func (game *Game) sendPacketToPlayers(packet interface{}) {
 	for _, id := range game.Data.PlayerIds {
@@ -178,7 +206,7 @@ func (game *Game) validateSettings() {
 	data.FilterMinAudioRate = utils.Clamp(data.FilterMinAudioRate, 0.5, 2.0)
 
 	// There is a maximum of 21 rates allowed in the game. So if we don't have all of them, then just clear it.
-	if len(data.MapAllDifficultyRatings) < 21 {
-		data.MapAllDifficultyRatings = []float64{}
+	if len(data.MapDifficultyRatingAll) < 21 {
+		data.MapDifficultyRatingAll = []float64{}
 	}
 }
