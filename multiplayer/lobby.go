@@ -64,6 +64,10 @@ func RemoveGameFromLobby(game *Game) {
 	lobby.mutex.Lock()
 	defer lobby.mutex.Unlock()
 
+	for _, user := range lobby.users {
+		sessions.SendPacketToUser(packets.NewServerGameDisbanded(game.Data.GameId), user)
+	}
+
 	delete(lobby.games, game.Data.Id)
 	log.Printf("Multiplayer game `%v (%v)` was disbanded.\n", game.Data.Name, game.Data.Id)
 }

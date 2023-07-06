@@ -101,6 +101,14 @@ func (game *Game) RemovePlayer(userId int) {
 	game.Data.PlayerModifiers = utils.Filter(game.Data.PlayerModifiers, func(x objects.MultiplayerGamePlayerMods) bool { return x.Id != user.Info.Id })
 	game.Data.PlayerWins = utils.Filter(game.Data.PlayerWins, func(x objects.MultiplayerGamePlayerWins) bool { return x.Id != user.Info.Id })
 
+	// Disband game since there are no more players left
+	if len(game.Data.PlayerIds) == 0 {
+		RemoveGameFromLobby(game)
+		return
+	}
+
+	// TODO: Send leave game packet to other users
+	game.SetHost(game.Data.PlayerIds[0], false)
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
