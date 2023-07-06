@@ -166,6 +166,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.MapJudgementCount = packet.JudgementCount
 	game.Data.PlayersWithoutMap = []int{}
 	game.Data.PlayersReady = []int{}
+	game.validateSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -218,8 +219,8 @@ func (game *Game) validateSettings() {
 	data.Ruleset = utils.Clamp(data.Ruleset, objects.MultiplayerGameRulesetFreeForAll, objects.MultiplayerGameRulesetTeam)
 	data.FreeModType = utils.Clamp(data.FreeModType, objects.MultiplayerGameFreeModNone, objects.MultiplayerGameFreeModRegular|objects.MultiplayerGameFreeModRate)
 
-	data.MapMD5 = utils.TruncateString(data.MapMD5, 32)
-	data.MapMD5Alternative = utils.TruncateString(data.MapMD5Alternative, 32)
+	data.MapMD5 = utils.TruncateString(data.MapMD5, 64)
+	data.MapMD5Alternative = utils.TruncateString(data.MapMD5Alternative, 64)
 	data.MapName = utils.TruncateString(data.MapName, 250)
 	data.MapGameMode = utils.Clamp(data.MapGameMode, common.ModeKeys4, common.ModeKeys7)
 
