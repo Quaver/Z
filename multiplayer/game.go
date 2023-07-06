@@ -182,6 +182,19 @@ func (game *Game) SetPlayerDoesntHaveMap(userId int) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetPlayerHasMap Sets that a player now has the currently played map
+func (game *Game) SetPlayerHasMap(userId int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	game.Data.PlayersWithoutMap = utils.Filter(game.Data.PlayersWithoutMap, func(x int) bool {
+		return x != userId
+	})
+
+	game.sendPacketToPlayers(packets.NewServerGamePlayerHasMap(userId))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Sends a packet to all players in the game.
 func (game *Game) sendPacketToPlayers(packet interface{}) {
 	for _, id := range game.Data.PlayerIds {
