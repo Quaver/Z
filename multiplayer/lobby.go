@@ -68,6 +68,14 @@ func RemoveGameFromLobby(game *Game) {
 	log.Printf("Multiplayer game `%v (%v)` was disbanded.\n", game.Data.Name, game.Data.Id)
 }
 
+// GetGameById Retrieves a multiplayer game by its id
+func GetGameById(id int) *Game {
+	lobby.mutex.Lock()
+	defer lobby.mutex.Unlock()
+
+	return lobby.games[id]
+}
+
 // SendLobbyUsersGameInfoPacket Sends all the users in the lobby a packet with game information
 // Be careful of deadlocks when calling this. Make sure not to call the mutex twice.
 func sendLobbyUsersGameInfoPacket(game *Game, lock bool) {

@@ -97,8 +97,11 @@ func (game *Game) RemovePlayer(userId int) {
 
 	user.SetMultiplayerGameId(0)
 
-	// Remove from player ids
-	// Remove from player modifiers
+	game.Data.PlayerIds = utils.Filter(game.Data.PlayerIds, func(x int) bool { return x != user.Info.Id })
+	game.Data.PlayerModifiers = utils.Filter(game.Data.PlayerModifiers, func(x objects.MultiplayerGamePlayerMods) bool { return x.Id != user.Info.Id })
+	game.Data.PlayerWins = utils.Filter(game.Data.PlayerWins, func(x objects.MultiplayerGamePlayerWins) bool { return x.Id != user.Info.Id })
+
+	sendLobbyUsersGameInfoPacket(game, true)
 }
 
 // SetHost Sets the host of the game
