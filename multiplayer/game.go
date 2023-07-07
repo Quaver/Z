@@ -7,15 +7,18 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
+	"log"
 	"math"
 	"sync"
+	"time"
 )
 
 type Game struct {
-	Data      *objects.MultiplayerGame
-	Password  string // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
-	CreatorId int    // The id of the user who created the game
-	mutex     *sync.Mutex
+	Data           *objects.MultiplayerGame
+	Password       string      // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
+	CreatorId      int         // The id of the user who created the game
+	mutex          *sync.Mutex // Locks down the game to prevent race conditions
+	countdownTimer *time.Timer // Counts down before starting the game
 }
 
 const (
@@ -218,6 +221,29 @@ func (game *Game) SetPlayerNotReady(userId int) {
 	})
 
 	game.sendPacketToPlayers(packets.NewServerGamePlayerNotReady(userId))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// StartCountdown Starts the 5-second multiplayer countdown
+func (game *Game) StartCountdown(requester *sessions.User) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if game.Data.InProgress {
+		return
+	}
+
+	if requester != nil && requester.Info.Id != game.Data.HostId {
+		return
+	}
+
+	game.countdownTimer = time.AfterFunc(5*time.Second, func() {
+		game.mutex.Lock()
+		defer game.mutex.Unlock()
+		log.Println("START THE GAME!")
+	})
+
+	game.sendPacketToPlayers(packets.NewServerGameStartCountdown())
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 

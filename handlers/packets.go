@@ -60,6 +60,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientGamePlayerReady(user, unmarshalPacket[packets.ClientGamePlayerReady](msg))
 	case packets.PacketIdClientGamePlayerNotReady:
 		handleClientGamePlayerNotReady(user, unmarshalPacket[packets.ClientGamePlayerNotReady](msg))
+	case packets.PacketIdClientGameStartCountdown:
+		handleClientGameStartCountdown(user, unmarshalPacket[packets.ClientGameStartCountdown](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}
