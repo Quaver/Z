@@ -7,7 +7,6 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
-	"log"
 	"math"
 	"sync"
 	"time"
@@ -238,8 +237,7 @@ func (game *Game) StartCountdown(requester *sessions.User) {
 	}
 
 	game.countdownTimer = time.AfterFunc(5*time.Second, func() {
-		log.Println("START THE GAME!")
-		game.clearCountdown()
+		game.StartGame()
 	})
 
 	game.sendPacketToPlayers(packets.NewServerGameStartCountdown())
@@ -260,6 +258,21 @@ func (game *Game) StopCountdown(requester *sessions.User) {
 	}
 
 	game.clearCountdown()
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// StartGame Starts the multiplayer game
+func (game *Game) StartGame() {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if game.Data.InProgress {
+		return
+	}
+
+	game.clearCountdown()
+	game.clearReadyPlayers(true)
+
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
