@@ -7,7 +7,6 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
-	"log"
 	"math"
 	"sync"
 )
@@ -132,7 +131,6 @@ func (game *Game) SetHost(userId int, lock bool) {
 	}
 
 	if user.GetMultiplayerGameId() != game.Data.Id {
-		log.Printf("[MP #%v] Tried to give host to user `%v (%v)`, but they are not in the game\n", game.Data.Id, user.Info.Username, user.Info.Id)
 		return
 	}
 
