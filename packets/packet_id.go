@@ -74,16 +74,16 @@ const (
 	PacketIdServerGameNameChanged
 	PacketIdServerGameInvite
 	PacketIdClientGameAcceptInvite
-	PacketIdServerGameHealthTypeChanged
-	PacketIdServerGameLivesChanged
+	PacketIdServerGameHealthTypeChanged // UNUSED
+	PacketIdServerGameLivesChanged      // UNUSED
 	PacketIdServerGameHostRotationChanged
-	PacketIdServerGamePlayerTeamChanged
-	PacketIdClientGamePlayerTeamChanged
-	PacketIdServerGameRulesetChanged
+	PacketIdServerGamePlayerTeamChanged // UNUSED
+	PacketIdClientGamePlayerTeamChanged // UNUSED
+	PacketIdServerGameRulesetChanged    // UNUSED
 	PacketIdServerGameLongNotePercentageChanged
 	PacketIdServerGameMaxPlayersChanged
 	PacketIdServerGameMinimumRateChanged
-	PacketIdServerGameTeamWinCount
+	PacketIdServerGameTeamWinCount // UNUSED
 	PacketIdServerGamePlayerWinCount
 	PacketIdClientRequestUserStats
 	PacketIdServerUserStats
@@ -91,7 +91,7 @@ const (
 	PacketIdClientGameKickPlayer
 	PacketIdClientGameTransferHost
 	PacketIdClientGameChangeOtherPlayerTeam // UNUSED
-	PacketIdClientGameChangeRuleset
+	PacketIdClientGameChangeRuleset         // UNUSED
 	PacketIdClientGameChangeMaxPlayers
 	PacketIdClientGameChangeAutoHostRotation
 	PacketIdClientGameChangeHealthType // UNUSED

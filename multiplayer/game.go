@@ -276,6 +276,30 @@ func (game *Game) StartGame() {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// ChangeName Changes the name of the multiplayer game
+func (game *Game) ChangeName(requester *sessions.User, name string) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if game.Data.InProgress {
+		return
+	}
+
+	if requester != nil && requester.Info.Id != game.Data.HostId {
+		return
+	}
+
+	if game.Data.Name == "" {
+		return
+	}
+
+	game.Data.Name = name
+	game.validateSettings()
+
+	game.sendPacketToPlayers(packets.NewServerGameNameChanged(game.Data.Name))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Clears all players that are ready. This is to be used in an already mutex-locked context.
 func (game *Game) clearReadyPlayers(sendToLobby bool) {
 	for _, id := range game.Data.PlayersReady {
