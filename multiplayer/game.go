@@ -271,7 +271,7 @@ func (game *Game) StartGame() {
 	}
 
 	game.clearCountdown()
-	game.clearReadyPlayers(true)
+	game.clearReadyPlayers(false)
 
 	sendLobbyUsersGameInfoPacket(game, true)
 }
