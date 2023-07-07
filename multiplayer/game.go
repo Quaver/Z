@@ -196,6 +196,19 @@ func (game *Game) SetPlayerHasMap(userId int) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetPlayerReady Sets that a player is currently ready to play
+func (game *Game) SetPlayerReady(userId int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !utils.Includes(game.Data.PlayersReady, userId) {
+		game.Data.PlayersReady = append(game.Data.PlayersReady, userId)
+	}
+
+	game.sendPacketToPlayers(packets.NewServerGamePlayerReady(userId))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Sends a packet to all players in the game.
 func (game *Game) sendPacketToPlayers(packet interface{}) {
 	for _, id := range game.Data.PlayerIds {
