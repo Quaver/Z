@@ -87,15 +87,15 @@ const (
 	PacketIdServerGamePlayerWinCount
 	PacketIdClientRequestUserStats
 	PacketIdServerUserStats
-	PacketIdServerGamePlayerBattleRoyaleEliminated
+	PacketIdServerGamePlayerBattleRoyaleEliminated // UNUSED
 	PacketIdClientGameKickPlayer
 	PacketIdClientGameTransferHost
-	PacketIdClientGameChangeOtherPlayerTeam
+	PacketIdClientGameChangeOtherPlayerTeam // UNUSED
 	PacketIdClientGameChangeRuleset
 	PacketIdClientGameChangeMaxPlayers
 	PacketIdClientGameChangeAutoHostRotation
-	PacketIdClientGameChangeHealthType
-	PacketIdClientGameChangeLivesCount
+	PacketIdClientGameChangeHealthType // UNUSED
+	PacketIdClientGameChangeLivesCount // UNUSED
 	PacketIdClientGameChangeFreeModType
 	PacketIdClientGameHostSelectingMap
 	PacketIdServerGameHostSelectingMap
@@ -108,22 +108,22 @@ const (
 	PacketIdServerSpectatorLeft
 	PacketIdClientSpectatorReplayFrames
 	PacketIdServerSpectatorReplayFrames
-	PacketIdServerListeningPartyJoined
-	PacketIdServerListeningPartyLeft
-	PacketIdClientListeningPartyStateUpdate
-	PacketIdServerListeningPartyStateUpdate
-	PacketIdServerListeningPartyFellowJoined
-	PacketIdServerListeningPartyFellowLeft
-	PacketIdClientListeningPartyChangeHost
-	PacketIdServerListeningPartyChangeHost
-	PacketIdClientListeningPartyKickUser
-	PacketIdClientListeningPartyUserMissingSong
-	PacketIdServerListeningPartyUserMissingSong
-	PacketIdClientListeningPartyUserHasSong
-	PacketIdServerListeningPartyUserHasSong
+	PacketIdServerListeningPartyJoined          // UNUSED
+	PacketIdServerListeningPartyLeft            // UNUSED
+	PacketIdClientListeningPartyStateUpdate     // UNUSED
+	PacketIdServerListeningPartyStateUpdate     // UNUSED
+	PacketIdServerListeningPartyFellowJoined    // UNUSED
+	PacketIdServerListeningPartyFellowLeft      // UNUSED
+	PacketIdClientListeningPartyChangeHost      // UNUSED
+	PacketIdServerListeningPartyChangeHost      // UNUSED
+	PacketIdClientListeningPartyKickUser        // UNUSED
+	PacketIdClientListeningPartyUserMissingSong // UNUSED
+	PacketIdServerListeningPartyUserMissingSong // UNUSED
+	PacketIdClientListeningPartyUserHasSong     // UNUSED
+	PacketIdServerListeningPartyUserHasSong     // UNUSED
 	PacketIdServerUserFriendsList
 	PacketIdClientFriendship
-	PacketIdClientJoinListeningParty
+	PacketIdClientJoinListeningParty // UNUSED
 	PacketIdClientInviteToGame
 	PacketIdServerSongRequest
 	PacketIdServerTwitchConnection

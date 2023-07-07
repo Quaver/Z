@@ -209,6 +209,19 @@ func (game *Game) SetPlayerReady(userId int) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetPlayerNotReady Sets that a player is not ready to play
+func (game *Game) SetPlayerNotReady(userId int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	game.Data.PlayersReady = utils.Filter(game.Data.PlayersReady, func(i int) bool {
+		return i != userId
+	})
+
+	game.sendPacketToPlayers(packets.NewServerGamePlayerNotReady(userId))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Sends a packet to all players in the game.
 func (game *Game) sendPacketToPlayers(packet interface{}) {
 	for _, id := range game.Data.PlayerIds {
