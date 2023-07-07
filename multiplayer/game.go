@@ -238,12 +238,28 @@ func (game *Game) StartCountdown(requester *sessions.User) {
 	}
 
 	game.countdownTimer = time.AfterFunc(5*time.Second, func() {
-		game.mutex.Lock()
-		defer game.mutex.Unlock()
 		log.Println("START THE GAME!")
+		game.clearCountdown()
 	})
 
 	game.sendPacketToPlayers(packets.NewServerGameStartCountdown())
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// StopCountdown Stops the multiplayer countdown if one is live
+func (game *Game) StopCountdown(requester *sessions.User) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if game.Data.InProgress {
+		return
+	}
+
+	if requester != nil && requester.Info.Id != game.Data.HostId {
+		return
+	}
+
+	game.clearCountdown()
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
@@ -258,6 +274,16 @@ func (game *Game) clearReadyPlayers(sendToLobby bool) {
 	if sendToLobby {
 		sendLobbyUsersGameInfoPacket(game, true)
 	}
+}
+
+// Clears and stops the countdown timer
+func (game *Game) clearCountdown() {
+	if game.countdownTimer != nil {
+		game.countdownTimer.Stop()
+		game.countdownTimer = nil
+	}
+
+	game.sendPacketToPlayers(packets.NewServerGameStopCountdown())
 }
 
 // Sends a packet to all players in the game. This is to be used in an already mutex-locked context.
