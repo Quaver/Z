@@ -167,6 +167,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.PlayersWithoutMap = []int{}
 	game.Data.PlayersReady = []int{}
 	game.validateSettings()
+	game.clearReadyPlayers(false)
 
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -222,7 +223,20 @@ func (game *Game) SetPlayerNotReady(userId int) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
-// Sends a packet to all players in the game.
+// Clears all players that are ready. This is to be used in an already mutex-locked context.
+func (game *Game) clearReadyPlayers(sendToLobby bool) {
+	for _, id := range game.Data.PlayersReady {
+		game.sendPacketToPlayers(packets.NewServerGamePlayerNotReady(id))
+	}
+
+	game.Data.PlayersReady = []int{}
+
+	if sendToLobby {
+		sendLobbyUsersGameInfoPacket(game, true)
+	}
+}
+
+// Sends a packet to all players in the game. This is to be used in an already mutex-locked context.
 func (game *Game) sendPacketToPlayers(packet interface{}) {
 	for _, id := range game.Data.PlayerIds {
 		user := sessions.GetUserById(id)
