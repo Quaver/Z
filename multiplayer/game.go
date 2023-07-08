@@ -358,6 +358,24 @@ func (game *Game) SetDifficultyRange(requester *sessions.User, min float32, max 
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetMaxSongLength Sets the maximum song length filter for the map
+func (game *Game) SetMaxSongLength(requester *sessions.User, lengthSeconds int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	game.Data.FilterMaxSongLength = lengthSeconds
+	game.validateSettings()
+
+	packet := packets.NewServerGameMaxSongLengthChanged(game.Data.FilterMaxSongLength)
+	game.sendPacketToPlayers(packet)
+
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Returns if the user is host of the game or has permission
 func (game *Game) isUserHost(user *sessions.User) bool {
 	if user == nil {
