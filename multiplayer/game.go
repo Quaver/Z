@@ -370,9 +370,23 @@ func (game *Game) SetMaxSongLength(requester *sessions.User, lengthSeconds int) 
 	game.Data.FilterMaxSongLength = lengthSeconds
 	game.validateSettings()
 
-	packet := packets.NewServerGameMaxSongLengthChanged(game.Data.FilterMaxSongLength)
-	game.sendPacketToPlayers(packet)
+	game.sendPacketToPlayers(packets.NewServerGameMaxSongLengthChanged(game.Data.FilterMaxSongLength))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
 
+// SetAllowedGameModes Sets the game modes that are allowed to be played in the game
+func (game *Game) SetAllowedGameModes(requester *sessions.User, gameModes []common.Mode) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	game.Data.FilterAllowedGameModes = gameModes
+	game.validateSettings()
+
+	game.sendPacketToPlayers(packets.NewServerGameAllowedModesChanged(game.Data.FilterAllowedGameModes))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
@@ -450,5 +464,9 @@ func (game *Game) validateSettings() {
 	// There is a maximum of 21 rates allowed in the game. So if we don't have all of them, then just clear it.
 	if len(data.MapDifficultyRatingAll) < 21 {
 		data.MapDifficultyRatingAll = []float64{}
+	}
+
+	if len(data.FilterAllowedGameModes) == 0 {
+		data.FilterAllowedGameModes = []common.Mode{common.ModeKeys4, common.ModeKeys7}
 	}
 }
