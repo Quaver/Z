@@ -152,7 +152,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 		return
 	}
 
-	if requester != nil && requester.Info.Id != game.Data.HostId {
+	if !game.isUserHost(requester) {
 		return
 	}
 
@@ -233,7 +233,7 @@ func (game *Game) StartCountdown(requester *sessions.User) {
 		return
 	}
 
-	if requester != nil && requester.Info.Id != game.Data.HostId {
+	if !game.isUserHost(requester) {
 		return
 	}
 
@@ -254,7 +254,7 @@ func (game *Game) StopCountdown(requester *sessions.User) {
 		return
 	}
 
-	if requester != nil && requester.Info.Id != game.Data.HostId {
+	if !game.isUserHost(requester) {
 		return
 	}
 
@@ -286,7 +286,7 @@ func (game *Game) ChangeName(requester *sessions.User, name string) {
 		return
 	}
 
-	if requester != nil && requester.Info.Id != game.Data.HostId {
+	if !game.isUserHost(requester) {
 		return
 	}
 
@@ -312,7 +312,7 @@ func (game *Game) SetHostSelectingMap(requester *sessions.User, isSelecting bool
 		return
 	}
 
-	if requester != nil && requester.Info.Id != game.Data.HostId {
+	if !game.isUserHost(requester) {
 		return
 	}
 
@@ -329,7 +329,7 @@ func (game *Game) SetPassword(requester *sessions.User, password string) {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
 
-	if requester != nil && requester.Info.Id != game.Data.HostId {
+	if !game.isUserHost(requester) {
 		return
 	}
 
@@ -337,6 +337,19 @@ func (game *Game) SetPassword(requester *sessions.User, password string) {
 	game.validateSettings()
 
 	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// Returns if the user is host of the game or has permission
+func (game *Game) isUserHost(user *sessions.User) bool {
+	if user == nil {
+		return true
+	}
+
+	if user.Info.Id != game.Data.HostId {
+		return false
+	}
+
+	return true
 }
 
 // Clears all players that are ready. This is to be used in an already mutex-locked context.
