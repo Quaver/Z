@@ -137,6 +137,7 @@ func (game *Game) SetHost(userId int, lock bool) {
 	}
 
 	game.Data.HostId = userId
+	game.SetHostSelectingMap(nil, false, false, false)
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeHost(game.Data.HostId))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -300,6 +301,29 @@ func (game *Game) ChangeName(requester *sessions.User, name string) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetHostSelectingMap Sets whether the host is selecting a map or not
+func (game *Game) SetHostSelectingMap(requester *sessions.User, isSelecting bool, sendToLobby bool, lock bool) {
+	if lock {
+		game.mutex.Lock()
+		defer game.mutex.Unlock()
+	}
+
+	if game.Data.InProgress {
+		return
+	}
+
+	if requester != nil && requester.Info.Id != game.Data.HostId {
+		return
+	}
+
+	game.Data.IsHostSelectingMap = isSelecting
+	game.sendPacketToPlayers(packets.NewServerGameHostSelectingMap(isSelecting))
+
+	if sendToLobby {
+		sendLobbyUsersGameInfoPacket(game, true)
+	}
+}
+
 // Clears all players that are ready. This is to be used in an already mutex-locked context.
 func (game *Game) clearReadyPlayers(sendToLobby bool) {
 	for _, id := range game.Data.PlayersReady {
@@ -313,7 +337,7 @@ func (game *Game) clearReadyPlayers(sendToLobby bool) {
 	}
 }
 
-// Clears and stops the countdown timer
+// Clears and stops the countdown timer This is to be used in an already mutex-locked context.
 func (game *Game) clearCountdown() {
 	if game.countdownTimer != nil {
 		game.countdownTimer.Stop()
