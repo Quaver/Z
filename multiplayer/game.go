@@ -339,6 +339,25 @@ func (game *Game) SetPassword(requester *sessions.User, password string) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetDifficultyRange Sets the difficulty range filter for the game
+func (game *Game) SetDifficultyRange(requester *sessions.User, min float32, max float32) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	game.Data.FilterMinDifficultyRating = min
+	game.Data.FilterMaxDifficultyRating = max
+	game.validateSettings()
+
+	packet := packets.NewServerGameDifficultyRangeChanged(game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating)
+	game.sendPacketToPlayers(packet)
+
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Returns if the user is host of the game or has permission
 func (game *Game) isUserHost(user *sessions.User) bool {
 	if user == nil {
