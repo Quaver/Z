@@ -324,6 +324,21 @@ func (game *Game) SetHostSelectingMap(requester *sessions.User, isSelecting bool
 	}
 }
 
+// SetPassword Sets the password for the game
+func (game *Game) SetPassword(requester *sessions.User, password string) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if requester != nil && requester.Info.Id != game.Data.HostId {
+		return
+	}
+
+	game.Password = password
+	game.validateSettings()
+
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Clears all players that are ready. This is to be used in an already mutex-locked context.
 func (game *Game) clearReadyPlayers(sendToLobby bool) {
 	for _, id := range game.Data.PlayersReady {
