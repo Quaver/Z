@@ -70,6 +70,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientGameHostSelectingMap(user, unmarshalPacket[packets.ClientGameHostSelectingMap](msg))
 	case packets.PacketIdClientPacketChangeGamePassword:
 		handleClientChangeGamePassword(user, unmarshalPacket[packets.ClientChangeGamePassword](msg))
+	case packets.PacketIdClientGameChangeModifiers:
+		handleClientGameChangeModifiers(user, unmarshalPacket[packets.ClientGameChangeModifiers](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}

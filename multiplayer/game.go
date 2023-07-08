@@ -390,6 +390,23 @@ func (game *Game) SetAllowedGameModes(requester *sessions.User, gameModes []comm
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetGlobalModifiers Sets the modifiers that all players must use in the game
+func (game *Game) SetGlobalModifiers(requester *sessions.User, mods int64, difficultyRating float64) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	game.Data.GlobalModifiers = mods
+	game.Data.MapDifficultyRating = difficultyRating
+	game.validateSettings()
+
+	game.sendPacketToPlayers(packets.NewServerGameChangeModifiers(game.Data.GlobalModifiers, game.Data.MapDifficultyRating))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Returns if the user is host of the game or has permission
 func (game *Game) isUserHost(user *sessions.User) bool {
 	if user == nil {
