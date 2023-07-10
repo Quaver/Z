@@ -72,6 +72,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientChangeGamePassword(user, unmarshalPacket[packets.ClientChangeGamePassword](msg))
 	case packets.PacketIdClientGameChangeModifiers:
 		handleClientGameChangeModifiers(user, unmarshalPacket[packets.ClientGameChangeModifiers](msg))
+	case packets.PacketIdClientGameChangeFreeModType:
+		handleClientGameChangeFreeMod(user, unmarshalPacket[packets.ClientGameFreeModTypeChanged](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}

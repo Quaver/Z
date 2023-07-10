@@ -395,6 +395,7 @@ func (game *Game) SetAllowedGameModes(requester *sessions.User, gameModes []comm
 func (game *Game) SetGlobalModifiers(requester *sessions.User, mods int64, difficultyRating float64) {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
+
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -404,6 +405,22 @@ func (game *Game) SetGlobalModifiers(requester *sessions.User, mods int64, diffi
 	game.validateSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeModifiers(game.Data.GlobalModifiers, game.Data.MapDifficultyRating))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// SetFreeMod Sets the free mod type for the match (free mod / free rate)
+func (game *Game) SetFreeMod(requester *sessions.User, freeMod objects.MultiplayerGameFreeMod) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	game.Data.FreeModType = freeMod
+	game.validateSettings()
+
+	game.sendPacketToPlayers(packets.NewServerGameChangeFreeMod(game.Data.FreeModType))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
