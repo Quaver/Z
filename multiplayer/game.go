@@ -7,6 +7,7 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
+	"log"
 	"math"
 	"sync"
 	"time"
@@ -76,8 +77,8 @@ func (game *Game) AddPlayer(userId int, password string) {
 	}
 
 	game.Data.PlayerIds = append(game.Data.PlayerIds, user.Info.Id)
-	game.Data.PlayerModifiers = append(game.Data.PlayerModifiers, objects.MultiplayerGamePlayerMods{Id: user.Info.Id})
-	game.Data.PlayerWins = append(game.Data.PlayerWins, objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
+	game.Data.PlayerModifiers = append(game.Data.PlayerModifiers, &objects.MultiplayerGamePlayerMods{Id: user.Info.Id})
+	game.Data.PlayerWins = append(game.Data.PlayerWins, &objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
 
 	user.SetMultiplayerGameId(game.Data.Id)
 	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
@@ -105,8 +106,8 @@ func (game *Game) RemovePlayer(userId int) {
 	user.SetMultiplayerGameId(0)
 
 	game.Data.PlayerIds = utils.Filter(game.Data.PlayerIds, func(x int) bool { return x != user.Info.Id })
-	game.Data.PlayerModifiers = utils.Filter(game.Data.PlayerModifiers, func(x objects.MultiplayerGamePlayerMods) bool { return x.Id != user.Info.Id })
-	game.Data.PlayerWins = utils.Filter(game.Data.PlayerWins, func(x objects.MultiplayerGamePlayerWins) bool { return x.Id != user.Info.Id })
+	game.Data.PlayerModifiers = utils.Filter(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool { return x.Id != user.Info.Id })
+	game.Data.PlayerWins = utils.Filter(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id != user.Info.Id })
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
@@ -396,6 +397,10 @@ func (game *Game) SetGlobalModifiers(requester *sessions.User, mods int64, diffi
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
 
+	if game.Data.InProgress {
+		return
+	}
+
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -413,6 +418,10 @@ func (game *Game) SetFreeMod(requester *sessions.User, freeMod objects.Multiplay
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
 
+	if game.Data.InProgress {
+		return
+	}
+
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -421,6 +430,30 @@ func (game *Game) SetFreeMod(requester *sessions.User, freeMod objects.Multiplay
 	game.validateSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeFreeMod(game.Data.FreeModType))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// SetPlayerModifiers Sets the player modifiers for an individual user
+func (game *Game) SetPlayerModifiers(userId int, mods int64) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if game.Data.InProgress {
+		return
+	}
+
+	playerMods, err := utils.Find(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool {
+		return x.Id == userId
+	})
+
+	if err != nil {
+		log.Printf("[MP #v] Error getting playermods for user: #%v - %v\n", userId, err)
+		return
+	}
+
+	playerMods.Modifiers = mods
+	game.sendPacketToPlayers(packets.NewServerGameChangePlayerModifiers(userId, mods))
+
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
