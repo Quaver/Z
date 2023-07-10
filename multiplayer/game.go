@@ -494,7 +494,7 @@ func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
-// rotateHost Rotates the host to the next person in line
+// rotateHost Rotates the host to the next person in line. This is to be used in an already mutex-locked context.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
 		return
@@ -518,7 +518,7 @@ func (game *Game) rotateHost() {
 	}
 }
 
-// Returns if the user is host of the game or has permission
+// Returns if the user is host of the game or has permission. This is to be used in an already mutex-locked context.
 func (game *Game) isUserHost(user *sessions.User) bool {
 	if user == nil {
 		return true
