@@ -494,6 +494,35 @@ func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// RotateHost Rotates the host to the next person in line
+func (game *Game) RotateHost() {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if len(game.Data.PlayerIds) == 1 {
+		return
+	}
+
+	var index = -1
+
+	for i, userId := range game.Data.PlayerIds {
+		if userId == game.Data.HostId {
+			index = i
+		}
+	}
+
+	if index == -1 {
+		return
+	}
+
+	// Cyclically rotates the host
+	if index+1 < len(game.Data.PlayerIds) {
+		game.SetHost(game.Data.PlayerIds[index+1], false)
+	} else {
+		game.SetHost(game.Data.PlayerIds[0], false)
+	}
+}
+
 // Returns if the user is host of the game or has permission
 func (game *Game) isUserHost(user *sessions.User) bool {
 	if user == nil {
