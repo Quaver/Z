@@ -499,17 +499,15 @@ func (game *Game) RotateHost() {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
 
+	if !game.Data.IsHostRotation {
+		return
+	}
+
 	if len(game.Data.PlayerIds) == 1 {
 		return
 	}
 
-	var index = -1
-
-	for i, userId := range game.Data.PlayerIds {
-		if userId == game.Data.HostId {
-			index = i
-		}
-	}
+	index := utils.FindIndex(game.Data.PlayerIds, game.Data.HostId)
 
 	if index == -1 {
 		return

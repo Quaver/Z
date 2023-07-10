@@ -36,3 +36,14 @@ func Find[T comparable](slice []T, f func(T) bool) (T, error) {
 
 	return *new(T), errors.New("could not find element in slice")
 }
+
+// FindIndex Returns the index of an element in a slice
+func FindIndex[T comparable](slice []T, val T) int {
+	for i, x := range slice {
+		if x == val {
+			return i
+		}
+	}
+
+	return -1
+}
