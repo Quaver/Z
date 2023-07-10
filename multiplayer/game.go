@@ -479,6 +479,21 @@ func (game *Game) SetPlayerModifiers(userId int, mods int64) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetHostRotation Sets whether host rotation will be enabled for the game
+func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	game.Data.IsHostRotation = enabled
+	game.sendPacketToPlayers(packets.NewServerGameHostRotation(game.Data.IsHostRotation))
+
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // Returns if the user is host of the game or has permission
 func (game *Game) isUserHost(user *sessions.User) bool {
 	if user == nil {
