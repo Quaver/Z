@@ -120,6 +120,27 @@ func (game *Game) RemovePlayer(userId int) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// KickPlayer Kicks a player from the multiplayer game
+func (game *Game) KickPlayer(requester *sessions.User, userId int) {
+	game.mutex.Lock()
+
+	if !game.isUserHost(requester) {
+		game.mutex.Unlock()
+		return
+	}
+	game.mutex.Unlock()
+
+	game.RemovePlayer(userId)
+
+	user := sessions.GetUserById(userId)
+
+	if user == nil {
+		return
+	}
+
+	sessions.SendPacketToUser(packets.NewServerGameKicked(), user)
+}
+
 // SetHost Sets the host of the game
 func (game *Game) SetHost(userId int, lock bool) {
 	if lock {
