@@ -427,6 +427,7 @@ func (game *Game) SetFreeMod(requester *sessions.User, freeMod objects.Multiplay
 	}
 
 	game.Data.FreeModType = freeMod
+	game.resetAllModifiers()
 	game.validateSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeFreeMod(game.Data.FreeModType))
@@ -491,6 +492,17 @@ func (game *Game) clearCountdown() {
 	}
 
 	game.sendPacketToPlayers(packets.NewServerGameStopCountdown())
+}
+
+// Resets the modifiers for every player
+func (game *Game) resetAllModifiers() {
+	game.Data.GlobalModifiers = 0
+	game.sendPacketToPlayers(packets.NewServerGameChangeModifiers(0, game.Data.MapDifficultyRating))
+
+	for _, pm := range game.Data.PlayerModifiers {
+		pm.Modifiers = 0
+		game.sendPacketToPlayers(packets.NewServerGameChangePlayerModifiers(pm.Id, pm.Modifiers))
+	}
 }
 
 // Sends a packet to all players in the game. This is to be used in an already mutex-locked context.
