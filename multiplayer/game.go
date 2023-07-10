@@ -494,11 +494,8 @@ func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
-// RotateHost Rotates the host to the next person in line
-func (game *Game) RotateHost() {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
+// rotateHost Rotates the host to the next person in line
+func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
 		return
 	}
