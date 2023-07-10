@@ -167,8 +167,9 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.MapJudgementCount = packet.JudgementCount
 	game.Data.PlayersWithoutMap = []int{}
 	game.Data.PlayersReady = []int{}
-	game.validateSettings()
 	game.clearReadyPlayers(false)
+	game.clearCountdown()
+	game.validateSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -394,7 +395,6 @@ func (game *Game) SetAllowedGameModes(requester *sessions.User, gameModes []comm
 func (game *Game) SetGlobalModifiers(requester *sessions.User, mods int64, difficultyRating float64) {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
-
 	if !game.isUserHost(requester) {
 		return
 	}
