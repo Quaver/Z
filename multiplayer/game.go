@@ -494,6 +494,22 @@ func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetLongNotePercent Sets the minimum and maximum long note percentage filters for the game
+func (game *Game) SetLongNotePercent(requester *sessions.User, min int, max int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	game.Data.FilterMinLongNotePercent = min
+	game.Data.FilterMaxLongNotePercent = max
+
+	game.sendPacketToPlayers(packets.NewServerGameLongNotePercent(game.Data.FilterMinLongNotePercent, game.Data.FilterMaxLongNotePercent))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // rotateHost Rotates the host to the next person in line. This is to be used in an already mutex-locked context.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
