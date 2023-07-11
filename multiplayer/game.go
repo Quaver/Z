@@ -505,8 +505,30 @@ func (game *Game) SetLongNotePercent(requester *sessions.User, min int, max int)
 
 	game.Data.FilterMinLongNotePercent = min
 	game.Data.FilterMaxLongNotePercent = max
+	game.validateSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameLongNotePercent(game.Data.FilterMinLongNotePercent, game.Data.FilterMaxLongNotePercent))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// SetMaxPlayerCount Sets the amount of max players allowed in the game
+func (game *Game) SetMaxPlayerCount(requester *sessions.User, count int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	// Can't change max players if there are more players in the game than the requested count
+	if len(game.Data.PlayerIds) > count {
+		return
+	}
+
+	game.Data.MaxPlayers = count
+	game.validateSettings()
+
+	game.sendPacketToPlayers(packets.NewServerGameChangeMaxPlayers(game.Data.MaxPlayers))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
