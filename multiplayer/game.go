@@ -48,10 +48,6 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		return nil, err
 	}
 
-	time.AfterFunc(time.Second*10, func() {
-		game.SendInvite(sessions.GetUserById(1), sessions.GetUserById(1))
-	})
-
 	return &game, nil
 }
 
