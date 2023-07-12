@@ -555,6 +555,25 @@ func (game *Game) SendInvite(sender *sessions.User, user *sessions.User) {
 	sessions.SendPacketToUser(packets.NewServerGameInvite(game.Data.GameId, sender.Info.Username), user)
 }
 
+// SetPlayerWinCount Sets the win count for a given player
+func (game *Game) SetPlayerWinCount(userId int, wins int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	playerWins, err := utils.Find(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool {
+		return x.Id == userId
+	})
+
+	if err != nil {
+		return
+	}
+
+	playerWins.Wins = wins
+
+	game.sendPacketToPlayers(packets.NewServerGamePlayerWinCount(userId, playerWins.Wins))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // rotateHost Rotates the host to the next person in line. This is to be used in an already mutex-locked context.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
