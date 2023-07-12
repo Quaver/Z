@@ -106,15 +106,13 @@ func (game *Game) RemovePlayer(userId int) {
 
 	user := sessions.GetUserById(userId)
 
-	if user == nil {
-		return
+	if user != nil {
+		user.SetMultiplayerGameId(0)
 	}
 
-	user.SetMultiplayerGameId(0)
-
-	game.Data.PlayerIds = utils.Filter(game.Data.PlayerIds, func(x int) bool { return x != user.Info.Id })
-	game.Data.PlayerModifiers = utils.Filter(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool { return x.Id != user.Info.Id })
-	game.Data.PlayerWins = utils.Filter(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id != user.Info.Id })
+	game.Data.PlayerIds = utils.Filter(game.Data.PlayerIds, func(x int) bool { return x != userId })
+	game.Data.PlayerModifiers = utils.Filter(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool { return x.Id != userId })
+	game.Data.PlayerWins = utils.Filter(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id != userId })
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
@@ -123,7 +121,7 @@ func (game *Game) RemovePlayer(userId int) {
 	}
 
 	game.SetHost(game.Data.PlayerIds[0], false)
-	game.sendPacketToPlayers(packets.NewServerUserLeftGame(user.Info.Id))
+	game.sendPacketToPlayers(packets.NewServerUserLeftGame(userId))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
