@@ -48,14 +48,15 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		return nil, err
 	}
 
+	time.AfterFunc(time.Second*10, func() {
+		game.SendInvite(sessions.GetUserById(1), sessions.GetUserById(1))
+	})
+
 	return &game, nil
 }
 
 // AddPlayer Adds a user to the multiplayer game
 func (game *Game) AddPlayer(userId int, password string) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	user := sessions.GetUserById(userId)
 
 	if user == nil {
@@ -64,9 +65,13 @@ func (game *Game) AddPlayer(userId int, password string) {
 
 	currentGame := GetGameById(user.GetMultiplayerGameId())
 
-	if currentGame != nil && currentGame.Data.Id != game.Data.Id {
+	if currentGame != nil {
 		currentGame.RemovePlayer(user.Info.Id)
 	}
+
+	// Doing this below because the game could be the same and cause a deadlock
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
 
 	if len(game.Data.PlayerIds) >= maxPlayerCount {
 		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorFull), user)
