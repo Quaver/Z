@@ -14,6 +14,8 @@ func HandleLogout(conn net.Conn) error {
 	user := sessions.GetUserByConnection(conn)
 
 	if user != nil {
+		sessions.SendPacketToAllUsers(packets.NewServerUserDisconnected(user.Info.Id))
+
 		err := sessions.RemoveUser(user)
 
 		if err != nil {
@@ -21,7 +23,6 @@ func HandleLogout(conn net.Conn) error {
 		}
 
 		chat.RemoveUserFromAllChannels(user)
-		sessions.SendPacketToAllUsers(packets.NewServerUserDisconnected(user.Info.Id))
 		multiplayer.RemoveUserFromLobby(user)
 
 		game := multiplayer.GetGameById(user.GetMultiplayerGameId())
