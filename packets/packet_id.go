@@ -82,8 +82,8 @@ const (
 	PacketIdServerGameRulesetChanged    // UNUSED
 	PacketIdServerGameLongNotePercentageChanged
 	PacketIdServerGameMaxPlayersChanged
-	PacketIdServerGameMinimumRateChanged
-	PacketIdServerGameTeamWinCount // UNUSED
+	PacketIdServerGameMinimumRateChanged // UNUSED
+	PacketIdServerGameTeamWinCount       // UNUSED
 	PacketIdServerGamePlayerWinCount
 	PacketIdClientRequestUserStats
 	PacketIdServerUserStats

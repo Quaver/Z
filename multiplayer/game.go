@@ -19,6 +19,7 @@ type Game struct {
 	CreatorId      int         // The id of the user who created the game
 	mutex          *sync.Mutex // Locks down the game to prevent race conditions
 	countdownTimer *time.Timer // Counts down before starting the game
+	playersInvited []int       // A list of users who have been invited to the game
 }
 
 const (
@@ -28,10 +29,11 @@ const (
 // NewGame Creates a new multiplayer game from a game
 func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 	game := Game{
-		Data:      gameData,
-		CreatorId: creatorId,
-		mutex:     &sync.Mutex{},
-		Password:  gameData.CreationPassword,
+		Data:           gameData,
+		CreatorId:      creatorId,
+		mutex:          &sync.Mutex{},
+		Password:       gameData.CreationPassword,
+		playersInvited: []int{},
 	}
 
 	game.Data.GameId = utils.GenerateRandomString(32)
@@ -71,7 +73,11 @@ func (game *Game) AddPlayer(userId int, password string) {
 		return
 	}
 
-	if game.Data.HasPassword && game.Password != password && !common.HasUserGroup(user.Info.UserGroups, common.UserGroupSwan) {
+	incorrectPassword := game.Data.HasPassword && game.Password != password
+	isSwan := common.HasUserGroup(user.Info.UserGroups, common.UserGroupSwan)
+	isInvited := utils.Includes(game.playersInvited, userId)
+
+	if incorrectPassword && !isInvited && !isSwan {
 		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorPassword), user)
 		return
 	}
@@ -530,6 +536,22 @@ func (game *Game) SetMaxPlayerCount(requester *sessions.User, count int) {
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeMaxPlayers(game.Data.MaxPlayers))
 	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// SendInvite Sends an invitation to a user in the multiplayer game
+func (game *Game) SendInvite(sender *sessions.User, user *sessions.User) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if user == nil {
+		return
+	}
+
+	if !utils.Includes(game.playersInvited, user.Info.Id) {
+		game.playersInvited = append(game.playersInvited, user.Info.Id)
+	}
+
+	sessions.SendPacketToUser(packets.NewServerGameInvite(game.Data.GameId, sender.Info.Username), user)
 }
 
 // rotateHost Rotates the host to the next person in line. This is to be used in an already mutex-locked context.
