@@ -125,8 +125,8 @@ func (game *Game) RemovePlayer(userId int) {
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
 		game.mutex.Unlock()
+		game.EndGame()
 		//RemoveGameFromLobby(game)
-		//EndGame()
 		return
 	}
 
