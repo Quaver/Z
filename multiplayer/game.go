@@ -137,9 +137,8 @@ func (game *Game) RemovePlayer(userId int) {
 	allPlayersFinished := game.isAllPlayersFinished()
 	game.mutex.Unlock()
 
-	// TODO: END GAME HERE
 	if allPlayersFinished {
-
+		game.EndGame()
 	}
 
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -252,6 +251,10 @@ func (game *Game) SetPlayerReady(userId int) {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
 
+	if game.Data.InProgress {
+		return
+	}
+
 	if !utils.Includes(game.Data.PlayersReady, userId) {
 		game.Data.PlayersReady = append(game.Data.PlayersReady, userId)
 	}
@@ -331,6 +334,27 @@ func (game *Game) StartGame() {
 	game.SetHostSelectingMap(nil, false, false, false)
 
 	game.sendPacketToPlayers(packets.NewServerGameStart())
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// EndGame Ends the multiplayer game
+func (game *Game) EndGame() {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.Data.InProgress {
+		return
+	}
+
+	game.Data.InProgress = false
+	game.playersInGame = []int{}
+	game.playersScreenLoaded = []int{}
+	game.playersFinished = []int{}
+	game.clearCountdown()
+	game.clearReadyPlayers(false)
+	game.rotateHost()
+
+	game.sendPacketToPlayers(packets.NewServerGameEnded())
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
@@ -652,8 +676,8 @@ func (game *Game) SetPlayerFinished(userId int) {
 	allFinished := game.isAllPlayersFinished()
 	game.mutex.Unlock()
 
-	// TODO: END GAME HERE
 	if allFinished {
+		game.EndGame()
 	}
 }
 
