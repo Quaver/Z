@@ -571,6 +571,25 @@ func (game *Game) SetPlayerWinCount(userId int, wins int) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetReferee Sets the referee for the game
+func (game *Game) SetReferee(requester *sessions.User, userId int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	if userId != -1 && !utils.Includes(game.Data.PlayerIds, userId) {
+		return
+	}
+
+	game.Data.RefereeId = userId
+
+	game.sendPacketToPlayers(packets.NewServerGameSetReferee(game.Data.RefereeId))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // rotateHost Rotates the host to the next person in line. This is to be used in an already mutex-locked context.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
