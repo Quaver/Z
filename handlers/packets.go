@@ -88,6 +88,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientGameKickPlayer(user, unmarshalPacket[packets.ClientGameKickPlayer](msg))
 	case packets.PacketIdClientGameTransferHost:
 		handleClientGameTransferHost(user, unmarshalPacket[packets.ClientGameTransferHost](msg))
+	case packets.PacketIdClientInviteToGame:
+		handleClientGameInvite(user, unmarshalPacket[packets.ClientGameInvite](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}
