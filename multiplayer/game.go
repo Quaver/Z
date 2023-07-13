@@ -20,7 +20,7 @@ type Game struct {
 	mutex               *sync.Mutex // Locks down the game to prevent race conditions
 	countdownTimer      *time.Timer // Counts down before starting the game
 	playersInvited      []int       // A list of users who have been invited to the game
-	playersInGame       []int       // A list of users who are currently playing the current match
+	playersInMatch      []int       // A list of users who are currently playing the current match
 	playersScreenLoaded []int       // A list of users whose screens have loaded in-game. The match doesn't start until all players are loaded.
 	playersFinished     []int       // A list of users who have finished playing the map
 	playersSkipped      []int       // A list of players who have skipped the map in multiplayer
@@ -38,7 +38,7 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		mutex:               &sync.Mutex{},
 		Password:            gameData.CreationPassword,
 		playersInvited:      []int{},
-		playersInGame:       []int{},
+		playersInMatch:      []int{},
 		playersScreenLoaded: []int{},
 		playersFinished:     []int{},
 		playersSkipped:      []int{},
@@ -120,7 +120,7 @@ func (game *Game) RemovePlayer(userId int) {
 	game.Data.PlayerIds = utils.Filter(game.Data.PlayerIds, func(x int) bool { return x != userId })
 	game.Data.PlayerModifiers = utils.Filter(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool { return x.Id != userId })
 	game.Data.PlayerWins = utils.Filter(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id != userId })
-	game.playersInGame = utils.Filter(game.playersInGame, func(x int) bool { return x != userId })
+	game.playersInMatch = utils.Filter(game.playersInMatch, func(x int) bool { return x != userId })
 	game.playersScreenLoaded = utils.Filter(game.playersScreenLoaded, func(x int) bool { return x != userId })
 	game.playersFinished = utils.Filter(game.playersFinished, func(x int) bool { return x != userId })
 	game.playersSkipped = utils.Filter(game.playersSkipped, func(x int) bool { return x != userId })
@@ -327,7 +327,7 @@ func (game *Game) StartGame() {
 
 	game.Data.InProgress = true
 
-	game.playersInGame = utils.Filter(game.Data.PlayerIds, func(x int) bool {
+	game.playersInMatch = utils.Filter(game.Data.PlayerIds, func(x int) bool {
 		return x != game.Data.RefereeId && !utils.Includes(game.Data.PlayersWithoutMap, x)
 	})
 
@@ -349,7 +349,7 @@ func (game *Game) EndGame() {
 	}
 
 	game.Data.InProgress = false
-	game.playersInGame = []int{}
+	game.playersInMatch = []int{}
 	game.playersScreenLoaded = []int{}
 	game.playersFinished = []int{}
 	game.playersSkipped = []int{}
@@ -652,7 +652,7 @@ func (game *Game) SetPlayerScreenLoaded(userId int) {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
 
-	if !game.Data.InProgress || !utils.Includes(game.playersInGame, userId) {
+	if !game.Data.InProgress || !utils.Includes(game.playersInMatch, userId) {
 		return
 	}
 
@@ -667,7 +667,7 @@ func (game *Game) SetPlayerScreenLoaded(userId int) {
 func (game *Game) SetPlayerFinished(userId int) {
 	game.mutex.Lock()
 
-	if !game.Data.InProgress || !utils.Includes(game.playersInGame, userId) {
+	if !game.Data.InProgress || !utils.Includes(game.playersInMatch, userId) {
 		game.mutex.Unlock()
 		return
 	}
@@ -689,7 +689,7 @@ func (game *Game) SetPlayerSkippedSong(userId int) {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
 
-	if !game.Data.InProgress || !utils.Includes(game.playersInGame, userId) {
+	if !game.Data.InProgress || !utils.Includes(game.playersInMatch, userId) {
 		return
 	}
 
@@ -779,7 +779,7 @@ func (game *Game) checkScreenLoadedPlayers() {
 		return
 	}
 
-	for _, player := range game.playersInGame {
+	for _, player := range game.playersInMatch {
 		if !utils.Includes(game.playersScreenLoaded, player) {
 			return
 		}
@@ -794,7 +794,7 @@ func (game *Game) isAllPlayersFinished() bool {
 		return false
 	}
 
-	for _, player := range game.playersInGame {
+	for _, player := range game.playersInMatch {
 		if !utils.Includes(game.playersFinished, player) {
 			return false
 		}
@@ -809,7 +809,7 @@ func (game *Game) checkAllPlayersSkipped() {
 		return
 	}
 
-	for _, player := range game.playersInGame {
+	for _, player := range game.playersInMatch {
 		if !utils.Includes(game.playersSkipped, player) {
 			return
 		}
