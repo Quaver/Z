@@ -22,6 +22,7 @@ type Game struct {
 	playersInvited      []int       // A list of users who have been invited to the game
 	playersInGame       []int       // A list of users who are currently playing the current match
 	playersScreenLoaded []int       // A list of users whose screens have loaded in-game. The match doesn't start until all players are loaded.
+	playersFinished     []int       // A list of users who have finished playing the map
 }
 
 const (
@@ -38,6 +39,7 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		playersInvited:      []int{},
 		playersInGame:       []int{},
 		playersScreenLoaded: []int{},
+		playersFinished:     []int{},
 	}
 
 	game.Data.GameId = utils.GenerateRandomString(32)
@@ -106,7 +108,6 @@ func (game *Game) AddPlayer(userId int, password string) {
 // RemovePlayer Removes a player from the multiplayer game and disbands the game if necessary
 func (game *Game) RemovePlayer(userId int) {
 	game.mutex.Lock()
-	defer game.mutex.Unlock()
 
 	user := sessions.GetUserById(userId)
 
@@ -119,16 +120,27 @@ func (game *Game) RemovePlayer(userId int) {
 	game.Data.PlayerWins = utils.Filter(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id != userId })
 	game.playersInGame = utils.Filter(game.playersInGame, func(x int) bool { return x != userId })
 	game.playersScreenLoaded = utils.Filter(game.playersScreenLoaded, func(x int) bool { return x != userId })
+	game.playersFinished = utils.Filter(game.playersFinished, func(x int) bool { return x != userId })
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
+		game.mutex.Unlock()
 		//RemoveGameFromLobby(game)
+		//EndGame()
 		return
 	}
 
 	game.SetHost(nil, game.Data.PlayerIds[0], false)
 	game.sendPacketToPlayers(packets.NewServerUserLeftGame(userId))
 	game.checkScreenLoadedPlayers()
+
+	allPlayersFinished := game.isAllPlayersFinished()
+	game.mutex.Unlock()
+
+	// TODO: END GAME HERE
+	if allPlayersFinished {
+
+	}
 
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -611,11 +623,7 @@ func (game *Game) SetPlayerScreenLoaded(userId int) {
 	game.mutex.Lock()
 	defer game.mutex.Unlock()
 
-	if !game.Data.InProgress {
-		return
-	}
-
-	if !utils.Includes(game.playersInGame, userId) {
+	if !game.Data.InProgress || !utils.Includes(game.playersInGame, userId) {
 		return
 	}
 
@@ -624,6 +632,27 @@ func (game *Game) SetPlayerScreenLoaded(userId int) {
 	}
 
 	game.checkScreenLoadedPlayers()
+}
+
+// SetPlayerFinished Handles when a client states that they have finished playing the current match
+func (game *Game) SetPlayerFinished(userId int) {
+	game.mutex.Lock()
+
+	if !game.Data.InProgress || !utils.Includes(game.playersInGame, userId) {
+		game.mutex.Unlock()
+		return
+	}
+
+	if !utils.Includes(game.playersFinished, userId) {
+		game.playersFinished = append(game.playersFinished, userId)
+	}
+
+	allFinished := game.isAllPlayersFinished()
+	game.mutex.Unlock()
+
+	// TODO: END GAME HERE
+	if allFinished {
+	}
 }
 
 // rotateHost Rotates the host to the next person in line. This is to be used in an already mutex-locked context.
@@ -701,6 +730,10 @@ func (game *Game) resetAllModifiers() {
 // Splitting this out into its own function because we need to check this in multiple places -
 // such as when a player leaves a match before their screen loads. It'll prevent it from getting stuck
 func (game *Game) checkScreenLoadedPlayers() {
+	if !game.Data.InProgress {
+		return
+	}
+
 	for _, player := range game.playersInGame {
 		if !utils.Includes(game.playersScreenLoaded, player) {
 			return
@@ -708,6 +741,21 @@ func (game *Game) checkScreenLoadedPlayers() {
 	}
 
 	game.sendPacketToPlayers(packets.NewServerGameAllPlayersLoaded())
+}
+
+// Returns if all users that are playing have finished playing the map
+func (game *Game) isAllPlayersFinished() bool {
+	if !game.Data.InProgress {
+		return false
+	}
+
+	for _, player := range game.playersInGame {
+		if !utils.Includes(game.playersFinished, player) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Sends a packet to all players in the game. This is to be used in an already mutex-locked context.
