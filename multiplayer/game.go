@@ -701,8 +701,10 @@ func (game *Game) resetAllModifiers() {
 // Splitting this out into its own function because we need to check this in multiple places -
 // such as when a player leaves a match before their screen loads. It'll prevent it from getting stuck
 func (game *Game) checkScreenLoadedPlayers() {
-	if len(game.playersInGame) != len(game.playersScreenLoaded) {
-		return
+	for _, player := range game.playersInGame {
+		if !utils.Includes(game.playersScreenLoaded, player) {
+			return
+		}
 	}
 
 	game.sendPacketToPlayers(packets.NewServerGameAllPlayersLoaded())
