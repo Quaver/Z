@@ -129,12 +129,12 @@ func (game *Game) RemovePlayer(userId int) {
 func (game *Game) KickPlayer(requester *sessions.User, userId int) {
 	game.mutex.Lock()
 
-	if !game.isUserHost(requester) {
+	if !game.isUserHost(requester) || !utils.Includes(game.Data.PlayerIds, userId) {
 		game.mutex.Unlock()
 		return
 	}
-	game.mutex.Unlock()
 
+	game.mutex.Unlock()
 	game.RemovePlayer(userId)
 
 	user := sessions.GetUserById(userId)
