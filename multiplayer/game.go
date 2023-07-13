@@ -14,16 +14,16 @@ import (
 )
 
 type Game struct {
-	Data                *objects.MultiplayerGame
-	Password            string      // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
-	CreatorId           int         // The id of the user who created the game
-	mutex               *sync.Mutex // Locks down the game to prevent race conditions
-	countdownTimer      *time.Timer // Counts down before starting the game
-	playersInvited      []int       // A list of users who have been invited to the game
-	playersInMatch      []int       // A list of users who are currently playing the current match
-	playersScreenLoaded []int       // A list of users whose screens have loaded in-game. The match doesn't start until all players are loaded.
-	playersFinished     []int       // A list of users who have finished playing the map
-	playersSkipped      []int       // A list of players who have skipped the map in multiplayer
+	Data                *objects.MultiplayerGame // Data about the multiplayer game that is sent in a packet
+	Password            string                   // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
+	CreatorId           int                      // The id of the user who created the game
+	mutex               *sync.Mutex              // Locks down the game to prevent race conditions
+	countdownTimer      *time.Timer              // Counts down before starting the game
+	playersInvited      []int                    // A list of users who have been invited to the game
+	playersInMatch      []int                    // A list of users who are currently playing the current match
+	playersScreenLoaded []int                    // A list of users whose screens have loaded in-game. The match doesn't start until all players are loaded.
+	playersFinished     []int                    // A list of users who have finished playing the map
+	playersSkipped      []int                    // A list of players who have skipped the map in multiplayer
 }
 
 const (
