@@ -700,6 +700,32 @@ func (game *Game) SetPlayerSkippedSong(userId int) {
 	game.checkAllPlayersSkipped()
 }
 
+// HandlePlayerJudgements Handles when a player sends judgement data during a multiplayer match
+func (game *Game) HandlePlayerJudgements(userId int, judgements []common.Judgements) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.Data.InProgress || !utils.Includes(game.playersInMatch, userId) {
+		return
+	}
+
+	packet := packets.NewServerGameJudgements(userId, judgements)
+
+	for _, playerId := range game.playersInMatch {
+		if playerId == userId {
+			continue
+		}
+
+		player := sessions.GetUserById(playerId)
+
+		if player == nil {
+			continue
+		}
+
+		sessions.SendPacketToUser(packet, player)
+	}
+}
+
 // rotateHost Rotates the host to the next person in line. This is to be used in an already mutex-locked context.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
