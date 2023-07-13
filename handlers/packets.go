@@ -86,6 +86,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientRequestUserStats(user, unmarshalPacket[packets.ClientRequestUserStats](msg))
 	case packets.PacketIdClientGameKickPlayer:
 		handleClientGameKickPlayer(user, unmarshalPacket[packets.ClientGameKickPlayer](msg))
+	case packets.PacketIdClientGameTransferHost:
+		handleClientGameTransferHost(user, unmarshalPacket[packets.ClientGameTransferHost](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}

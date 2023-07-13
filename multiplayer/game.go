@@ -92,7 +92,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
 
 	if len(game.Data.PlayerIds) == 1 {
-		game.SetHost(user.Info.Id, false)
+		game.SetHost(nil, user.Info.Id, false)
 	}
 
 	RemoveUserFromLobby(user)
@@ -120,7 +120,7 @@ func (game *Game) RemovePlayer(userId int) {
 		return
 	}
 
-	game.SetHost(game.Data.PlayerIds[0], false)
+	game.SetHost(nil, game.Data.PlayerIds[0], false)
 	game.sendPacketToPlayers(packets.NewServerUserLeftGame(userId))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -146,20 +146,19 @@ func (game *Game) KickPlayer(requester *sessions.User, userId int) {
 	sessions.SendPacketToUser(packets.NewServerGameKicked(), user)
 }
 
-// SetHost Sets the host of the game
-func (game *Game) SetHost(userId int, lock bool) {
+// SetHost Sets the host of the game. Set requester to nil if this is meant to be a forced action.
+// Otherwise, set the requester if a user is transferring host to another.
+func (game *Game) SetHost(requester *sessions.User, userId int, lock bool) {
 	if lock {
 		game.mutex.Lock()
 		defer game.mutex.Unlock()
 	}
 
-	user := sessions.GetUserById(userId)
-
-	if user == nil {
+	if !game.isUserHost(requester) {
 		return
 	}
 
-	if user.GetMultiplayerGameId() != game.Data.Id {
+	if !utils.Includes(game.Data.PlayerIds, userId) {
 		return
 	}
 
@@ -590,9 +589,9 @@ func (game *Game) rotateHost() {
 
 	// Cyclically rotates the host
 	if index+1 < len(game.Data.PlayerIds) {
-		game.SetHost(game.Data.PlayerIds[index+1], false)
+		game.SetHost(nil, game.Data.PlayerIds[index+1], false)
 	} else {
-		game.SetHost(game.Data.PlayerIds[0], false)
+		game.SetHost(nil, game.Data.PlayerIds[0], false)
 	}
 }
 
