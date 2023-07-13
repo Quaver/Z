@@ -23,6 +23,7 @@ type Game struct {
 	playersInGame       []int       // A list of users who are currently playing the current match
 	playersScreenLoaded []int       // A list of users whose screens have loaded in-game. The match doesn't start until all players are loaded.
 	playersFinished     []int       // A list of users who have finished playing the map
+	playersSkipped      []int       // A list of players who have skipped the map in multiplayer
 }
 
 const (
@@ -40,6 +41,7 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		playersInGame:       []int{},
 		playersScreenLoaded: []int{},
 		playersFinished:     []int{},
+		playersSkipped:      []int{},
 	}
 
 	game.Data.GameId = utils.GenerateRandomString(32)
@@ -121,6 +123,7 @@ func (game *Game) RemovePlayer(userId int) {
 	game.playersInGame = utils.Filter(game.playersInGame, func(x int) bool { return x != userId })
 	game.playersScreenLoaded = utils.Filter(game.playersScreenLoaded, func(x int) bool { return x != userId })
 	game.playersFinished = utils.Filter(game.playersFinished, func(x int) bool { return x != userId })
+	game.playersSkipped = utils.Filter(game.playersSkipped, func(x int) bool { return x != userId })
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
@@ -133,6 +136,7 @@ func (game *Game) RemovePlayer(userId int) {
 	game.SetHost(nil, game.Data.PlayerIds[0], false)
 	game.sendPacketToPlayers(packets.NewServerUserLeftGame(userId))
 	game.checkScreenLoadedPlayers()
+	game.checkAllPlayersSkipped()
 
 	allPlayersFinished := game.isAllPlayersFinished()
 	game.mutex.Unlock()
@@ -212,8 +216,6 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.MapJudgementCount = packet.JudgementCount
 	game.Data.PlayersWithoutMap = []int{}
 	game.Data.PlayersReady = []int{}
-	game.playersScreenLoaded = []int{}
-	game.playersFinished = []int{}
 	game.clearReadyPlayers(false)
 	game.clearCountdown()
 	game.validateSettings()
@@ -350,6 +352,7 @@ func (game *Game) EndGame() {
 	game.playersInGame = []int{}
 	game.playersScreenLoaded = []int{}
 	game.playersFinished = []int{}
+	game.playersSkipped = []int{}
 	game.clearCountdown()
 	game.clearReadyPlayers(false)
 	game.rotateHost()
@@ -681,6 +684,22 @@ func (game *Game) SetPlayerFinished(userId int) {
 	}
 }
 
+// SetPlayerSkippedSong Handles when the client requests to skip the song
+func (game *Game) SetPlayerSkippedSong(userId int) {
+	game.mutex.Lock()
+	defer game.mutex.Unlock()
+
+	if !game.Data.InProgress || !utils.Includes(game.playersInGame, userId) {
+		return
+	}
+
+	if !utils.Includes(game.playersSkipped, userId) {
+		game.playersSkipped = append(game.playersSkipped, userId)
+	}
+
+	game.checkAllPlayersSkipped()
+}
+
 // rotateHost Rotates the host to the next person in line. This is to be used in an already mutex-locked context.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
@@ -782,6 +801,21 @@ func (game *Game) isAllPlayersFinished() bool {
 	}
 
 	return true
+}
+
+// Checks if all the players in the game have skipped the map and sends a packet letting them know.
+func (game *Game) checkAllPlayersSkipped() {
+	if !game.Data.InProgress {
+		return
+	}
+
+	for _, player := range game.playersInGame {
+		if !utils.Includes(game.playersSkipped, player) {
+			return
+		}
+	}
+
+	game.sendPacketToPlayers(packets.NewServerGameAllPlayersSkipped())
 }
 
 // Sends a packet to all players in the game. This is to be used in an already mutex-locked context.
