@@ -129,7 +129,7 @@ func (game *Game) RemovePlayer(userId int) {
 	if len(game.Data.PlayerIds) == 0 {
 		game.mutex.Unlock()
 		game.EndGame()
-		//RemoveGameFromLobby(game)
+		RemoveGameFromLobby(game)
 		return
 	}
 
