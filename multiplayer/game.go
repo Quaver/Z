@@ -213,6 +213,8 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.MapJudgementCount = packet.JudgementCount
 	game.Data.PlayersWithoutMap = []int{}
 	game.Data.PlayersReady = []int{}
+	game.playersScreenLoaded = []int{}
+	game.playersFinished = []int{}
 	game.clearReadyPlayers(false)
 	game.clearCountdown()
 	game.validateSettings()
