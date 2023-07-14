@@ -29,3 +29,8 @@ func HasAnyUserGroup(groupsCombo UserGroups, groups []UserGroups) bool {
 
 	return false
 }
+
+// IsSwan Returns if the user is Swan
+func IsSwan(userGroups UserGroups) bool {
+	return HasUserGroup(userGroups, UserGroupSwan)
+}

@@ -82,11 +82,8 @@ func (game *Game) AddPlayer(userId int, password string) {
 		return
 	}
 
-	incorrectPassword := game.Data.HasPassword && game.Password != password
-	isSwan := common.HasUserGroup(user.Info.UserGroups, common.UserGroupSwan)
-	isInvited := utils.Includes(game.playersInvited, userId)
-
-	if incorrectPassword && !isInvited && !isSwan {
+	// Check password in the event that the user wasn't invited or has a swan-bypass.
+	if (game.Data.HasPassword && game.Password != password) && !utils.Includes(game.playersInvited, userId) && !common.IsSwan(user.Info.UserGroups) {
 		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorPassword), user)
 		return
 	}
