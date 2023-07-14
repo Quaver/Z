@@ -18,5 +18,7 @@ func handleClientGameTransferHost(user *sessions.User, packet *packets.ClientGam
 		return
 	}
 
-	game.SetHost(user, packet.UserId, true)
+	game.RunLocked(func() {
+		game.SetHost(user, packet.UserId)
+	})
 }

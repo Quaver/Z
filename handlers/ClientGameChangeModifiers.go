@@ -18,5 +18,7 @@ func handleClientGameChangeModifiers(user *sessions.User, packet *packets.Client
 		return
 	}
 
-	game.SetGlobalModifiers(user, packet.Modifiers, packet.DifficultyRating)
+	game.RunLocked(func() {
+		game.SetGlobalModifiers(user, packet.Modifiers, packet.DifficultyRating)
+	})
 }

@@ -18,5 +18,7 @@ func handleClientGameChangeMaxPlayers(user *sessions.User, packet *packets.Clien
 		return
 	}
 
-	game.SetMaxPlayerCount(user, packet.Count)
+	game.RunLocked(func() {
+		game.SetMaxPlayerCount(user, packet.Count)
+	})
 }

@@ -18,5 +18,7 @@ func handleClientChangeGameMap(user *sessions.User, packet *packets.ClientChange
 		return
 	}
 
-	game.ChangeMap(user, packet)
+	game.RunLocked(func() {
+		game.ChangeMap(user, packet)
+	})
 }

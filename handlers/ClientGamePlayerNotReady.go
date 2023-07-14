@@ -18,5 +18,7 @@ func handleClientGamePlayerNotReady(user *sessions.User, packet *packets.ClientG
 		return
 	}
 
-	game.SetPlayerNotReady(user.Info.Id)
+	game.RunLocked(func() {
+		game.SetPlayerNotReady(user.Info.Id)
+	})
 }

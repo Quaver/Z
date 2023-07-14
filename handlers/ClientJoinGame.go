@@ -19,5 +19,7 @@ func handleClientJoinGame(user *sessions.User, packet *packets.ClientJoinGame) {
 		return
 	}
 
-	game.AddPlayer(user.Info.Id, packet.Password)
+	game.RunLocked(func() {
+		game.AddPlayer(user.Info.Id, packet.Password)
+	})
 }

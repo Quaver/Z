@@ -28,7 +28,9 @@ func HandleLogout(conn net.Conn) error {
 		game := multiplayer.GetGameById(user.GetMultiplayerGameId())
 
 		if game != nil {
-			game.RemovePlayer(user.Info.Id)
+			game.RunLocked(func() {
+				game.RemovePlayer(user.Info.Id)
+			})
 		}
 
 		log.Printf("[%v #%v] Logged out (%v users online).\n", user.Info.Username, user.Info.Id, sessions.GetOnlineUserCount())

@@ -18,5 +18,7 @@ func handleClientGamePlayerFinished(user *sessions.User, packet *packets.ClientG
 		return
 	}
 
-	game.SetPlayerFinished(user.Info.Id)
+	game.RunLocked(func() {
+		game.SetPlayerFinished(user.Info.Id)
+	})
 }

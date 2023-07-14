@@ -18,5 +18,7 @@ func handleClientGamePlayerNoMap(user *sessions.User, packet *packets.ClientGame
 		return
 	}
 
-	game.SetPlayerDoesntHaveMap(user.Info.Id)
+	game.RunLocked(func() {
+		game.SetPlayerDoesntHaveMap(user.Info.Id)
+	})
 }

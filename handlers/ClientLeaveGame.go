@@ -18,5 +18,7 @@ func handleClientLeaveGame(user *sessions.User, packet *packets.ClientLeaveGame)
 		return
 	}
 
-	game.RemovePlayer(user.Info.Id)
+	game.RunLocked(func() {
+		game.RemovePlayer(user.Info.Id)
+	})
 }

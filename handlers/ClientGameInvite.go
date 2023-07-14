@@ -24,5 +24,7 @@ func handleClientGameInvite(user *sessions.User, packet *packets.ClientGameInvit
 		return
 	}
 
-	game.SendInvite(user, invitee)
+	game.RunLocked(func() {
+		game.SendInvite(user, invitee)
+	})
 }

@@ -21,5 +21,8 @@ func handleClientCreateGame(user *sessions.User, packet *packets.ClientCreateGam
 	}
 
 	multiplayer.AddGameToLobby(game)
-	game.AddPlayer(user.Info.Id, game.Password)
+
+	game.RunLocked(func() {
+		game.AddPlayer(user.Info.Id, game.Password)
+	})
 }

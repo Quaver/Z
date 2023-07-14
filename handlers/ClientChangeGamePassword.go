@@ -18,5 +18,7 @@ func handleClientChangeGamePassword(user *sessions.User, packet *packets.ClientC
 		return
 	}
 
-	game.SetPassword(user, packet.Password)
+	game.RunLocked(func() {
+		game.SetPassword(user, packet.Password)
+	})
 }

@@ -18,5 +18,7 @@ func handleClientGamePlayerSkipSong(user *sessions.User, packet *packets.ClientG
 		return
 	}
 
-	game.SetPlayerSkippedSong(user.Info.Id)
+	game.RunLocked(func() {
+		game.SetPlayerSkippedSong(user.Info.Id)
+	})
 }

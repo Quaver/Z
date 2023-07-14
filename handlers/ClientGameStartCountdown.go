@@ -18,5 +18,7 @@ func handleClientGameStartCountdown(user *sessions.User, packet *packets.ClientG
 		return
 	}
 
-	game.StartCountdown(user)
+	game.RunLocked(func() {
+		game.StartCountdown(user)
+	})
 }

@@ -18,5 +18,7 @@ func handleClientChangeGameName(user *sessions.User, packet *packets.ClientChang
 		return
 	}
 
-	game.ChangeName(user, packet.Name)
+	game.RunLocked(func() {
+		game.ChangeName(user, packet.Name)
+	})
 }

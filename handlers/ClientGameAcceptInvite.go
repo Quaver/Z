@@ -19,5 +19,7 @@ func handleClientGameAcceptInvite(user *sessions.User, packet *packets.ClientGam
 		return
 	}
 
-	game.AddPlayer(user.Info.Id, "")
+	game.RunLocked(func() {
+		game.AddPlayer(user.Info.Id, "")
+	})
 }

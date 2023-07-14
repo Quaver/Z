@@ -18,5 +18,7 @@ func handleClientGameJudgements(user *sessions.User, packet *packets.ClientGameJ
 		return
 	}
 
-	game.HandlePlayerJudgements(user.Info.Id, packet.Judgements)
+	game.RunLocked(func() {
+		game.HandlePlayerJudgements(user.Info.Id, packet.Judgements)
+	})
 }

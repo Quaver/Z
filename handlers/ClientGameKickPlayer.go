@@ -18,5 +18,7 @@ func handleClientGameKickPlayer(user *sessions.User, packet *packets.ClientGameK
 		return
 	}
 
-	game.KickPlayer(user, packet.UserId)
+	game.RunLocked(func() {
+		game.KickPlayer(user, packet.UserId)
+	})
 }

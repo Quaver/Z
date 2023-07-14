@@ -18,5 +18,7 @@ func handleClientGameScreenLoaded(user *sessions.User, packet *packets.ClientGam
 		return
 	}
 
-	game.SetPlayerScreenLoaded(user.Info.Id)
+	game.RunLocked(func() {
+		game.SetPlayerScreenLoaded(user.Info.Id)
+	})
 }

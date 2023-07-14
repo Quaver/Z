@@ -9,15 +9,14 @@ import (
 	"example.com/Quaver/Z/utils"
 	"log"
 	"math"
-	"sync"
 	"time"
 )
 
 type Game struct {
+	mutex               *utils.Mutex             // Locks down the game to prevent race conditions
 	Data                *objects.MultiplayerGame // Data about the multiplayer game that is sent in a packet
 	Password            string                   // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
 	CreatorId           int                      // The id of the user who created the game
-	mutex               *sync.Mutex              // Locks down the game to prevent race conditions
 	countdownTimer      *time.Timer              // Counts down before starting the game
 	playersInvited      []int                    // A list of users who have been invited to the game
 	playersInMatch      []int                    // A list of users who are currently playing the current match
@@ -33,9 +32,9 @@ const (
 // NewGame Creates a new multiplayer game from a game
 func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 	game := Game{
+		mutex:               utils.NewMutex(),
 		Data:                gameData,
 		CreatorId:           creatorId,
-		mutex:               &sync.Mutex{},
 		Password:            gameData.CreationPassword,
 		playersInvited:      []int{},
 		playersInMatch:      []int{},
@@ -59,6 +58,11 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 	return &game, nil
 }
 
+// RunLocked Runs a function in a locked environment
+func (game *Game) RunLocked(f func()) {
+	game.mutex.RunLocked(f)
+}
+
 // AddPlayer Adds a user to the multiplayer game
 func (game *Game) AddPlayer(userId int, password string) {
 	user := sessions.GetUserById(userId)
@@ -72,10 +76,6 @@ func (game *Game) AddPlayer(userId int, password string) {
 	if currentGame != nil {
 		currentGame.RemovePlayer(user.Info.Id)
 	}
-
-	// Doing this below because the game could be the same and cause a deadlock
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
 
 	if len(game.Data.PlayerIds) >= maxPlayerCount {
 		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorFull), user)
@@ -100,7 +100,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
 
 	if len(game.Data.PlayerIds) == 1 {
-		game.SetHost(nil, user.Info.Id, false)
+		game.SetHost(nil, user.Info.Id)
 	}
 
 	RemoveUserFromLobby(user)
@@ -109,8 +109,6 @@ func (game *Game) AddPlayer(userId int, password string) {
 
 // RemovePlayer Removes a player from the multiplayer game and disbands the game if necessary
 func (game *Game) RemovePlayer(userId int) {
-	game.mutex.Lock()
-
 	user := sessions.GetUserById(userId)
 
 	if user != nil {
@@ -127,21 +125,17 @@ func (game *Game) RemovePlayer(userId int) {
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
-		game.mutex.Unlock()
 		game.EndGame()
 		RemoveGameFromLobby(game)
 		return
 	}
 
-	game.SetHost(nil, game.Data.PlayerIds[0], false)
+	game.SetHost(nil, game.Data.PlayerIds[0])
 	game.sendPacketToPlayers(packets.NewServerUserLeftGame(userId))
 	game.checkScreenLoadedPlayers()
 	game.checkAllPlayersSkipped()
 
-	allPlayersFinished := game.isAllPlayersFinished()
-	game.mutex.Unlock()
-
-	if allPlayersFinished {
+	if game.isAllPlayersFinished() {
 		game.EndGame()
 	}
 
@@ -150,14 +144,10 @@ func (game *Game) RemovePlayer(userId int) {
 
 // KickPlayer Kicks a player from the multiplayer game
 func (game *Game) KickPlayer(requester *sessions.User, userId int) {
-	game.mutex.Lock()
-
 	if !game.isUserHost(requester) || !utils.Includes(game.Data.PlayerIds, userId) {
-		game.mutex.Unlock()
 		return
 	}
 
-	game.mutex.Unlock()
 	game.RemovePlayer(userId)
 
 	user := sessions.GetUserById(userId)
@@ -171,12 +161,7 @@ func (game *Game) KickPlayer(requester *sessions.User, userId int) {
 
 // SetHost Sets the host of the game. Set requester to nil if this is meant to be a forced action.
 // Otherwise, set the requester if a user is transferring host to another.
-func (game *Game) SetHost(requester *sessions.User, userId int, lock bool) {
-	if lock {
-		game.mutex.Lock()
-		defer game.mutex.Unlock()
-	}
-
+func (game *Game) SetHost(requester *sessions.User, userId int) {
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -186,7 +171,7 @@ func (game *Game) SetHost(requester *sessions.User, userId int, lock bool) {
 	}
 
 	game.Data.HostId = userId
-	game.SetHostSelectingMap(nil, false, false, false)
+	game.SetHostSelectingMap(nil, false, false)
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeHost(game.Data.HostId))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -194,9 +179,6 @@ func (game *Game) SetHost(requester *sessions.User, userId int, lock bool) {
 
 // ChangeMap Changes the multiplayer map. Non-nil requester checks if they are the host
 func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChangeGameMap) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if game.Data.InProgress {
 		return
 	}
@@ -226,9 +208,6 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 
 // SetPlayerDoesntHaveMap Sets that a player does not have the map downloaded
 func (game *Game) SetPlayerDoesntHaveMap(userId int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	game.Data.PlayersWithoutMap = append(game.Data.PlayersWithoutMap, userId)
 
 	game.sendPacketToPlayers(packets.NewServerGamePlayerNoMap(userId))
@@ -237,9 +216,6 @@ func (game *Game) SetPlayerDoesntHaveMap(userId int) {
 
 // SetPlayerHasMap Sets that a player now has the currently played map
 func (game *Game) SetPlayerHasMap(userId int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	game.Data.PlayersWithoutMap = utils.Filter(game.Data.PlayersWithoutMap, func(x int) bool {
 		return x != userId
 	})
@@ -250,9 +226,6 @@ func (game *Game) SetPlayerHasMap(userId int) {
 
 // SetPlayerReady Sets that a player is currently ready to play
 func (game *Game) SetPlayerReady(userId int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if game.Data.InProgress {
 		return
 	}
@@ -267,9 +240,6 @@ func (game *Game) SetPlayerReady(userId int) {
 
 // SetPlayerNotReady Sets that a player is not ready to play
 func (game *Game) SetPlayerNotReady(userId int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	game.Data.PlayersReady = utils.Filter(game.Data.PlayersReady, func(i int) bool {
 		return i != userId
 	})
@@ -280,9 +250,6 @@ func (game *Game) SetPlayerNotReady(userId int) {
 
 // StartCountdown Starts the 5-second multiplayer countdown
 func (game *Game) StartCountdown(requester *sessions.User) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if game.Data.InProgress {
 		return
 	}
@@ -292,7 +259,9 @@ func (game *Game) StartCountdown(requester *sessions.User) {
 	}
 
 	game.countdownTimer = time.AfterFunc(5*time.Second, func() {
-		game.StartGame()
+		game.RunLocked(func() {
+			game.StartGame()
+		})
 	})
 
 	game.sendPacketToPlayers(packets.NewServerGameStartCountdown())
@@ -301,9 +270,6 @@ func (game *Game) StartCountdown(requester *sessions.User) {
 
 // StopCountdown Stops the multiplayer countdown if one is live
 func (game *Game) StopCountdown(requester *sessions.User) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if game.Data.InProgress {
 		return
 	}
@@ -318,9 +284,6 @@ func (game *Game) StopCountdown(requester *sessions.User) {
 
 // StartGame Starts the multiplayer game
 func (game *Game) StartGame() {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if game.Data.InProgress {
 		return
 	}
@@ -333,7 +296,7 @@ func (game *Game) StartGame() {
 
 	game.clearCountdown()
 	game.clearReadyPlayers(false)
-	game.SetHostSelectingMap(nil, false, false, false)
+	game.SetHostSelectingMap(nil, false, false)
 
 	game.sendPacketToPlayers(packets.NewServerGameStart())
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -341,9 +304,6 @@ func (game *Game) StartGame() {
 
 // EndGame Ends the multiplayer game
 func (game *Game) EndGame() {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.Data.InProgress {
 		return
 	}
@@ -363,9 +323,6 @@ func (game *Game) EndGame() {
 
 // ChangeName Changes the name of the multiplayer game
 func (game *Game) ChangeName(requester *sessions.User, name string) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if game.Data.InProgress {
 		return
 	}
@@ -386,12 +343,7 @@ func (game *Game) ChangeName(requester *sessions.User, name string) {
 }
 
 // SetHostSelectingMap Sets whether the host is selecting a map or not
-func (game *Game) SetHostSelectingMap(requester *sessions.User, isSelecting bool, sendToLobby bool, lock bool) {
-	if lock {
-		game.mutex.Lock()
-		defer game.mutex.Unlock()
-	}
-
+func (game *Game) SetHostSelectingMap(requester *sessions.User, isSelecting bool, sendToLobby bool) {
 	if game.Data.InProgress {
 		return
 	}
@@ -410,9 +362,6 @@ func (game *Game) SetHostSelectingMap(requester *sessions.User, isSelecting bool
 
 // SetPassword Sets the password for the game
 func (game *Game) SetPassword(requester *sessions.User, password string) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -425,9 +374,6 @@ func (game *Game) SetPassword(requester *sessions.User, password string) {
 
 // SetDifficultyRange Sets the difficulty range filter for the game
 func (game *Game) SetDifficultyRange(requester *sessions.User, min float32, max float32) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -444,9 +390,6 @@ func (game *Game) SetDifficultyRange(requester *sessions.User, min float32, max 
 
 // SetMaxSongLength Sets the maximum song length filter for the map
 func (game *Game) SetMaxSongLength(requester *sessions.User, lengthSeconds int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -460,9 +403,6 @@ func (game *Game) SetMaxSongLength(requester *sessions.User, lengthSeconds int) 
 
 // SetAllowedGameModes Sets the game modes that are allowed to be played in the game
 func (game *Game) SetAllowedGameModes(requester *sessions.User, gameModes []common.Mode) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -476,9 +416,6 @@ func (game *Game) SetAllowedGameModes(requester *sessions.User, gameModes []comm
 
 // SetGlobalModifiers Sets the modifiers that all players must use in the game
 func (game *Game) SetGlobalModifiers(requester *sessions.User, mods int64, difficultyRating float64) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if game.Data.InProgress {
 		return
 	}
@@ -497,9 +434,6 @@ func (game *Game) SetGlobalModifiers(requester *sessions.User, mods int64, diffi
 
 // SetFreeMod Sets the free mod type for the match (free mod / free rate)
 func (game *Game) SetFreeMod(requester *sessions.User, freeMod objects.MultiplayerGameFreeMod) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if game.Data.InProgress {
 		return
 	}
@@ -518,9 +452,6 @@ func (game *Game) SetFreeMod(requester *sessions.User, freeMod objects.Multiplay
 
 // SetPlayerModifiers Sets the player modifiers for an individual user
 func (game *Game) SetPlayerModifiers(userId int, mods int64) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if game.Data.InProgress {
 		return
 	}
@@ -542,9 +473,6 @@ func (game *Game) SetPlayerModifiers(userId int, mods int64) {
 
 // SetHostRotation Sets whether host rotation will be enabled for the game
 func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -557,9 +485,6 @@ func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
 
 // SetLongNotePercent Sets the minimum and maximum long note percentage filters for the game
 func (game *Game) SetLongNotePercent(requester *sessions.User, min int, max int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -574,9 +499,6 @@ func (game *Game) SetLongNotePercent(requester *sessions.User, min int, max int)
 
 // SetMaxPlayerCount Sets the amount of max players allowed in the game
 func (game *Game) SetMaxPlayerCount(requester *sessions.User, count int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -595,9 +517,6 @@ func (game *Game) SetMaxPlayerCount(requester *sessions.User, count int) {
 
 // SendInvite Sends an invitation to a user in the multiplayer game
 func (game *Game) SendInvite(sender *sessions.User, user *sessions.User) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if user == nil {
 		return
 	}
@@ -611,9 +530,6 @@ func (game *Game) SendInvite(sender *sessions.User, user *sessions.User) {
 
 // SetPlayerWinCount Sets the win count for a given player
 func (game *Game) SetPlayerWinCount(userId int, wins int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	playerWins, err := utils.Find(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool {
 		return x.Id == userId
 	})
@@ -630,9 +546,6 @@ func (game *Game) SetPlayerWinCount(userId int, wins int) {
 
 // SetReferee Sets the referee for the game
 func (game *Game) SetReferee(requester *sessions.User, userId int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.isUserHost(requester) {
 		return
 	}
@@ -649,9 +562,6 @@ func (game *Game) SetReferee(requester *sessions.User, userId int) {
 
 // SetPlayerScreenLoaded Handles when a client states that their gameplay screen has loaded at the start of a match
 func (game *Game) SetPlayerScreenLoaded(userId int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.Data.InProgress || !utils.Includes(game.playersInMatch, userId) {
 		return
 	}
@@ -665,10 +575,7 @@ func (game *Game) SetPlayerScreenLoaded(userId int) {
 
 // SetPlayerFinished Handles when a client states that they have finished playing the current match
 func (game *Game) SetPlayerFinished(userId int) {
-	game.mutex.Lock()
-
 	if !game.Data.InProgress || !utils.Includes(game.playersInMatch, userId) {
-		game.mutex.Unlock()
 		return
 	}
 
@@ -676,19 +583,13 @@ func (game *Game) SetPlayerFinished(userId int) {
 		game.playersFinished = append(game.playersFinished, userId)
 	}
 
-	allFinished := game.isAllPlayersFinished()
-	game.mutex.Unlock()
-
-	if allFinished {
+	if game.isAllPlayersFinished() {
 		game.EndGame()
 	}
 }
 
 // SetPlayerSkippedSong Handles when the client requests to skip the song
 func (game *Game) SetPlayerSkippedSong(userId int) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.Data.InProgress || !utils.Includes(game.playersInMatch, userId) {
 		return
 	}
@@ -702,9 +603,6 @@ func (game *Game) SetPlayerSkippedSong(userId int) {
 
 // HandlePlayerJudgements Handles when a player sends judgement data during a multiplayer match
 func (game *Game) HandlePlayerJudgements(userId int, judgements []common.Judgements) {
-	game.mutex.Lock()
-	defer game.mutex.Unlock()
-
 	if !game.Data.InProgress || !utils.Includes(game.playersInMatch, userId) {
 		return
 	}
@@ -726,7 +624,7 @@ func (game *Game) HandlePlayerJudgements(userId int, judgements []common.Judgeme
 	}
 }
 
-// rotateHost Rotates the host to the next person in line. This is to be used in an already mutex-locked context.
+// rotateHost Rotates the host to the next person in line.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
 		return
@@ -744,13 +642,13 @@ func (game *Game) rotateHost() {
 
 	// Cyclically rotates the host
 	if index+1 < len(game.Data.PlayerIds) {
-		game.SetHost(nil, game.Data.PlayerIds[index+1], false)
+		game.SetHost(nil, game.Data.PlayerIds[index+1])
 	} else {
-		game.SetHost(nil, game.Data.PlayerIds[0], false)
+		game.SetHost(nil, game.Data.PlayerIds[0])
 	}
 }
 
-// Returns if the user is host of the game or has permission. This is to be used in an already mutex-locked context.
+// Returns if the user is host of the game or has permission.
 func (game *Game) isUserHost(user *sessions.User) bool {
 	if user == nil {
 		return true
@@ -763,7 +661,7 @@ func (game *Game) isUserHost(user *sessions.User) bool {
 	return true
 }
 
-// Clears all players that are ready. This is to be used in an already mutex-locked context.
+// Clears all players that are ready.
 func (game *Game) clearReadyPlayers(sendToLobby bool) {
 	for _, id := range game.Data.PlayersReady {
 		game.sendPacketToPlayers(packets.NewServerGamePlayerNotReady(id))
@@ -776,7 +674,7 @@ func (game *Game) clearReadyPlayers(sendToLobby bool) {
 	}
 }
 
-// Clears and stops the countdown timer This is to be used in an already mutex-locked context.
+// Clears and stops the countdown timer.
 func (game *Game) clearCountdown() {
 	if game.countdownTimer != nil {
 		game.countdownTimer.Stop()
@@ -844,7 +742,7 @@ func (game *Game) checkAllPlayersSkipped() {
 	game.sendPacketToPlayers(packets.NewServerGameAllPlayersSkipped())
 }
 
-// Sends a packet to all players in the game. This is to be used in an already mutex-locked context.
+// Sends a packet to all players in the game.
 func (game *Game) sendPacketToPlayers(packet interface{}) {
 	for _, id := range game.Data.PlayerIds {
 		user := sessions.GetUserById(id)

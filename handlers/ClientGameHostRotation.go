@@ -18,5 +18,7 @@ func handleClientGameHostRotation(user *sessions.User, packet *packets.ClientGam
 		return
 	}
 
-	game.SetHostRotation(user, packet.Enabled)
+	game.RunLocked(func() {
+		game.SetHostRotation(user, packet.Enabled)
+	})
 }

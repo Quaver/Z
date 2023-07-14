@@ -18,5 +18,7 @@ func handleClientGameChangeFreeMod(user *sessions.User, packet *packets.ClientGa
 		return
 	}
 
-	game.SetFreeMod(user, packet.Type)
+	game.RunLocked(func() {
+		game.SetFreeMod(user, packet.Type)
+	})
 }

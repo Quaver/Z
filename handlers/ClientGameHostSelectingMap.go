@@ -18,5 +18,7 @@ func handleClientGameHostSelectingMap(user *sessions.User, packet *packets.Clien
 		return
 	}
 
-	game.SetHostSelectingMap(user, packet.IsSelecting, true, true)
+	game.RunLocked(func() {
+		game.SetHostSelectingMap(user, packet.IsSelecting, true)
+	})
 }

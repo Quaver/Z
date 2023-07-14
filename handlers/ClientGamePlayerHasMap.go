@@ -18,5 +18,7 @@ func handleClientGamePlayerHasMap(user *sessions.User, packet *packets.ClientGam
 		return
 	}
 
-	game.SetPlayerHasMap(user.Info.Id)
+	game.RunLocked(func() {
+		game.SetPlayerHasMap(user.Info.Id)
+	})
 }

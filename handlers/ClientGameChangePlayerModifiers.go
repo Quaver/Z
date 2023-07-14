@@ -18,5 +18,7 @@ func handleClientGameChangePlayerModifiers(user *sessions.User, packet *packets.
 		return
 	}
 
-	game.SetPlayerModifiers(user.Info.Id, packet.Modifiers)
+	game.RunLocked(func() {
+		game.SetPlayerModifiers(user.Info.Id, packet.Modifiers)
+	})
 }
