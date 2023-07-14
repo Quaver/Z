@@ -683,19 +683,19 @@ func (game *Game) clearReadyPlayers(sendToLobby bool) {
 // Creates score processors for all the users that are playing in the match
 func (game *Game) createScoreProcessors() {
 	for _, player := range game.playersInMatch {
-		mods, err := utils.Find(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool {
+		playerMods, err := utils.Find(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool {
 			return x.Id == player
 		})
 
 		if err != nil {
-			mods = &objects.MultiplayerGamePlayerMods{
+			playerMods = &objects.MultiplayerGamePlayerMods{
 				Id:        player,
 				Modifiers: 0,
 			}
 		}
 
 		// TODO: GET ACTUAL RATING
-		game.playerScores[player] = scoring.NewScoreProcessor(1000, game.Data.GlobalModifiers|mods.Modifiers)
+		game.playerScores[player] = scoring.NewScoreProcessor(1000, game.Data.GlobalModifiers|playerMods.Modifiers)
 	}
 }
 
