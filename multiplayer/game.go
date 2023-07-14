@@ -802,8 +802,8 @@ func (game *Game) validateSettings() {
 	data.FilterMaxLongNotePercent = utils.Clamp(data.FilterMaxLongNotePercent, 0, 100)
 	data.FilterMinAudioRate = utils.Clamp(data.FilterMinAudioRate, 0.5, 2.0)
 
-	// There is a maximum of 21 rates allowed in the game. So if we don't have all of them, then just clear it.
-	if len(data.MapDifficultyRatingAll) < 21 {
+	// There is a maximum of 31 rates allowed in the game. So if we don't have all of them, then just clear it.
+	if len(data.MapDifficultyRatingAll) < 31 {
 		data.MapDifficultyRatingAll = []float64{}
 	}
 
