@@ -31,7 +31,7 @@ type MultiplayerGame struct {
 	PlayersBlueTeam           []int                        `json:"btp"`   // The players that are on the blue team
 	PlayerWins                []*MultiplayerGamePlayerWins `json:"plw"`   // The amount of wins each player has
 	MatchCountdownTimestamp   int64                        `json:"cst"`   // A unix timestamp of the time the match countdown has started
-	GlobalModifiers           int64                        `json:"md"`    // The modifiers that are used globally for every player in the match
+	GlobalModifiers           common.Mods                  `json:"md"`    // The modifiers that are used globally for every player in the match
 	FreeModType               MultiplayerGameFreeMod       `json:"fm"`    // The type of free mod that is active for the match.
 	TeamRedWins               int                          `json:"rtw"`   // The amount of wins the red team has
 	TeamBlueWins              int                          `json:"btw"`   // The amount of wins the blue team has

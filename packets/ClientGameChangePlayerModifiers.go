@@ -1,6 +1,8 @@
 package packets
 
+import "example.com/Quaver/Z/common"
+
 type ClientGameChangePlayerModifiers struct {
 	Packet
-	Modifiers int64 `json:"m"`
+	Modifiers common.Mods `json:"m"`
 }

@@ -417,7 +417,7 @@ func (game *Game) SetAllowedGameModes(requester *sessions.User, gameModes []comm
 }
 
 // SetGlobalModifiers Sets the modifiers that all players must use in the game
-func (game *Game) SetGlobalModifiers(requester *sessions.User, mods int64, difficultyRating float64) {
+func (game *Game) SetGlobalModifiers(requester *sessions.User, mods common.Mods, difficultyRating float64) {
 	if game.Data.InProgress {
 		return
 	}
@@ -453,7 +453,7 @@ func (game *Game) SetFreeMod(requester *sessions.User, freeMod objects.Multiplay
 }
 
 // SetPlayerModifiers Sets the player modifiers for an individual user
-func (game *Game) SetPlayerModifiers(userId int, mods int64) {
+func (game *Game) SetPlayerModifiers(userId int, mods common.Mods) {
 	if game.Data.InProgress {
 		return
 	}
@@ -694,8 +694,15 @@ func (game *Game) createScoreProcessors() {
 			}
 		}
 
-		// TODO: GET ACTUAL RATING
-		game.playerScores[player] = scoring.NewScoreProcessor(1000, game.Data.GlobalModifiers|playerMods.Modifiers)
+		mods := game.Data.GlobalModifiers | playerMods.Modifiers
+		difficulty := game.Data.MapDifficultyRating
+		idx := utils.FindIndex(common.SpeedMods, common.GetSpeedModFromMods(mods))
+
+		if idx != -1 && len(game.Data.MapDifficultyRatingAll) > 0 {
+			difficulty = game.Data.MapDifficultyRatingAll[idx]
+		}
+
+		game.playerScores[player] = scoring.NewScoreProcessor(difficulty, mods)
 	}
 }
 

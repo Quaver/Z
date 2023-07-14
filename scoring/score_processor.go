@@ -7,7 +7,7 @@ import (
 
 type ScoreProcessor struct {
 	DifficultyRating  float64
-	Modifiers         int64
+	Modifiers         common.Mods
 	Accuracy          float64
 	PerformanceRating float64
 	Combo             int
@@ -15,7 +15,7 @@ type ScoreProcessor struct {
 	Judgements        map[common.Judgements]int
 }
 
-func NewScoreProcessor(difficultyRating float64, modifiers int64) *ScoreProcessor {
+func NewScoreProcessor(difficultyRating float64, modifiers common.Mods) *ScoreProcessor {
 	return &ScoreProcessor{
 		DifficultyRating: difficultyRating,
 		Modifiers:        modifiers,
