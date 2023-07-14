@@ -5,6 +5,7 @@ import (
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
 	"example.com/Quaver/Z/packets"
+	"example.com/Quaver/Z/scoring"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"log"
@@ -13,16 +14,17 @@ import (
 )
 
 type Game struct {
-	mutex               *utils.Mutex             // Locks down the game to prevent race conditions
-	Data                *objects.MultiplayerGame // Data about the multiplayer game that is sent in a packet
-	Password            string                   // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
-	CreatorId           int                      // The id of the user who created the game
-	countdownTimer      *time.Timer              // Counts down before starting the game
-	playersInvited      []int                    // A list of users who have been invited to the game
-	playersInMatch      []int                    // A list of users who are currently playing the current match
-	playersScreenLoaded []int                    // A list of users whose screens have loaded in-game. The match doesn't start until all players are loaded.
-	playersFinished     []int                    // A list of users who have finished playing the map
-	playersSkipped      []int                    // A list of players who have skipped the map in multiplayer
+	mutex               *utils.Mutex                    // Locks down the game to prevent race conditions
+	Data                *objects.MultiplayerGame        // Data about the multiplayer game that is sent in a packet
+	Password            string                          // The password for the game. This is different from Data.CreationPassword, as it is hidden from users.
+	CreatorId           int                             // The id of the user who created the game
+	countdownTimer      *time.Timer                     // Counts down before starting the game
+	playersInvited      []int                           // A list of users who have been invited to the game
+	playersInMatch      []int                           // A list of users who are currently playing the current match
+	playersScreenLoaded []int                           // A list of users whose screens have loaded in-game. The match doesn't start until all players are loaded.
+	playersFinished     []int                           // A list of users who have finished playing the map
+	playersSkipped      []int                           // A list of players who have skipped the map in multiplayer
+	playerScores        map[int]*scoring.ScoreProcessor // Score processors for players in the game
 }
 
 const (
@@ -41,6 +43,7 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		playersScreenLoaded: []int{},
 		playersFinished:     []int{},
 		playersSkipped:      []int{},
+		playerScores:        map[int]*scoring.ScoreProcessor{},
 	}
 
 	game.Data.GameId = utils.GenerateRandomString(32)
@@ -119,6 +122,7 @@ func (game *Game) RemovePlayer(userId int) {
 	game.playersScreenLoaded = utils.Filter(game.playersScreenLoaded, func(x int) bool { return x != userId })
 	game.playersFinished = utils.Filter(game.playersFinished, func(x int) bool { return x != userId })
 	game.playersSkipped = utils.Filter(game.playersSkipped, func(x int) bool { return x != userId })
+	delete(game.playerScores, userId)
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
@@ -291,6 +295,7 @@ func (game *Game) StartGame() {
 		return x != game.Data.RefereeId && !utils.Includes(game.Data.PlayersWithoutMap, x)
 	})
 
+	game.createScoreProcessors()
 	game.clearCountdown()
 	game.clearReadyPlayers(false)
 	game.SetHostSelectingMap(nil, false, false)
@@ -604,6 +609,10 @@ func (game *Game) HandlePlayerJudgements(userId int, judgements []common.Judgeme
 		return
 	}
 
+	if score, ok := game.playerScores[userId]; ok {
+		score.AddJudgements(judgements)
+	}
+
 	packet := packets.NewServerGameJudgements(userId, judgements)
 
 	for _, playerId := range game.playersInMatch {
@@ -668,6 +677,25 @@ func (game *Game) clearReadyPlayers(sendToLobby bool) {
 
 	if sendToLobby {
 		sendLobbyUsersGameInfoPacket(game, true)
+	}
+}
+
+// Creates score processors for all the users that are playing in the match
+func (game *Game) createScoreProcessors() {
+	for _, player := range game.playersInMatch {
+		mods, err := utils.Find(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool {
+			return x.Id == player
+		})
+
+		if err != nil {
+			mods = &objects.MultiplayerGamePlayerMods{
+				Id:        player,
+				Modifiers: 0,
+			}
+		}
+
+		// TODO: GET ACTUAL RATING
+		game.playerScores[player] = scoring.NewScoreProcessor(1000, game.Data.GlobalModifiers|mods.Modifiers)
 	}
 }
 
@@ -759,7 +787,7 @@ func (game *Game) validateSettings() {
 	data.Name = utils.TruncateString(data.Name, 50)
 	data.HasPassword = game.Password != ""
 	data.MaxPlayers = utils.Clamp(data.MaxPlayers, 2, 16)
-	data.Ruleset = utils.Clamp(data.Ruleset, objects.MultiplayerGameRulesetFreeForAll, objects.MultiplayerGameRulesetTeam)
+	data.Ruleset = objects.MultiplayerGameRulesetFreeForAll
 	data.FreeModType = utils.Clamp(data.FreeModType, objects.MultiplayerGameFreeModNone, objects.MultiplayerGameFreeModRegular|objects.MultiplayerGameFreeModRate)
 
 	data.MapMD5 = utils.TruncateString(data.MapMD5, 64)
