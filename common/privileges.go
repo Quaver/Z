@@ -27,6 +27,6 @@ const (
 )
 
 // HasPrivilege Returns if a combination of privileges has a given privilege
-func HasPrivilege(privilegeCombo UserGroups, privilege UserGroups) bool {
+func HasPrivilege(privilegeCombo Privileges, privilege Privileges) bool {
 	return privilegeCombo&privilege != 0
 }
