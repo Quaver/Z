@@ -630,6 +630,22 @@ func (game *Game) HandlePlayerJudgements(userId int, judgements []common.Judgeme
 	}
 }
 
+// SetTournamentMode Enables/disables tournament mode for the match
+func (game *Game) SetTournamentMode(requester *sessions.User, enabled bool) {
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	if requester != nil && !common.HasPrivilege(requester.Info.Privileges, common.PrivilegeEnableTournamentMode) {
+		return
+	}
+
+	game.Data.IsTournamentMode = enabled
+
+	game.sendPacketToPlayers(packets.NewServerGameTournamentMode(game.Data.IsTournamentMode))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // rotateHost Rotates the host to the next person in line.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
