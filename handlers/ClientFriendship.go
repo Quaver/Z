@@ -20,7 +20,7 @@ func handleClientFriendship(user *sessions.User, packet *packets.ClientFriendshi
 	relationship, err := db.GetUserRelationship(user.Info.Id, packet.UserId)
 
 	if err != nil {
-		log.Printf("Failed to get used relationship (#%v -> #%v) - %v\n", user.Info.Id, packet.UserId, err)
+		log.Printf("Failed to get user relationship (#%v -> #%v) - %v\n", user.Info.Id, packet.UserId, err)
 	}
 
 	switch packet.Action {
