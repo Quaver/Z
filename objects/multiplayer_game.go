@@ -60,4 +60,5 @@ func (mg *MultiplayerGame) SetDefaults() {
 	mg.FilterMaxSongLength = 999999999
 	mg.FilterMaxLongNotePercent = 100
 	mg.FilterMinAudioRate = 0.5
+	mg.IsTournamentMode = false
 }
