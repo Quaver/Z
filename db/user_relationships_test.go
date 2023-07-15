@@ -2,6 +2,7 @@ package db
 
 import (
 	"example.com/Quaver/Z/config"
+	"fmt"
 	"testing"
 )
 
@@ -26,3 +27,48 @@ func TestUserFriendsList(t *testing.T) {
 
 	CloseSQLConnection()
 }
+
+func TestGetUserRelationship(t *testing.T) {
+	_ = config.Load("../config.json")
+
+	if config.Instance == nil {
+		return
+	}
+
+	InitializeSQL()
+
+	relationship, err := GetUserRelationship(1, 2)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(relationship)
+
+	CloseSQLConnection()
+}
+
+func TestAddFriend(t *testing.T) {
+	_ = config.Load("../config.json")
+
+	if config.Instance == nil {
+		return
+	}
+
+	InitializeSQL()
+
+	err := AddFriend(1, 2)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = RemoveFriend(1, 2)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	CloseSQLConnection()
+}
+

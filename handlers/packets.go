@@ -98,6 +98,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientGamePlayerSkipSong(user, unmarshalPacket[packets.ClientGamePlayerSkipSong](msg))
 	case packets.PacketIdClientGameJudgements:
 		handleClientGameJudgements(user, unmarshalPacket[packets.ClientGameJudgements](msg))
+	case packets.PacketIdClientFriendship:
+		handleClientFriendship(user, unmarshalPacket[packets.ClientFriendship](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}
