@@ -100,6 +100,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientGameJudgements(user, unmarshalPacket[packets.ClientGameJudgements](msg))
 	case packets.PacketIdClientFriendship:
 		handleClientFriendship(user, unmarshalPacket[packets.ClientFriendship](msg))
+	case packets.PacketIdClientTwitchUnlink:
+		handleClientUnlinkTwitch(user, unmarshalPacket[packets.ClientUnlinkTwitch](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}

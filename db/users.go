@@ -93,3 +93,15 @@ func MuteUser(id int, endTime int64) error {
 
 	return nil
 }
+
+// UnlinkUserTwitch Unlinks the twitch account of a given user
+func UnlinkUserTwitch(id int) error {
+	_, err := SQL.Exec("UPDATE users SET twitch_username = NULL WHERE id = ?", id)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
