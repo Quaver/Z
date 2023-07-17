@@ -24,6 +24,8 @@ func Initialize() {
 	channels = make(map[string]*Channel)
 	chatMutex = &sync.Mutex{}
 
+	_ = sessions.AddUser(Bot)
+
 	for _, channel := range config.Instance.ChatChannels {
 		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, false, channel.DiscordWebhook))
 	}
