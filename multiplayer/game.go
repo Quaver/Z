@@ -1,7 +1,6 @@
 package multiplayer
 
 import (
-	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
@@ -26,7 +25,6 @@ type Game struct {
 	playersFinished     []int                           // A list of users who have finished playing the map
 	playersSkipped      []int                           // A list of players who have skipped the map in multiplayer
 	playerScores        map[int]*scoring.ScoreProcessor // Score processors for players in the game
-	chatChannel         *chat.Channel                   // The channel that players can chat in for the game
 }
 
 const (
@@ -60,7 +58,6 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		return nil, err
 	}
 
-	game.chatChannel = chat.AddMultiplayerChannel(game.Data.GameId)
 	return &game, nil
 }
 
@@ -94,7 +91,6 @@ func (game *Game) AddPlayer(userId int, password string) {
 		return
 	}
 
-	game.chatChannel.AddUser(user)
 	game.Data.PlayerIds = append(game.Data.PlayerIds, user.Info.Id)
 	game.Data.PlayerModifiers = append(game.Data.PlayerModifiers, &objects.MultiplayerGamePlayerMods{Id: user.Info.Id})
 	game.Data.PlayerWins = append(game.Data.PlayerWins, &objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
@@ -118,7 +114,6 @@ func (game *Game) RemovePlayer(userId int) {
 
 	if user != nil {
 		user.SetMultiplayerGameId(0)
-		game.chatChannel.RemoveUser(user)
 	}
 
 	game.Data.PlayerIds = utils.Filter(game.Data.PlayerIds, func(x int) bool { return x != userId })
@@ -134,7 +129,6 @@ func (game *Game) RemovePlayer(userId int) {
 	if len(game.Data.PlayerIds) == 0 {
 		game.EndGame()
 		RemoveGameFromLobby(game)
-		chat.RemoveMultiplayerChannel(game.Data.GameId)
 		return
 	}
 

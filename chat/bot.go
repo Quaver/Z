@@ -21,3 +21,8 @@ var (
 		TwitchUsername: sql.NullString{},
 	})
 )
+
+// handleBotCommands Handles bot commands for a given message (if any)
+func handleBotCommands(user *sessions.User, channel *Channel, message string) {
+
+}

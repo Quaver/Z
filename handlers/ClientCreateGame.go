@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/multiplayer"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
@@ -23,6 +24,7 @@ func handleClientCreateGame(user *sessions.User, packet *packets.ClientCreateGam
 	multiplayer.AddGameToLobby(game)
 
 	game.RunLocked(func() {
+		chat.AddMultiplayerChannel(game.Data.GameId)
 		game.AddPlayer(user.Info.Id, game.Password)
 	})
 }

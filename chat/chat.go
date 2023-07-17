@@ -24,8 +24,6 @@ func Initialize() {
 	channels = make(map[string]*Channel)
 	chatMutex = &sync.Mutex{}
 
-	_ = sessions.AddUser(Bot)
-
 	for _, channel := range config.Instance.ChatChannels {
 		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, false, channel.DiscordWebhook))
 	}
@@ -89,6 +87,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		}
 
 		sendPublicMessage(sender, channel, message)
+		handleBotCommands(sender, channel, message)
 		discordWebhook = channel.WebhookClient
 	} else {
 		receivingUser := sessions.GetUserByUsername(receiver)
