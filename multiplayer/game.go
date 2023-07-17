@@ -1,6 +1,7 @@
 package multiplayer
 
 import (
+	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
@@ -25,6 +26,7 @@ type Game struct {
 	playersFinished     []int                           // A list of users who have finished playing the map
 	playersSkipped      []int                           // A list of players who have skipped the map in multiplayer
 	playerScores        map[int]*scoring.ScoreProcessor // Score processors for players in the game
+	chatChannel         *chat.Channel                   // The multiplayer chat
 }
 
 const (
@@ -58,6 +60,7 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		return nil, err
 	}
 
+	game.chatChannel = chat.AddMultiplayerChannel(game.Data.GameId)
 	return &game, nil
 }
 
@@ -104,6 +107,8 @@ func (game *Game) AddPlayer(userId int, password string) {
 		game.SetHost(nil, user.Info.Id)
 	}
 
+	game.chatChannel.AddUser(user)
+
 	RemoveUserFromLobby(user)
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -125,10 +130,13 @@ func (game *Game) RemovePlayer(userId int) {
 	game.playersSkipped = utils.Filter(game.playersSkipped, func(x int) bool { return x != userId })
 	delete(game.playerScores, userId)
 
+	game.chatChannel.RemoveUser(user)
+
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
 		game.EndGame()
 		RemoveGameFromLobby(game)
+		chat.RemoveMultiplayerChannel(game.Data.GameId)
 		return
 	}
 

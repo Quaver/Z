@@ -10,19 +10,22 @@ import (
 	"fmt"
 	"github.com/disgoorg/disgo/webhook"
 	"log"
+	"strings"
 	"sync"
 	"time"
 )
 
 var (
-	channels  map[string]*Channel
-	chatMutex *sync.Mutex
+	channels        map[string]*Channel
+	chatMutex       *sync.Mutex
+	messageHandlers []func(user *sessions.User, channel *Channel, args []string) string
 )
 
 // Initialize Initializes the chat channels
 func Initialize() {
 	channels = make(map[string]*Channel)
 	chatMutex = &sync.Mutex{}
+	messageHandlers = []func(user *sessions.User, channel *Channel, args []string) string{}
 
 	for _, channel := range config.Instance.ChatChannels {
 		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, false, channel.DiscordWebhook))
@@ -59,11 +62,6 @@ func GetChannelByName(name string) *Channel {
 	return nil
 }
 
-// GetMultiplayerChannel Returns a multiplayer channel
-func GetMultiplayerChannel(id string) *Channel {
-	return GetChannelByName(fmt.Sprintf("#multiplayer_%v", id))
-}
-
 // SendMessage Sends a message to a given a receiver
 func SendMessage(sender *sessions.User, receiver string, message string) {
 	chatMutex.Lock()
@@ -94,8 +92,15 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		}
 
 		sendPublicMessage(sender, channel, message)
-		handleBotCommands(sender, channel, message)
-		discordWebhook = channel.WebhookClient
+		webhooks.SendChatMessage(channel.WebhookClient, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
+
+		for _, handler := range messageHandlers {
+			responseMsg := handler(sender, channel, strings.Split(message, " "))
+
+			if responseMsg != "" {
+				sendPublicMessage(Bot, channel, responseMsg)
+			}
+		}
 	} else {
 		receivingUser := sessions.GetUserByUsername(receiver)
 
@@ -104,10 +109,6 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		}
 
 		sendPrivateMessage(sender, receivingUser, message)
-		discordWebhook = webhooks.PrivateChat
-	}
-
-	if discordWebhook != nil {
 		webhooks.SendChatMessage(discordWebhook, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
 	}
 }
@@ -129,6 +130,14 @@ func RemoveMultiplayerChannel(id string) {
 	}
 
 	removeChannel(channel)
+}
+
+// AddPublicMessageHandler Adds a message handler for public chat channels
+func AddPublicMessageHandler(f func(user *sessions.User, channel *Channel, args []string) string) {
+	chatMutex.Lock()
+	defer chatMutex.Unlock()
+
+	messageHandlers = append(messageHandlers, f)
 }
 
 // Sends a message to a public chat channel

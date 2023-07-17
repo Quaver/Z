@@ -19,6 +19,7 @@ func main() {
 	db.InitializeRedis()
 	webhooks.Initialize()
 	chat.Initialize()
+	multiplayer.InitializeBot()
 	multiplayer.InitializeLobby()
 
 	s := NewServer(config.Instance.Server.Port)
