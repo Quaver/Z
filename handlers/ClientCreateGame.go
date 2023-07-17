@@ -26,6 +26,9 @@ func handleClientCreateGame(user *sessions.User, packet *packets.ClientCreateGam
 
 	game.RunLocked(func() {
 		game.AddPlayer(user.Info.Id, game.Password)
-		addUserToGameChat(user, game)
+
+		if multiplayer.GetGameById(user.GetMultiplayerGameId()) != nil {
+			addUserToGameChat(user, game)
+		}
 	})
 }

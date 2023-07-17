@@ -22,7 +22,11 @@ func handleClientJoinGame(user *sessions.User, packet *packets.ClientJoinGame) {
 
 	game.RunLocked(func() {
 		game.AddPlayer(user.Info.Id, packet.Password)
-		addUserToGameChat(user, game)
+
+		// User joined game successfully
+		if multiplayer.GetGameById(user.GetMultiplayerGameId()) != nil {
+			addUserToGameChat(user, game)
+		}
 	})
 }
 
