@@ -12,6 +12,10 @@ func InitializeBot() {
 
 // Handles commands made for multiplayer
 func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args []string) string {
+	if !channel.IsMultiplayer {
+		return ""
+	}
+
 	if args[0] != "!mp" {
 		return ""
 	}
@@ -22,6 +26,5 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 		return ""
 	}
 
-	fmt.Println("USER EXECUTED COMMAND ", args)
-	return ""
+	return fmt.Sprintf("You executed the multiplayer command: %v", args)
 }

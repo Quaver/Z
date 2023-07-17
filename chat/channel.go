@@ -81,6 +81,10 @@ func (channel *Channel) RemoveUser(user *sessions.User) {
 	channel.mutex.Lock()
 	defer channel.mutex.Unlock()
 
+	if user == nil {
+		return
+	}
+
 	if _, ok := channel.Participants[user.Info.Id]; ok {
 		delete(channel.Participants, user.Info.Id)
 	}

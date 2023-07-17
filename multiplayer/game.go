@@ -119,6 +119,7 @@ func (game *Game) RemovePlayer(userId int) {
 
 	if user != nil {
 		user.SetMultiplayerGameId(0)
+		game.chatChannel.RemoveUser(user)
 	}
 
 	game.Data.PlayerIds = utils.Filter(game.Data.PlayerIds, func(x int) bool { return x != userId })
@@ -129,8 +130,6 @@ func (game *Game) RemovePlayer(userId int) {
 	game.playersFinished = utils.Filter(game.playersFinished, func(x int) bool { return x != userId })
 	game.playersSkipped = utils.Filter(game.playersSkipped, func(x int) bool { return x != userId })
 	delete(game.playerScores, userId)
-
-	game.chatChannel.RemoveUser(user)
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
