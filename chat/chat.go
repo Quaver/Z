@@ -16,16 +16,16 @@ import (
 )
 
 var (
-	channels        map[string]*Channel
-	chatMutex       *sync.Mutex
-	messageHandlers []func(user *sessions.User, channel *Channel, args []string) string
+	channels              map[string]*Channel
+	chatMutex             *sync.Mutex
+	publicMessageHandlers []func(user *sessions.User, channel *Channel, args []string) string
 )
 
 // Initialize Initializes the chat channels
 func Initialize() {
 	channels = make(map[string]*Channel)
 	chatMutex = &sync.Mutex{}
-	messageHandlers = []func(user *sessions.User, channel *Channel, args []string) string{}
+	publicMessageHandlers = []func(user *sessions.User, channel *Channel, args []string) string{}
 
 	for _, channel := range config.Instance.ChatChannels {
 		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, false, channel.DiscordWebhook))
@@ -94,7 +94,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		sendPublicMessage(sender, channel, message)
 		webhooks.SendChatMessage(channel.WebhookClient, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
 
-		for _, handler := range messageHandlers {
+		for _, handler := range publicMessageHandlers {
 			responseMsg := handler(sender, channel, strings.Split(message, " "))
 
 			if responseMsg != "" {
@@ -137,7 +137,7 @@ func AddPublicMessageHandler(f func(user *sessions.User, channel *Channel, args 
 	chatMutex.Lock()
 	defer chatMutex.Unlock()
 
-	messageHandlers = append(messageHandlers, f)
+	publicMessageHandlers = append(publicMessageHandlers, f)
 }
 
 // Sends a message to a public chat channel
