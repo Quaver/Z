@@ -7,6 +7,7 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/webhooks"
+	"fmt"
 	"github.com/disgoorg/disgo/webhook"
 	"log"
 	"sync"
@@ -101,6 +102,25 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 	if discordWebhook != nil {
 		webhooks.SendChatMessage(discordWebhook, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
 	}
+}
+
+// AddMultiplayerChannel Adds a multiplayer channel.
+func AddMultiplayerChannel(id string) *Channel {
+	channel := NewChannel(fmt.Sprintf("#multiplayer_%v", id), "", false, false, "")
+	addChannel(channel)
+
+	return channel
+}
+
+// RemoveMultiplayerChannel Removes a multiplayer channel
+func RemoveMultiplayerChannel(id string) {
+	channel := GetChannelByName(fmt.Sprintf("#multiplayer_%v", id))
+
+	if channel == nil {
+		return
+	}
+
+	removeChannel(channel)
 }
 
 // Sends a message to a public chat channel
