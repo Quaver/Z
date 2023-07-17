@@ -25,7 +25,7 @@ func Initialize() {
 	chatMutex = &sync.Mutex{}
 
 	for _, channel := range config.Instance.ChatChannels {
-		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, channel.DiscordWebhook))
+		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, false, channel.DiscordWebhook))
 	}
 }
 
@@ -37,7 +37,7 @@ func GetAvailableChannels(userGroups common.UserGroups) []*Channel {
 	var availableChannels []*Channel
 
 	for _, channel := range channels {
-		if !channel.AdminOnly || (channel.AdminOnly && isChatModerator(userGroups)) {
+		if (!channel.IsMultiplayer && !channel.AdminOnly) || (channel.AdminOnly && isChatModerator(userGroups)) {
 			availableChannels = append(availableChannels, channel)
 		}
 	}
@@ -106,7 +106,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 // AddMultiplayerChannel Adds a multiplayer channel.
 func AddMultiplayerChannel(id string) *Channel {
-	channel := NewChannel(fmt.Sprintf("#multiplayer_%v", id), "", false, false, "")
+	channel := NewChannel(fmt.Sprintf("#multiplayer_%v", id), "", false, false, true, "")
 	addChannel(channel)
 
 	return channel

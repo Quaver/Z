@@ -18,11 +18,12 @@ type Channel struct {
 	DiscordWebhook string                 `json:"discord_webhook"`
 	WebhookClient  webhook.Client         `json:"-"`
 	Participants   map[int]*sessions.User `json:"-"`
+	IsMultiplayer  bool                   `json:"-"`
 	mutex          *sync.Mutex
 }
 
 // NewChannel Creates a new chat channel instance
-func NewChannel(name string, description string, adminOnly bool, autoJoin bool, discordWebhook string) *Channel {
+func NewChannel(name string, description string, adminOnly bool, autoJoin bool, isMultiplayer bool, discordWebhook string) *Channel {
 	channel := Channel{
 		Name:           name,
 		Description:    description,
@@ -31,6 +32,7 @@ func NewChannel(name string, description string, adminOnly bool, autoJoin bool, 
 		DiscordWebhook: discordWebhook,
 		WebhookClient:  nil,
 		Participants:   map[int]*sessions.User{},
+		IsMultiplayer:  isMultiplayer,
 		mutex:          &sync.Mutex{},
 	}
 
@@ -65,7 +67,6 @@ func (channel *Channel) AddUser(user *sessions.User) {
 	channel.mutex.Lock()
 	defer channel.mutex.Unlock()
 
-	// TODO: Check for spectator / multiplayer
 	if channel.AdminOnly && !isChatModerator(user.Info.UserGroups) {
 		sessions.SendPacketToUser(packets.NewServerFailedToJoinChatChannel(channel.Name), user)
 		return
