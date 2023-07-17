@@ -27,6 +27,8 @@ func Initialize() {
 	for _, channel := range config.Instance.ChatChannels {
 		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, false, channel.DiscordWebhook))
 	}
+
+	_ = sessions.AddUser(Bot)
 }
 
 // GetAvailableChannels Returns the available channels that the user is able to join
