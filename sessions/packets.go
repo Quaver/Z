@@ -9,6 +9,10 @@ import (
 
 // SendPacketToConnection Sends a packet to a given connection
 func SendPacketToConnection(data interface{}, conn net.Conn) {
+	if conn == nil {
+		return
+	}
+
 	j, err := json.Marshal(data)
 
 	if err != nil {
