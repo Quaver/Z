@@ -59,6 +59,11 @@ func GetChannelByName(name string) *Channel {
 	return nil
 }
 
+// GetMultiplayerChannel Returns a multiplayer channel
+func GetMultiplayerChannel(id string) *Channel {
+	return GetChannelByName(fmt.Sprintf("#multiplayer_%v", id))
+}
+
 // SendMessage Sends a message to a given a receiver
 func SendMessage(sender *sessions.User, receiver string, message string) {
 	chatMutex.Lock()

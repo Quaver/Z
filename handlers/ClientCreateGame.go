@@ -22,9 +22,10 @@ func handleClientCreateGame(user *sessions.User, packet *packets.ClientCreateGam
 	}
 
 	multiplayer.AddGameToLobby(game)
+	chat.AddMultiplayerChannel(game.Data.GameId)
 
 	game.RunLocked(func() {
-		chat.AddMultiplayerChannel(game.Data.GameId)
 		game.AddPlayer(user.Info.Id, game.Password)
+		addUserToGameChat(user, game)
 	})
 }

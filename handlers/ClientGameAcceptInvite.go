@@ -21,5 +21,6 @@ func handleClientGameAcceptInvite(user *sessions.User, packet *packets.ClientGam
 
 	game.RunLocked(func() {
 		game.AddPlayer(user.Info.Id, "")
+		addUserToGameChat(user, game)
 	})
 }
