@@ -5,6 +5,7 @@ import (
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -42,6 +43,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandChangeMap(user, game, args)
 		case "hostrotation":
 			message = handleCommandHostRotation(user, game)
+		case "maxplayers":
+			message = handleCommandMaxPlayers(user, game, args)
 		}
 	})
 
@@ -127,6 +130,26 @@ func handleCommandHostRotation(user *sessions.User, game *Game) string {
 
 	game.SetHostRotation(user, !game.Data.IsHostRotation)
 	return fmt.Sprintf("Host Rotation has been %v.", utils.BoolToEnabledString(game.Data.IsHostRotation))
+}
+
+// Handles the command to set the max player count
+func handleCommandMaxPlayers(user *sessions.User, game *Game, args []string) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if len(args) < 3 {
+		return "You must provide a number between 2 and 16 in order to change the max player count."
+	}
+
+	numPlayers, err := strconv.Atoi(args[2])
+
+	if err != nil {
+		return "You must provide a valid number."
+	}
+
+	game.SetMaxPlayerCount(user, numPlayers)
+	return fmt.Sprintf("The max player count has been changed to: %v.", game.Data.MaxPlayers)
 }
 
 // Returns a target user from command args
