@@ -47,6 +47,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandMaxPlayers(user, game, args)
 		case "start":
 			message = handleCommandStartMatch(user, game)
+		case "end":
+			message = handleCommandEndMatch(user, game)
 		}
 	})
 
@@ -166,6 +168,20 @@ func handleCommandStartMatch(user *sessions.User, game *Game) string {
 
 	game.StartGame()
 	return "The match has been started."
+}
+
+// Handles the command to end the match
+func handleCommandEndMatch(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if !game.Data.InProgress {
+		return "The match is not currently in progress."
+	}
+
+	game.EndGame()
+	return "The match has been ended."
 }
 
 // Returns a target user from command args
