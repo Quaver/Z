@@ -842,3 +842,15 @@ func (game *Game) validateSettings() {
 		data.FilterAllowedGameModes = []common.Mode{common.ModeKeys4, common.ModeKeys7}
 	}
 }
+
+// Returns if a user is inside the game
+func (game *Game) isUserInGame(user *sessions.User) bool {
+	if user == nil {
+		return false
+	}
+
+	game.mutex.Mutex.Lock()
+	defer game.mutex.Mutex.Unlock()
+
+	return utils.Includes(game.Data.PlayerIds, user.Info.Id)
+}
