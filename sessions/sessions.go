@@ -3,6 +3,7 @@ package sessions
 import (
 	"example.com/Quaver/Z/objects"
 	"net"
+	"strings"
 	"sync"
 )
 
@@ -145,7 +146,7 @@ func addUserToMaps(user *User) {
 	defer userMutex.Unlock()
 
 	userIdToUser[user.Info.Id] = user
-	usernameToUser[user.Info.Username] = user
+	usernameToUser[strings.ToLower(user.Info.Username)] = user
 	connToUser[user.Conn] = user
 }
 
