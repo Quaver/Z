@@ -6,17 +6,13 @@ import (
 	"fmt"
 )
 
-func InitializeBot() {
+func InitializeChatBot() {
 	chat.AddPublicMessageHandler(handleMultiplayerCommands)
 }
 
 // Handles commands made for multiplayer
 func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args []string) string {
 	if !channel.IsMultiplayer {
-		return ""
-	}
-
-	if args[0] != "!mp" {
 		return ""
 	}
 
