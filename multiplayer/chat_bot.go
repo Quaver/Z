@@ -30,14 +30,16 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 
 	switch strings.ToLower(args[1]) {
 	case "kick":
-		return handleCommandKick(user, game, args)
+		return handleCommandKickPlayer(user, game, args)
+	case "name":
+		return handleCommandChangeName(user, game, args)
 	}
 
 	return fmt.Sprintf("You executed the multiplayer command: %v", args)
 }
 
 // Handles the command to kick a user
-func handleCommandKick(user *sessions.User, game *Game, args []string) string {
+func handleCommandKickPlayer(user *sessions.User, game *Game, args []string) string {
 	if !game.isUserHost(user) {
 		return ""
 	}
@@ -62,4 +64,18 @@ func handleCommandKick(user *sessions.User, game *Game, args []string) string {
 
 	game.KickPlayer(user, target.Info.Id)
 	return fmt.Sprintf("%v has been successfully kicked from the game.", target.Info.Username)
+}
+
+// Handles the command to change the name of the multiplayer game.
+func handleCommandChangeName(user *sessions.User, game *Game, args []string) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if len(args) < 3 {
+		return "You must provide a new name for the multiplayer game."
+	}
+
+	game.ChangeName(user, strings.Join(args[2:], " "))
+	return fmt.Sprintf("The multiplayer game has been changed to %v", game.Data.Name)
 }
