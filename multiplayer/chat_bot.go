@@ -45,6 +45,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandHostRotation(user, game)
 		case "maxplayers":
 			message = handleCommandMaxPlayers(user, game, args)
+		case "start":
+			message = handleCommandStartMatch(user, game)
 		}
 	})
 
@@ -150,6 +152,20 @@ func handleCommandMaxPlayers(user *sessions.User, game *Game, args []string) str
 
 	game.SetMaxPlayerCount(user, numPlayers)
 	return fmt.Sprintf("The max player count has been changed to: %v.", game.Data.MaxPlayers)
+}
+
+// Handles the command to start the match
+func handleCommandStartMatch(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if game.Data.InProgress {
+		return "The match is already in progress."
+	}
+
+	game.StartGame()
+	return "The match has been started."
 }
 
 // Returns a target user from command args
