@@ -849,8 +849,5 @@ func (game *Game) isUserInGame(user *sessions.User) bool {
 		return false
 	}
 
-	game.mutex.Mutex.Lock()
-	defer game.mutex.Mutex.Unlock()
-
 	return utils.Includes(game.Data.PlayerIds, user.Info.Id)
 }
