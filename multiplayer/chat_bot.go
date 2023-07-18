@@ -39,6 +39,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandChangeHost(user, game, args)
 		case "map":
 			message = handleCommandChangeMap(user, game, args)
+		case "hostrotation":
+			message = handleCommandHostRotation(user, game)
 		}
 	})
 
@@ -111,10 +113,19 @@ func handleCommandChangeHost(user *sessions.User, game *Game, args []string) str
 	return fmt.Sprintf("The host has been transferred to: %v.", target.Info.Username)
 }
 
-// Handles the command to change the multiplayer map
-// TODO: Needs difficulty calculator
+// TODO: Handles the command to change the multiplayer map / Needs difficulty calculator
 func handleCommandChangeMap(user *sessions.User, game *Game, args []string) string {
 	return "Command not implemented"
+}
+
+// Handles the command to enable/disable host rotation
+func handleCommandHostRotation(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	game.SetHostRotation(user, !game.Data.IsHostRotation)
+	return fmt.Sprintf("Host Rotation has been set to: %v.", game.Data.IsHostRotation)
 }
 
 // Returns a target user from command args
