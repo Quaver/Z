@@ -51,6 +51,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandEndMatch(user, game)
 		case "startcountdown":
 			message = handleCommandStartCountdown(user, game)
+		case "stopcountdown":
+			message = handleCommandStopCountdown(user, game)
 		}
 	})
 
@@ -202,6 +204,24 @@ func handleCommandStartCountdown(user *sessions.User, game *Game) string {
 
 	game.StartCountdown(user)
 	return "Countdown active. The match will begin in 5 seconds."
+}
+
+// Handles the command to stop the match countdown.
+func handleCommandStopCountdown(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if game.Data.InProgress {
+		return "The match is currently in progress."
+	}
+
+	if game.countdownTimer == nil {
+		return "The countdown is not currently active."
+	}
+
+	game.StopCountdown(user)
+	return "The match countdown has been disabled."
 }
 
 // Returns a target user from command args
