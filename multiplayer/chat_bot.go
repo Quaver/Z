@@ -27,125 +27,94 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 		return ""
 	}
 
-	switch strings.ToLower(args[1]) {
-	case "kick":
-		return handleCommandKickPlayer(user, game, args)
-	case "name":
-		return handleCommandChangeName(user, game, args)
-	case "host":
-		return handleCommandChangeHost(user, game, args)
-	case "map":
-		return handleCommandChangeMap(user, game, args)
-	}
+	message := ""
 
-	return fmt.Sprintf("You executed the multiplayer command: %v", args)
+	game.RunLocked(func() {
+		switch strings.ToLower(args[1]) {
+		case "kick":
+			message = handleCommandKickPlayer(user, game, args)
+		case "name":
+			message = handleCommandChangeName(user, game, args)
+		case "host":
+			message = handleCommandChangeHost(user, game, args)
+		case "map":
+			message = handleCommandChangeMap(user, game, args)
+		}
+	})
+
+	return message
 }
 
 // Handles the command to kick a user
 func handleCommandKickPlayer(user *sessions.User, game *Game, args []string) string {
-	message := ""
+	if !game.isUserHost(user) {
+		return ""
+	}
 
-	game.RunLocked(func() {
-		if !game.isUserHost(user) {
-			message = ""
-			return
-		}
+	if len(args) < 3 {
+		return "You must provide a username to kick."
+	}
 
-		if len(args) < 3 {
-			message = "You must provide a username to kick."
-			return
-		}
+	target := getUserFromCommandArgs(args)
 
-		target := getUserFromCommandArgs(args)
+	if target == nil {
+		return "That player is not online."
+	}
 
-		if target == nil {
-			message = "That player is not online."
-			return
-		}
+	if target == user {
+		return "You cannot kick yourself from the game."
+	}
 
-		if target == user {
-			message = "You cannot kick yourself from the game."
-			return
-		}
+	if !game.isUserInGame(target) {
+		return "That user is not in the game."
+	}
 
-		if !game.isUserInGame(target) {
-			message = "That user is not in the game."
-			return
-		}
-
-		game.KickPlayer(user, target.Info.Id)
-		message = fmt.Sprintf("%v has been successfully kicked from the game.", target.Info.Username)
-	})
-
-	return message
+	game.KickPlayer(user, target.Info.Id)
+	return fmt.Sprintf("%v has been successfully kicked from the game.", target.Info.Username)
 }
 
 // Handles the command to change the name of the multiplayer game.
 func handleCommandChangeName(user *sessions.User, game *Game, args []string) string {
-	message := ""
+	if !game.isUserHost(user) {
+		return ""
+	}
 
-	game.RunLocked(func() {
-		if !game.isUserHost(user) {
-			message = ""
-			return
-		}
+	if len(args) < 3 {
+		return "You must provide a new name for the multiplayer game."
+	}
 
-		if len(args) < 3 {
-			message = "You must provide a new name for the multiplayer game."
-			return
-		}
-
-		game.ChangeName(user, strings.Join(args[2:], " "))
-		message = fmt.Sprintf("The multiplayer game name has been changed to: %v.", game.Data.Name)
-	})
-
-	return message
+	game.ChangeName(user, strings.Join(args[2:], " "))
+	return fmt.Sprintf("The multiplayer game name has been changed to: %v.", game.Data.Name)
 }
 
 // Handles the command to change the host of the game
 func handleCommandChangeHost(user *sessions.User, game *Game, args []string) string {
-	message := ""
+	if !game.isUserHost(user) {
+		return ""
+	}
 
-	game.RunLocked(func() {
-		if !game.isUserHost(user) {
-			message = ""
-			return
-		}
+	if len(args) < 3 {
+		return "You must provide the username of the player to give host to."
+	}
 
-		if len(args) < 3 {
-			message = "You must provide the username of the player to give host to."
-			return
-		}
+	target := getUserFromCommandArgs(args)
 
-		target := getUserFromCommandArgs(args)
+	if target == nil {
+		return "That user is not online."
+	}
 
-		if target == nil {
-			message = "That user is not online."
-			return
-		}
+	if !game.isUserInGame(target) {
+		return "That user is not in the game."
+	}
 
-		if !game.isUserInGame(target) {
-			message = "That user is not in the game."
-			return
-		}
-
-		game.SetHost(user, target.Info.Id)
-		message = fmt.Sprintf("The host has been transferred to: %v.", target.Info.Username)
-	})
-
-	return message
+	game.SetHost(user, target.Info.Id)
+	return fmt.Sprintf("The host has been transferred to: %v.", target.Info.Username)
 }
 
 // Handles the command to change the multiplayer map
 // TODO: Needs difficulty calculator
 func handleCommandChangeMap(user *sessions.User, game *Game, args []string) string {
-	message := ""
-
-	game.RunLocked(func() {
-	})
-
-	message = "Command not implemented"
-	return message
+	return "Command not implemented"
 }
 
 // Returns a target user from command args
