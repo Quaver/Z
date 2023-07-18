@@ -3,6 +3,7 @@ package multiplayer
 import (
 	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/utils"
 	"fmt"
 	"strings"
 )
@@ -125,7 +126,7 @@ func handleCommandHostRotation(user *sessions.User, game *Game) string {
 	}
 
 	game.SetHostRotation(user, !game.Data.IsHostRotation)
-	return fmt.Sprintf("Host Rotation has been set to: %v.", game.Data.IsHostRotation)
+	return fmt.Sprintf("Host Rotation has been %v.", utils.BoolToEnabledString(game.Data.IsHostRotation))
 }
 
 // Returns a target user from command args
