@@ -53,6 +53,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandStartCountdown(user, game)
 		case "stopcountdown":
 			message = handleCommandStopCountdown(user, game)
+		case "mindiff":
+			message = handleCommandMinDifficulty(user, game, args)
 		}
 	})
 
@@ -222,6 +224,32 @@ func handleCommandStopCountdown(user *sessions.User, game *Game) string {
 
 	game.StopCountdown(user)
 	return "The match countdown has been disabled."
+}
+
+// Handles the command to set the minimum difficulty
+func handleCommandMinDifficulty(user *sessions.User, game *Game, args []string) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if len(args) < 3 {
+		return "You must provide a minimum difficulty number."
+	}
+
+	diff, err := strconv.ParseFloat(args[2], 32)
+
+	if err != nil {
+		return "You must provide a valid number."
+	}
+
+	diffFloat32 := float32(diff)
+
+	if diffFloat32 > game.Data.FilterMaxDifficultyRating {
+		return "The minimum difficulty rating cannot be above the max difficulty rating."
+	}
+
+	game.SetDifficultyRange(user, diffFloat32, game.Data.FilterMaxDifficultyRating)
+	return fmt.Sprintf("The minimm difficulty has been changed to: %v.", game.Data.FilterMinDifficultyRating)
 }
 
 // Returns a target user from command args
