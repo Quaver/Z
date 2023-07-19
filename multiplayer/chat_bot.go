@@ -7,8 +7,10 @@ import (
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func InitializeChatBot() {
@@ -85,6 +87,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandTournamentMode(user, game)
 		case "invite":
 			message = handleCommandInvite(user, game, args)
+		case "roll":
+			message = handleCommandRoll(user)
 		}
 	})
 
@@ -508,6 +512,14 @@ func handleCommandInvite(user *sessions.User, game *Game, args []string) string 
 
 	game.SendInvite(user, target)
 	return fmt.Sprintf("%v has been invited to the game.", target.Info.Username)
+}
+
+// Handles the command to roll a random number between 0 and 100
+func handleCommandRoll(user *sessions.User) string {
+	rand.Seed(time.Now().UnixNano())
+	randomNumber := rand.Intn(101)
+
+	return fmt.Sprintf("%v has rolled a: %v.", user.Info.Username, randomNumber)
 }
 
 // Returns a target user from command args
