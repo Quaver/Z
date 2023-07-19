@@ -327,6 +327,7 @@ func (game *Game) EndGame() {
 	game.clearCountdown()
 	game.clearReadyPlayers(false)
 	game.rotateHost()
+	game.updatePlayerWinCount()
 
 	game.sendPacketToPlayers(packets.NewServerGameEnded())
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -748,6 +749,31 @@ func (game *Game) checkPlayerWinResult(userId int) (WinResult, error) {
 	}
 
 	return WinResultWon, nil
+}
+
+// Updates the win count for each player
+func (game *Game) updatePlayerWinCount() {
+	for userId := range game.playerScores {
+		winResult, err := game.checkPlayerWinResult(userId)
+
+		if err != nil {
+			continue
+		}
+
+		if winResult != WinResultWon {
+			continue
+		}
+
+		playerWins, err := utils.Find(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool {
+			return x.Id == userId
+		})
+
+		if err != nil {
+			continue
+		}
+
+		game.SetPlayerWinCount(userId, playerWins.Wins+1)
+	}
 }
 
 // Clears and stops the countdown timer.
