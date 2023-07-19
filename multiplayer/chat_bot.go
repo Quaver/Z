@@ -73,6 +73,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandFreeMod(user, game, objects.MultiplayerGameFreeModRegular)
 		case "freerate":
 			message = handleCommandFreeMod(user, game, objects.MultiplayerGameFreeModRate)
+		case "clearwins":
+			message = handleCommandClearWins(user, game)
 		}
 	})
 
@@ -379,6 +381,19 @@ func handleCommandFreeMod(user *sessions.User, game *Game, freeModType objects.M
 	}
 
 	return "Free Mod type has been changed. All modifiers have been reset."
+}
+
+// Handles the command to clear all players' win counts
+func handleCommandClearWins(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	for _, playerId := range game.Data.PlayerIds {
+		game.SetPlayerWinCount(playerId, 0)
+	}
+
+	return "All player win counts have been reset back to zero."
 }
 
 // Returns a target user from command args
