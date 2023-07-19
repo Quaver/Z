@@ -57,6 +57,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandDifficulty(user, game, args, false)
 		case "maxdiff":
 			message = handleCommandDifficulty(user, game, args, true)
+		case "maxlength":
+			message = handleCommandMaxLength(user, game, args)
 		}
 	})
 
@@ -249,7 +251,7 @@ func handleCommandDifficulty(user *sessions.User, game *Game, args []string, isM
 	if !isMax && diffFloat32 > game.Data.FilterMaxDifficultyRating {
 		return "The minimum difficulty rating cannot be above the maximum difficulty rating."
 	} else if isMax && diffFloat32 < game.Data.FilterMinDifficultyRating {
-		return "The maximum difficulty rating cannot be below the minimum difficulty rating"
+		return "The maximum difficulty rating cannot be below the minimum difficulty rating."
 	}
 
 	if isMax {
@@ -259,6 +261,26 @@ func handleCommandDifficulty(user *sessions.User, game *Game, args []string, isM
 	}
 
 	return fmt.Sprintf("The difficulty range has been changed to: %v - %v.", game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating)
+}
+
+// Handles the command to set the max length in the multiplayer game
+func handleCommandMaxLength(user *sessions.User, game *Game, args []string) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if len(args) < 3 {
+		return "You must provide a value in seconds."
+	}
+
+	seconds, err := strconv.Atoi(args[2])
+
+	if err != nil {
+		return "You must provide a valid number."
+	}
+
+	game.SetMaxSongLength(user, seconds)
+	return fmt.Sprintf("The maximum song length has been changed to: %v seconds.", game.Data.FilterMaxSongLength)
 }
 
 // Returns a target user from command args
