@@ -15,6 +15,34 @@ import (
 
 func InitializeChatBot() {
 	chat.AddPublicMessageHandler(handleMultiplayerCommands)
+	chat.AddPublicMessageHandler(handleJoinMultiplayerChatCommand)
+}
+
+// Handles the command to join a multiplayer chat channel.
+func handleJoinMultiplayerChatCommand(user *sessions.User, channel *chat.Channel, args []string) string {
+	if args[0] != "!joinmpchat" {
+		return ""
+	}
+
+	if !common.HasPrivilege(user.Info.Privileges, common.PrivilegeEnableTournamentMode) {
+		return ""
+	}
+
+	if len(args) < 2 {
+		return "You must provide a game id."
+	}
+
+	id, err := strconv.Atoi(args[1])
+
+	if err != nil {
+		return "You must provide a valid number id."
+	}
+
+	if game, ok := lobby.games[id]; ok {
+		game.chatChannel.AddUser(user)
+	}
+
+	return "That multiplayer game does not exist."
 }
 
 // Handles commands made for multiplayer
@@ -487,11 +515,6 @@ func handleCommandTournamentMode(user *sessions.User, game *Game) string {
 
 	game.SetTournamentMode(user, !game.Data.IsTournamentMode)
 	return fmt.Sprintf("Tournament mode has been %v.", utils.BoolToEnabledString(game.Data.IsTournamentMode))
-}
-
-// TODO: Handles the command to join any multiplayer chat channel
-func handleCommandJoinChat(user *sessions.User, game *Game, args []string) string {
-	return "Not implemented."
 }
 
 // Handles the command to invite a user to the game
