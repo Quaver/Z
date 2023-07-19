@@ -75,6 +75,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandFreeMod(user, game, objects.MultiplayerGameFreeModRate)
 		case "clearwins":
 			message = handleCommandClearWins(user, game)
+		case "playerwins":
+			message = handleCommandPlayerWins(user, game, args)
 		}
 	})
 
@@ -394,6 +396,38 @@ func handleCommandClearWins(user *sessions.User, game *Game) string {
 	}
 
 	return "All player win counts have been reset back to zero."
+}
+
+// Handles the command to set a specific player's win count
+func handleCommandPlayerWins(user *sessions.User, game *Game, args []string) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if len(args) < 4 {
+		return "Invalid command usage. Try this: `!mp playerwins user_name number`."
+	}
+
+	wins, err := strconv.Atoi(args[3])
+
+	if err != nil {
+		return "You must supply a valid win count."
+	}
+
+	wins = utils.Clamp(wins, 0, 100)
+
+	target := getUserFromCommandArgs(args)
+
+	if target == nil {
+		return "That user is not online."
+	}
+
+	if !game.isUserInGame(target) {
+		return "That user is not in the game."
+	}
+
+	game.SetPlayerWinCount(target.Info.Id, wins)
+	return fmt.Sprintf("%v's win count has been set to: %v.", target.Info.Username, wins)
 }
 
 // Returns a target user from command args
