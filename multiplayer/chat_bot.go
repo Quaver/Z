@@ -54,7 +54,9 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 		case "stopcountdown":
 			message = handleCommandStopCountdown(user, game)
 		case "mindiff":
-			message = handleCommandMinDifficulty(user, game, args)
+			message = handleCommandDifficulty(user, game, args, false)
+		case "maxdiff":
+			message = handleCommandDifficulty(user, game, args, true)
 		}
 	})
 
@@ -226,14 +228,14 @@ func handleCommandStopCountdown(user *sessions.User, game *Game) string {
 	return "The match countdown has been disabled."
 }
 
-// Handles the command to set the minimum difficulty
-func handleCommandMinDifficulty(user *sessions.User, game *Game, args []string) string {
+// Handles the command to set the minimum/maximum difficulty
+func handleCommandDifficulty(user *sessions.User, game *Game, args []string, isMax bool) string {
 	if !game.isUserHost(user) {
 		return ""
 	}
 
 	if len(args) < 3 {
-		return "You must provide a minimum difficulty number."
+		return "You must provide a difficulty number."
 	}
 
 	diff, err := strconv.ParseFloat(args[2], 32)
@@ -244,12 +246,19 @@ func handleCommandMinDifficulty(user *sessions.User, game *Game, args []string) 
 
 	diffFloat32 := float32(diff)
 
-	if diffFloat32 > game.Data.FilterMaxDifficultyRating {
-		return "The minimum difficulty rating cannot be above the max difficulty rating."
+	if !isMax && diffFloat32 > game.Data.FilterMaxDifficultyRating {
+		return "The minimum difficulty rating cannot be above the maximum difficulty rating."
+	} else if isMax && diffFloat32 < game.Data.FilterMinDifficultyRating {
+		return "The maximum difficulty rating cannot be below the minimum difficulty rating"
 	}
 
-	game.SetDifficultyRange(user, diffFloat32, game.Data.FilterMaxDifficultyRating)
-	return fmt.Sprintf("The minimm difficulty has been changed to: %v.", game.Data.FilterMinDifficultyRating)
+	if isMax {
+		game.SetDifficultyRange(user, game.Data.FilterMinDifficultyRating, diffFloat32)
+	} else {
+		game.SetDifficultyRange(user, diffFloat32, game.Data.FilterMaxDifficultyRating)
+	}
+
+	return fmt.Sprintf("The difficulty range has been changed to: %v - %v.", game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating)
 }
 
 // Returns a target user from command args
