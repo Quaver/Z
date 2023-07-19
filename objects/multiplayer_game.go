@@ -56,7 +56,7 @@ func (mg *MultiplayerGame) SetDefaults() {
 	mg.PlayersBlueTeam = []int{}
 	mg.PlayerWins = []*MultiplayerGamePlayerWins{}
 	mg.FilterAllowedGameModes = []common.Mode{common.ModeKeys4, common.ModeKeys7}
-	mg.FilterMaxDifficultyRating = 999999999
+	mg.FilterMaxDifficultyRating = 100
 	mg.FilterMaxSongLength = 999999999
 	mg.FilterMaxLongNotePercent = 100
 	mg.FilterMinAudioRate = 0.5

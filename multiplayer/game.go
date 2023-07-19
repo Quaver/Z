@@ -826,8 +826,8 @@ func (game *Game) validateSettings() {
 	data.MapName = utils.TruncateString(data.MapName, 250)
 	data.MapGameMode = utils.Clamp(data.MapGameMode, common.ModeKeys4, common.ModeKeys7)
 
-	data.FilterMinDifficultyRating = utils.Clamp(data.FilterMinDifficultyRating, 0, math.MaxInt32)
-	data.FilterMaxDifficultyRating = utils.Clamp(data.FilterMaxDifficultyRating, 0, math.MaxInt32)
+	data.FilterMinDifficultyRating = utils.Clamp(data.FilterMinDifficultyRating, 0, 100)
+	data.FilterMaxDifficultyRating = utils.Clamp(data.FilterMaxDifficultyRating, 0, 100)
 	data.FilterMaxSongLength = utils.Clamp(data.FilterMaxSongLength, 0, math.MaxInt32)
 	data.FilterMinLongNotePercent = utils.Clamp(data.FilterMinLongNotePercent, 0, 100)
 	data.FilterMaxLongNotePercent = utils.Clamp(data.FilterMaxLongNotePercent, 0, 100)
