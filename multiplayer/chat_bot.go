@@ -3,6 +3,7 @@ package multiplayer
 import (
 	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/common"
+	"example.com/Quaver/Z/objects"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
@@ -68,6 +69,10 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandLongNote(user, game, args, false)
 		case "lnmax":
 			message = handleCommandLongNote(user, game, args, true)
+		case "freemod":
+			message = handleCommandFreeMod(user, game, objects.MultiplayerGameFreeModRegular)
+		case "freerate":
+			message = handleCommandFreeMod(user, game, objects.MultiplayerGameFreeModRate)
 		}
 	})
 
@@ -359,6 +364,21 @@ func handleCommandLongNote(user *sessions.User, game *Game, args []string, isMax
 	}
 
 	return fmt.Sprintf("The long note percentage range has been changed to: %v - %v", game.Data.FilterMinLongNotePercent, game.Data.FilterMaxLongNotePercent)
+}
+
+// Handles enabling/disabling free mod / free rate for the game
+func handleCommandFreeMod(user *sessions.User, game *Game, freeModType objects.MultiplayerGameFreeMod) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if game.Data.FreeModType&freeModType != 0 {
+		game.SetFreeMod(user, game.Data.FreeModType-freeModType)
+	} else {
+		game.SetFreeMod(user, game.Data.FreeModType|freeModType)
+	}
+
+	return "Free Mod type has been changed. All modifiers have been reset."
 }
 
 // Returns a target user from command args
