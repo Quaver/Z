@@ -79,6 +79,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandPlayerWins(user, game, args)
 		case "referee":
 			message = handleCommandReferee(user, game, args)
+		case "clearreferee":
+			message = handleCommandClearReferee(user, game)
 		}
 	})
 
@@ -454,6 +456,16 @@ func handleCommandReferee(user *sessions.User, game *Game, args []string) string
 
 	game.SetReferee(user, target.Info.Id)
 	return fmt.Sprintf("%v is now the referee of the game.", target.Info.Username)
+}
+
+// Handles the command to clear the referee of the game.
+func handleCommandClearReferee(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	game.SetReferee(user, -1)
+	return "The referee of the game has been cleared."
 }
 
 // Returns a target user from command args
