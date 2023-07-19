@@ -2,6 +2,7 @@ package multiplayer
 
 import (
 	"example.com/Quaver/Z/chat"
+	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
@@ -59,6 +60,10 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandDifficulty(user, game, args, true)
 		case "maxlength":
 			message = handleCommandMaxLength(user, game, args)
+		case "allowmode":
+			message = handleCommandModeAllowance(user, game, args, true)
+		case "disallowmode":
+			message = handleCommandModeAllowance(user, game, args, false)
 		}
 	})
 
@@ -281,6 +286,44 @@ func handleCommandMaxLength(user *sessions.User, game *Game, args []string) stri
 
 	game.SetMaxSongLength(user, seconds)
 	return fmt.Sprintf("The maximum song length has been changed to: %v seconds.", game.Data.FilterMaxSongLength)
+}
+
+// Handles the command to set an allowed game mode for the game
+func handleCommandModeAllowance(user *sessions.User, game *Game, args []string, allowing bool) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	errorStr := "You must provide either `4k` or `7k`"
+
+	if len(args) < 3 {
+		return errorStr
+	}
+
+	var mode common.Mode
+
+	switch strings.ToLower(args[2]) {
+	case "4k":
+		mode = common.ModeKeys4
+	case "7k":
+		mode = common.ModeKeys7
+	default:
+		return fmt.Sprintf("Invalid mode provided. %v", errorStr)
+	}
+
+	if allowing && !utils.Includes(game.Data.FilterAllowedGameModes, mode) {
+		game.SetAllowedGameModes(user, append(game.Data.FilterAllowedGameModes, mode))
+		return fmt.Sprintf("%v is now allowed in this game.", args[2])
+	} else if !allowing && len(game.Data.FilterAllowedGameModes) > 1 {
+		game.SetAllowedGameModes(user, utils.Filter(game.Data.FilterAllowedGameModes, func(x common.Mode) bool { return x != mode }))
+		return fmt.Sprintf("%v is now disallowed in this game.", args[2])
+	}
+
+	if allowing {
+		return "This mode is allowed already."
+	} else {
+		return "You must have at least one allowed mode."
+	}
 }
 
 // Returns a target user from command args
