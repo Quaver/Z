@@ -327,7 +327,9 @@ func (game *Game) EndGame() {
 	game.clearCountdown()
 	game.clearReadyPlayers(false)
 	game.rotateHost()
+
 	game.updatePlayerWinCount()
+	game.playerScores = map[int]*scoring.ScoreProcessor{}
 
 	game.sendPacketToPlayers(packets.NewServerGameEnded())
 	sendLobbyUsersGameInfoPacket(game, true)
