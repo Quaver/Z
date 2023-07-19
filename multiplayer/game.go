@@ -1,6 +1,7 @@
 package multiplayer
 
 import (
+	"errors"
 	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
@@ -728,6 +729,25 @@ func (game *Game) createScoreProcessors() {
 
 		game.playerScores[player] = scoring.NewScoreProcessor(difficulty, mods)
 	}
+}
+
+// Returns the id of the most recent match winner.
+func (game *Game) checkPlayerWinResult(userId int) (WinResult, error) {
+	if _, ok := game.playerScores[userId]; !ok {
+		return -1, errors.New("player score does not exist")
+	}
+
+	for scoreUserId, score := range game.playerScores {
+		if scoreUserId == userId {
+			continue
+		}
+
+		if game.playerScores[userId].PerformanceRating < score.PerformanceRating {
+			return WinResultLost, nil
+		}
+	}
+
+	return WinResultWon, nil
 }
 
 // Clears and stops the countdown timer.
