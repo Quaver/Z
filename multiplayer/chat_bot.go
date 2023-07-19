@@ -64,6 +64,10 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandModeAllowance(user, game, args, true)
 		case "disallowmode":
 			message = handleCommandModeAllowance(user, game, args, false)
+		case "lnmin":
+			message = handleCommandLongNote(user, game, args, false)
+		case "lnmax":
+			message = handleCommandLongNote(user, game, args, true)
 		}
 	})
 
@@ -324,6 +328,37 @@ func handleCommandModeAllowance(user *sessions.User, game *Game, args []string, 
 	} else {
 		return "You must have at least one allowed mode."
 	}
+}
+
+// Handles the command to change the long note percentage
+func handleCommandLongNote(user *sessions.User, game *Game, args []string, isMax bool) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if len(args) < 3 {
+		return "You must provide a valid number."
+	}
+
+	percentage, err := strconv.Atoi(args[2])
+
+	if err != nil {
+		return "You must provide a valid number."
+	}
+
+	if !isMax && percentage > game.Data.FilterMaxLongNotePercent {
+		return "The minimum long note percentage cannot be above the maxim long note percentage."
+	} else if isMax && percentage < game.Data.FilterMinLongNotePercent {
+		return "The maximum long note percentage cannot be below the minimum long note percentage."
+	}
+
+	if isMax {
+		game.SetLongNotePercent(user, game.Data.FilterMinLongNotePercent, percentage)
+	} else {
+		game.SetLongNotePercent(user, percentage, game.Data.FilterMaxLongNotePercent)
+	}
+
+	return fmt.Sprintf("The long note percentage range has been changed to: %v - %v", game.Data.FilterMinLongNotePercent, game.Data.FilterMaxLongNotePercent)
 }
 
 // Returns a target user from command args
