@@ -77,6 +77,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandClearWins(user, game)
 		case "playerwins":
 			message = handleCommandPlayerWins(user, game, args)
+		case "referee":
+			message = handleCommandReferee(user, game, args)
 		}
 	})
 
@@ -428,6 +430,30 @@ func handleCommandPlayerWins(user *sessions.User, game *Game, args []string) str
 
 	game.SetPlayerWinCount(target.Info.Id, wins)
 	return fmt.Sprintf("%v's win count has been set to: %v.", target.Info.Username, wins)
+}
+
+// Handles the command to appoint a user as referee.
+func handleCommandReferee(user *sessions.User, game *Game, args []string) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if len(args) < 3 {
+		return "You must provide a user to give host to."
+	}
+
+	target := getUserFromCommandArgs(args)
+
+	if target == nil {
+		return "That user is not online."
+	}
+
+	if !game.isUserInGame(target) {
+		return "That user is not in the game."
+	}
+
+	game.SetReferee(user, target.Info.Id)
+	return fmt.Sprintf("%v is now the referee of the game.", target.Info.Username)
 }
 
 // Returns a target user from command args
