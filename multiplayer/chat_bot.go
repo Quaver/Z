@@ -81,6 +81,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandReferee(user, game, args)
 		case "clearreferee":
 			message = handleCommandClearReferee(user, game)
+		case "tournament":
+			message = handleCommandTournamentMode(user, game)
 		}
 	})
 
@@ -466,6 +468,19 @@ func handleCommandClearReferee(user *sessions.User, game *Game) string {
 
 	game.SetReferee(user, -1)
 	return "The referee of the game has been cleared."
+}
+
+func handleCommandTournamentMode(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if !common.HasPrivilege(user.Info.Privileges, common.PrivilegeEnableTournamentMode) {
+		return "You don't have permission to turn on tournament mode."
+	}
+
+	game.SetTournamentMode(user, !game.Data.IsTournamentMode)
+	return fmt.Sprintf("Tournament mode has been %v.", utils.BoolToEnabledString(game.Data.IsTournamentMode))
 }
 
 // Returns a target user from command args
