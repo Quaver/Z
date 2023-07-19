@@ -83,6 +83,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandClearReferee(user, game)
 		case "tournament":
 			message = handleCommandTournamentMode(user, game)
+		case "invite":
+			message = handleCommandInvite(user, game, args)
 		}
 	})
 
@@ -481,6 +483,31 @@ func handleCommandTournamentMode(user *sessions.User, game *Game) string {
 
 	game.SetTournamentMode(user, !game.Data.IsTournamentMode)
 	return fmt.Sprintf("Tournament mode has been %v.", utils.BoolToEnabledString(game.Data.IsTournamentMode))
+}
+
+// TODO: Handles the command to join any multiplayer chat channel
+func handleCommandJoinChat(user *sessions.User, game *Game, args []string) string {
+	return "Not implemented."
+}
+
+// Handles the command to invite a user to the game
+func handleCommandInvite(user *sessions.User, game *Game, args []string) string {
+	if len(args) < 3 {
+		return "You must provide a user to invite."
+	}
+
+	target := getUserFromCommandArgs(args)
+
+	if target == nil {
+		return "That user is not online."
+	}
+
+	if game.isUserInGame(target) {
+		return "That user is already in the game."
+	}
+
+	game.SendInvite(user, target)
+	return fmt.Sprintf("%v has been invited to the game.", target.Info.Username)
 }
 
 // Returns a target user from command args
