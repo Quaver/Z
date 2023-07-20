@@ -779,10 +779,10 @@ func (game *Game) updatePlayerWinCount() {
 	}
 }
 
-// Inserts the current match + scores into the database.
-func (game *Game) insertMatchIntoDatabase() *db.MultiplayerMatch {
+// Inserts the current match into the database.
+func (game *Game) insertMatchIntoDatabase() {
 	if len(game.playerScores) == 0 {
-		return nil
+		return
 	}
 
 	match := db.MultiplayerMatch{
@@ -801,10 +801,42 @@ func (game *Game) insertMatchIntoDatabase() *db.MultiplayerMatch {
 
 	if err != nil {
 		log.Printf("Failed to insert match from game #%v into database - %v\n", game.Data.Id, err)
-		return nil
+		return
 	}
 
-	return &match
+	for userId, score := range game.playerScores {
+		winResult, _ := game.checkPlayerWinResult(userId)
+
+		dbScore := db.MultiplayerMatchScore{
+			UserId:            userId,
+			MatchId:           match.Id,
+			Mods:              score.Modifiers,
+			PerformanceRating: score.PerformanceRating,
+			Accuracy:          score.Accuracy,
+			MaxCombo:          score.MaxCombo,
+			CountMarv:         score.Judgements[common.JudgementMarv],
+			CountPerf:         score.Judgements[common.JudgementPerf],
+			CountGreat:        score.Judgements[common.JudgementGreat],
+			CountGood:         score.Judgements[common.JudgementGood],
+			CountOkay:         score.Judgements[common.JudgementOkay],
+			CountMiss:         score.Judgements[common.JudgementMiss],
+			Won:               int(winResult),
+		}
+
+		err := dbScore.InsertIntoDatabase()
+
+		if err != nil {
+			log.Printf("Failed to insert #%v's match score from game #%v into database - %v\n", userId, game.Data.Id, err)
+			return
+		}
+	}
+}
+
+// Inserts
+func (game *Game) insertScoresIntoDatabase(match *db.MultiplayerMatch) {
+	if len(game.playerScores) == 0 {
+		return
+	}
 }
 
 // Clears and stops the countdown timer.
