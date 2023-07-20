@@ -832,13 +832,6 @@ func (game *Game) insertMatchIntoDatabase() {
 	}
 }
 
-// Inserts
-func (game *Game) insertScoresIntoDatabase(match *db.MultiplayerMatch) {
-	if len(game.playerScores) == 0 {
-		return
-	}
-}
-
 // Clears and stops the countdown timer.
 func (game *Game) clearCountdown() {
 	if game.countdownTimer != nil {
