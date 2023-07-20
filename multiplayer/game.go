@@ -780,9 +780,9 @@ func (game *Game) updatePlayerWinCount() {
 }
 
 // Inserts the current match + scores into the database.
-func (game *Game) insertMatchIntoDatabase() {
+func (game *Game) insertMatchIntoDatabase() *db.MultiplayerMatch {
 	if len(game.playerScores) == 0 {
-		return
+		return nil
 	}
 
 	match := db.MultiplayerMatch{
@@ -801,7 +801,10 @@ func (game *Game) insertMatchIntoDatabase() {
 
 	if err != nil {
 		log.Printf("Failed to insert match from game #%v into database - %v\n", game.Data.Id, err)
+		return nil
 	}
+
+	return &match
 }
 
 // Clears and stops the countdown timer.
