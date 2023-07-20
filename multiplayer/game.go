@@ -319,16 +319,17 @@ func (game *Game) EndGame() {
 		return
 	}
 
+	game.clearCountdown()
+	game.clearReadyPlayers(false)
+	game.updatePlayerWinCount()
+	game.insertMatchIntoDatabase()
+	game.rotateHost()
+
 	game.Data.InProgress = false
 	game.playersInMatch = []int{}
 	game.playersScreenLoaded = []int{}
 	game.playersFinished = []int{}
 	game.playersSkipped = []int{}
-	game.clearCountdown()
-	game.clearReadyPlayers(false)
-	game.rotateHost()
-
-	game.updatePlayerWinCount()
 	game.playerScores = map[int]*scoring.ScoreProcessor{}
 
 	game.sendPacketToPlayers(packets.NewServerGameEnded())
@@ -775,6 +776,31 @@ func (game *Game) updatePlayerWinCount() {
 		}
 
 		game.SetPlayerWinCount(userId, playerWins.Wins+1)
+	}
+}
+
+// Inserts the current match + scores into the database.
+func (game *Game) insertMatchIntoDatabase() {
+	if len(game.playerScores) == 0 {
+		return
+	}
+
+	match := db.MultiplayerMatch{
+		GameId:          game.Data.Id,
+		TimePlayed:      time.Now().UnixMilli(),
+		MapMd5:          game.Data.MapMD5,
+		MapName:         game.Data.MapName,
+		HostId:          game.Data.HostId,
+		Ruleset:         game.Data.Ruleset,
+		GameMode:        game.Data.MapGameMode,
+		GlobalModifiers: game.Data.GlobalModifiers,
+		FreeMod:         game.Data.FreeModType,
+	}
+
+	err := match.InsertIntoDatabase()
+
+	if err != nil {
+		log.Printf("Failed to insert match from game #%v into database - %v\n", game.Data.Id, err)
 	}
 }
 
