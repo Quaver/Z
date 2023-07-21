@@ -134,4 +134,6 @@ const (
 	PacketIdClientSpectateMultiplayerGame
 	PacketIdServerSpectateMultiplayerGame
 	PacketIdServerGameTournamentMode
+	PacketIdServerGameNeedDifficultyRatings
+	PacketIdClientGameDifficultyRatings
 )

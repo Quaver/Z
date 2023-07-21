@@ -31,7 +31,8 @@ type Game struct {
 }
 
 const (
-	maxPlayerCount int = 16 // The maximum amount of players allowed in a game
+	maxPlayerCount         int = 16 // The maximum amount of players allowed in a game
+	countDifficultyRatings int = 31 // The amount of difficulty ratings needed for a map (31 different rates)
 )
 
 // NewGame Creates a new multiplayer game from a game
@@ -205,7 +206,6 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.MapGameMode = packet.Mode
 	game.Data.MapDifficultyRating = packet.DifficultyRating
 	game.Data.MapDifficultyRatingAll = packet.DifficultyRatingAll
-	game.Data.MapJudgementCount = packet.JudgementCount
 	game.Data.PlayersWithoutMap = []int{}
 	game.Data.PlayersReady = []int{}
 	game.clearReadyPlayers(false)
@@ -659,6 +659,18 @@ func (game *Game) SetTournamentMode(requester *sessions.User, enabled bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetClientProvidedDifficultyRatings Handles when the client provides new difficulty ratings for us to use
+func (game *Game) SetClientProvidedDifficultyRatings(difficulties []float64) {
+	if len(difficulties) != countDifficultyRatings || len(game.Data.MapDifficultyRatingAll) == countDifficultyRatings {
+		return
+	}
+
+	game.Data.MapDifficultyRatingAll = difficulties
+	game.validateSettings()
+
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // rotateHost Rotates the host to the next person in line.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {
@@ -936,9 +948,14 @@ func (game *Game) validateSettings() {
 	data.FilterMinAudioRate = utils.Clamp(data.FilterMinAudioRate, 0.5, 2.0)
 
 	// There is a maximum of 31 rates allowed in the game. So if we don't have all of them, then just clear it.
-	if len(data.MapDifficultyRatingAll) < 31 {
+	if len(data.MapDifficultyRatingAll) != countDifficultyRatings {
+		data.NeedsDifficultyRatings = true
 		data.MapDifficultyRatingAll = []float64{}
+	} else {
+		data.NeedsDifficultyRatings = false
 	}
+
+	game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(data.NeedsDifficultyRatings))
 
 	if len(data.FilterAllowedGameModes) == 0 {
 		data.FilterAllowedGameModes = []common.Mode{common.ModeKeys4, common.ModeKeys7}

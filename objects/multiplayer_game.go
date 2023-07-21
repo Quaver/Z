@@ -45,6 +45,7 @@ type MultiplayerGame struct {
 	FilterMinLongNotePercent  int                          `json:"lnmin"` // The minimum long note percentage for the map
 	FilterMaxLongNotePercent  int                          `json:"lnmax"` // The maximum long note percentage for the map
 	FilterMinAudioRate        float64                      `json:"mr"`    // The minimum audio rate allowed for free mod
+	NeedsDifficultyRatings    bool                         `json:"ndr"`   // If the multiplayer game needs the calculated difficulty ratings from one of the clients.
 }
 
 func (mg *MultiplayerGame) SetDefaults() {
