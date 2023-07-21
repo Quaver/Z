@@ -1,12 +1,16 @@
 package multiplayer
 
 import (
+	"database/sql"
 	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/common"
+	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
+	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
+	"log"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -189,9 +193,48 @@ func handleCommandChangeHost(user *sessions.User, game *Game, args []string) str
 	return fmt.Sprintf("The host has been transferred to: %v.", target.Info.Username)
 }
 
-// TODO: Handles the command to change the multiplayer map / Needs difficulty calculator
+// Handles the command to change the multiplayer map
 func handleCommandChangeMap(user *sessions.User, game *Game, args []string) string {
-	return "Command not implemented"
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if len(args) < 3 {
+		return "You must provide a map id."
+	}
+
+	id, err := strconv.Atoi(args[2])
+
+	if err != nil {
+		return "You must provide a valid map id."
+	}
+
+	song, err := db.GetSongMapById(id)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "That map doesn't exist."
+		}
+
+		log.Printf("Error getting map %v from the database - %v\n", id, err)
+		return "There was an error while retrieving the map."
+	}
+
+	mapName := fmt.Sprintf("%v - %v [%v]", song.Artist.String, song.Title.String, song.DifficultyName.String)
+
+	game.ChangeMap(user, &packets.ClientChangeGameMap{
+		Packet:              packets.Packet{Id: packets.PacketIdClientChangeGameMap},
+		MD5:                 song.Md5.String,
+		AlternativeMD5:      song.AlternativeMd5.String,
+		MapId:               song.Id,
+		MapsetId:            song.MapsetId,
+		Name:                mapName,
+		Mode:                song.GameMode,
+		DifficultyRating:    song.DifficultyRating,
+		DifficultyRatingAll: []float64{},
+	})
+
+	return fmt.Sprintf("The map has been changed to: %v.", mapName)
 }
 
 // Handles the command to enable/disable host rotation
