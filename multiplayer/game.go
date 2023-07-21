@@ -210,6 +210,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.PlayersReady = []int{}
 	game.clearReadyPlayers(false)
 	game.clearCountdown()
+	log.Println(game.Data.MapDifficultyRatingAll)
 	game.validateSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
@@ -660,14 +661,19 @@ func (game *Game) SetTournamentMode(requester *sessions.User, enabled bool) {
 }
 
 // SetClientProvidedDifficultyRatings Handles when the client provides new difficulty ratings for us to use
-func (game *Game) SetClientProvidedDifficultyRatings(difficulties []float64) {
+func (game *Game) SetClientProvidedDifficultyRatings(md5 string, alternativeMd5 string, difficulties []float64) {
 	if len(difficulties) != countDifficultyRatings || len(game.Data.MapDifficultyRatingAll) == countDifficultyRatings {
+		return
+	}
+
+	// Hash mismatch
+	if md5 != game.Data.MapMD5 && alternativeMd5 != game.Data.MapMD5Alternative {
 		return
 	}
 
 	game.Data.MapDifficultyRatingAll = difficulties
 	game.validateSettings()
-	game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(false))
+	game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(game.Data.MapMD5, game.Data.MapMD5Alternative, false))
 
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -952,7 +958,7 @@ func (game *Game) validateSettings() {
 	if len(data.MapDifficultyRatingAll) != countDifficultyRatings {
 		data.NeedsDifficultyRatings = true
 		data.MapDifficultyRatingAll = []float64{}
-		game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(data.NeedsDifficultyRatings))
+		game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(data.MapMD5, data.MapMD5Alternative, data.NeedsDifficultyRatings))
 	} else {
 		data.NeedsDifficultyRatings = false
 	}

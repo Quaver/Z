@@ -18,5 +18,5 @@ func handleClientGameDifficultyRatings(user *sessions.User, packet *packets.Clie
 		return
 	}
 
-	game.SetClientProvidedDifficultyRatings(packet.Difficulties)
+	game.SetClientProvidedDifficultyRatings(packet.Md5, packet.AlternativeMd5, packet.Difficulties)
 }
