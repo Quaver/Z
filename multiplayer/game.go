@@ -667,6 +667,7 @@ func (game *Game) SetClientProvidedDifficultyRatings(difficulties []float64) {
 
 	game.Data.MapDifficultyRatingAll = difficulties
 	game.validateSettings()
+	game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(false))
 
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -951,11 +952,10 @@ func (game *Game) validateSettings() {
 	if len(data.MapDifficultyRatingAll) != countDifficultyRatings {
 		data.NeedsDifficultyRatings = true
 		data.MapDifficultyRatingAll = []float64{}
+		game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(data.NeedsDifficultyRatings))
 	} else {
 		data.NeedsDifficultyRatings = false
 	}
-
-	game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(data.NeedsDifficultyRatings))
 
 	if len(data.FilterAllowedGameModes) == 0 {
 		data.FilterAllowedGameModes = []common.Mode{common.ModeKeys4, common.ModeKeys7}
