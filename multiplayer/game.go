@@ -210,7 +210,6 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.PlayersReady = []int{}
 	game.clearReadyPlayers(false)
 	game.clearCountdown()
-	log.Println(game.Data.MapDifficultyRatingAll)
 	game.validateSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
