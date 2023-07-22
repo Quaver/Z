@@ -210,6 +210,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.Data.PlayersReady = []int{}
 	game.clearReadyPlayers(false)
 	game.clearCountdown()
+	game.SetDonatorMapsetShared(false, false)
 	game.validateSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
@@ -675,6 +676,16 @@ func (game *Game) SetClientProvidedDifficultyRatings(md5 string, alternativeMd5 
 	game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(game.Data.MapMD5, game.Data.MapMD5Alternative, false))
 
 	sendLobbyUsersGameInfoPacket(game, true)
+}
+
+// SetDonatorMapsetShared Sets whether an unsubmitted map is shared by a donator
+func (game *Game) SetDonatorMapsetShared(isShared bool, sendToLobby bool) {
+	game.Data.IsMapsetShared = isShared
+	game.sendPacketToPlayers(packets.NewServerGameMapsetShared(isShared))
+
+	if sendToLobby {
+		sendLobbyUsersGameInfoPacket(game, true)
+	}
 }
 
 // rotateHost Rotates the host to the next person in line.

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/multiplayer"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"github.com/go-redis/redis/v8"
@@ -94,5 +95,33 @@ func HandleTwitchConnection(msg *redis.Message) {
 }
 
 func HandleMultiplayerMapShares(msg *redis.Message) {
+	type redisMultiplayerMapShare struct {
+		UploaderId int `json:"uploader_id"`
+		GameId     int `json:"game_id"`
+	}
 
+	var parsed redisMultiplayerMapShare
+
+	err := json.Unmarshal([]byte(msg.Payload), &parsed)
+
+	if err != nil {
+		log.Printf("Failed to parse redis multiplayer map share - %v - %v\n", msg.Payload, err)
+		return
+	}
+
+	user := sessions.GetUserById(parsed.UploaderId)
+
+	if user == nil {
+		return
+	}
+
+	game := multiplayer.GetGameById(user.GetMultiplayerGameId())
+
+	if game == nil {
+		return
+	}
+
+	game.RunLocked(func() {
+		game.SetDonatorMapsetShared(true, true)
+	})
 }
