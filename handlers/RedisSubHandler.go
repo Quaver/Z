@@ -25,6 +25,10 @@ type RedisTwitchSongRequest struct {
 	} `json:"request"`
 }
 
+type RedisTwitchConnection struct {
+	UserId int `json:"user_id"`
+}
+
 func AddRedisHandlers() {
 	db.AddRedisSubscriberHandler(db.RedisChannelSongRequests, HandleTwitchSongRequest)
 	db.AddRedisSubscriberHandler(db.RedisChannelTwitchConnection, HandleTwitchConnection)
@@ -37,7 +41,8 @@ func HandleTwitchSongRequest(msg *redis.Message) {
 	err := json.Unmarshal([]byte(msg.Payload), &parsed)
 
 	if err != nil {
-		log.Printf("Failed to parse twitch song request - %v - %v", msg.Payload, err)
+		log.Printf("Failed to parse twitch song request - %v - %v\n", msg.Payload, err)
+		return
 	}
 
 	user := sessions.GetUserById(parsed.UserId)
@@ -62,7 +67,30 @@ func HandleTwitchSongRequest(msg *redis.Message) {
 }
 
 func HandleTwitchConnection(msg *redis.Message) {
+	var parsed RedisTwitchConnection
 
+	err := json.Unmarshal([]byte(msg.Payload), &parsed)
+
+	if err != nil {
+		log.Printf("Failed to parse redis twitch connection - %v - %v\n", msg.Payload, err)
+		return
+	}
+
+	user := sessions.GetUserById(parsed.UserId)
+
+	if user == nil {
+		return
+	}
+
+	newUser, err := db.GetUserBySteamId(user.Info.SteamId)
+
+	if err != nil {
+		log.Printf("Failed to retrieve user from DB while handling redis twitch connection - %v\n", err)
+		return
+	}
+
+	user.Info.TwitchUsername = newUser.TwitchUsername
+	sessions.SendPacketToUser(packets.NewServerTwitchConnection(user.Info.TwitchUsername.String), user)
 }
 
 func HandleMultiplayerMapShares(msg *redis.Message) {
