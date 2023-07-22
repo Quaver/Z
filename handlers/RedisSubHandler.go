@@ -9,26 +9,6 @@ import (
 	"log"
 )
 
-type RedisTwitchSongRequest struct {
-	UserId  int `json:"user_id"`
-	Request struct {
-		TwitchUsername   string                  `json:"twitch_username"`
-		Game             packets.SongRequestGame `json:"game"`
-		MapId            int                     `json:"map_id"`
-		MapsetId         int                     `json:"mapset_id"`
-		MapMd5           string                  `json:"map_md5"`
-		Artist           string                  `json:"artist"`
-		Title            string                  `json:"title"`
-		DifficultyName   string                  `json:"difficulty_name"`
-		Creator          string                  `json:"creator"`
-		DifficultyRating float64                 `json:"difficulty_rating"`
-	} `json:"request"`
-}
-
-type RedisTwitchConnection struct {
-	UserId int `json:"user_id"`
-}
-
 func AddRedisHandlers() {
 	db.AddRedisSubscriberHandler(db.RedisChannelSongRequests, HandleTwitchSongRequest)
 	db.AddRedisSubscriberHandler(db.RedisChannelTwitchConnection, HandleTwitchConnection)
@@ -36,7 +16,23 @@ func AddRedisHandlers() {
 }
 
 func HandleTwitchSongRequest(msg *redis.Message) {
-	var parsed RedisTwitchSongRequest
+	type redisTwitchSongRequest struct {
+		UserId  int `json:"user_id"`
+		Request struct {
+			TwitchUsername   string                  `json:"twitch_username"`
+			Game             packets.SongRequestGame `json:"game"`
+			MapId            int                     `json:"map_id"`
+			MapsetId         int                     `json:"mapset_id"`
+			MapMd5           string                  `json:"map_md5"`
+			Artist           string                  `json:"artist"`
+			Title            string                  `json:"title"`
+			DifficultyName   string                  `json:"difficulty_name"`
+			Creator          string                  `json:"creator"`
+			DifficultyRating float64                 `json:"difficulty_rating"`
+		} `json:"request"`
+	}
+
+	var parsed redisTwitchSongRequest
 
 	err := json.Unmarshal([]byte(msg.Payload), &parsed)
 
@@ -67,7 +63,11 @@ func HandleTwitchSongRequest(msg *redis.Message) {
 }
 
 func HandleTwitchConnection(msg *redis.Message) {
-	var parsed RedisTwitchConnection
+	type redisTwitchConnection struct {
+		UserId int `json:"user_id"`
+	}
+
+	var parsed redisTwitchConnection
 
 	err := json.Unmarshal([]byte(msg.Payload), &parsed)
 
