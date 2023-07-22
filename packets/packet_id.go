@@ -53,8 +53,8 @@ const (
 	PacketIdClientGameScreenLoaded
 	PacketIdServerAllPlayersLoaded
 	PacketIdClientGameSongSkipRequest
-	PacketIdServerGameAllPlayersSkipped
 	PacketIdClientGamePlayerReady
+	PacketIdServerGameAllPlayersSkipped
 	PacketIdServerGamePlayerReady
 	PacketIdClientGamePlayerNotReady
 	PacketIdServerGamePlayerNotReady
