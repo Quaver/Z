@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/multiplayer"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"log"
 )
@@ -14,6 +16,7 @@ func AddRedisHandlers() {
 	db.AddRedisSubscriberHandler(db.RedisChannelSongRequests, HandleTwitchSongRequest)
 	db.AddRedisSubscriberHandler(db.RedisChannelTwitchConnection, HandleTwitchConnection)
 	db.AddRedisSubscriberHandler(db.RedisChannelMultiplayerMapShares, HandleMultiplayerMapShares)
+	db.AddRedisSubscriberHandler(db.RedisChannelFirstPlaceScores, HandleFirstPlaceScores)
 }
 
 func HandleTwitchSongRequest(msg *redis.Message) {
@@ -124,4 +127,29 @@ func HandleMultiplayerMapShares(msg *redis.Message) {
 	game.RunLocked(func() {
 		game.SetDonatorMapsetShared(true, true)
 	})
+}
+
+func HandleFirstPlaceScores(msg *redis.Message) {
+	type redisFirstPlaceScore struct {
+		User struct {
+			Username string `json:"username"`
+		} `json:"user"`
+		Map struct {
+			Artist         string `json:"artist"`
+			Title          string `json:"title"`
+			DifficultyName string `json:"difficulty_name"`
+		} `json:"map"`
+	}
+
+	var parsed redisFirstPlaceScore
+
+	err := json.Unmarshal([]byte(msg.Payload), &parsed)
+
+	if err != nil {
+		log.Printf("Failed to parse first place score - %v - %v\n", msg.Payload, err)
+		return
+	}
+
+	chat.SendMessage(chat.Bot, "#first-places", fmt.Sprintf("%v has just achieved first place on %v - %v [%v]",
+		parsed.User.Username, parsed.Map.Artist, parsed.Map.Title, parsed.Map.DifficultyName))
 }
