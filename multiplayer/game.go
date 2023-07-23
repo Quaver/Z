@@ -102,24 +102,22 @@ func (game *Game) AddPlayer(userId int, password string) {
 
 	// Player wins persist even if a user leaves and joins the game pack at a later time
 	_, err := utils.Find(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id == user.Info.Id })
-
 	if err != nil {
 		game.Data.PlayerWins = append(game.Data.PlayerWins, &objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
 	}
 
 	user.SetMultiplayerGameId(game.Data.Id)
-
-	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
-	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
+	game.cachePlayer(user.Info.Id)
+	game.chatChannel.AddUser(user)
 
 	if len(game.Data.PlayerIds) == 1 {
 		game.SetHost(nil, user.Info.Id)
 	}
 
-	game.chatChannel.AddUser(user)
-	game.cachePlayer(user.Info.Id)
-
 	RemoveUserFromLobby(user)
+
+	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
+	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
