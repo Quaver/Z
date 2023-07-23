@@ -137,8 +137,9 @@ func (game *Game) RemovePlayer(userId int) {
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
 		game.EndGame()
-		RemoveGameFromLobby(game)
+		game.deleteCachedMatchSettings()
 		chat.RemoveMultiplayerChannel(game.Data.GameId)
+		RemoveGameFromLobby(game)
 		return
 	}
 

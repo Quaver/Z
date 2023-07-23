@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// Returns the redis key for the match settings
 func (game *Game) getMatchSettingsRedisKey() string {
 	return fmt.Sprintf("quaver:server:multiplayer:%v", game.Data.Id)
 }
@@ -46,10 +47,22 @@ func (game *Game) cacheMatchSettings() {
 	}
 }
 
+// Deletes the cached match settings in redis
+func (game *Game) deleteCachedMatchSettings() {
+	_, err := db.Redis.Del(db.RedisCtx, game.getMatchSettingsRedisKey()).Result()
+
+	if err != nil {
+		log.Printf("Failed to remove match settings in redis - %v\n", err)
+		return
+	}
+}
+
+// Returns the redis key for an individual user in the game
 func (game *Game) getPlayerRedisKey(id int) string {
 	return fmt.Sprintf("quaver:server:multiplayer:%v:player:%v", game.Data.Id, id)
 }
 
+// Returns the redis key for a player's score in the game
 func (game *Game) getPlayerScoreRedisKey(id int) string {
 	return fmt.Sprintf("quaver:server:multiplayer:%v:%v", game.Data.Id, id)
 }
