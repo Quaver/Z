@@ -53,7 +53,6 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 	game.Data.GameId = utils.GenerateRandomString(32)
 	game.Data.CreationPassword = ""
 	game.Data.SetDefaults()
-	game.validateSettings()
 
 	var err error
 	game.Data.Id, err = db.InsertMultiplayerGame(game.Data.Name, game.Data.GameId)
@@ -61,6 +60,8 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	game.validateAndCacheSettings()
 
 	game.chatChannel = chat.AddMultiplayerChannel(game.Data.GameId)
 	return &game, nil
@@ -183,6 +184,7 @@ func (game *Game) SetHost(requester *sessions.User, userId int) {
 
 	game.Data.HostId = userId
 	game.SetHostSelectingMap(nil, false, false)
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeHost(game.Data.HostId))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -211,7 +213,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.clearReadyPlayers(false)
 	game.clearCountdown()
 	game.SetDonatorMapsetShared(false, false)
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -309,6 +311,7 @@ func (game *Game) StartGame() {
 	game.clearCountdown()
 	game.clearReadyPlayers(false)
 	game.SetHostSelectingMap(nil, false, false)
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameStart())
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -332,6 +335,7 @@ func (game *Game) EndGame() {
 	game.playersFinished = []int{}
 	game.playersSkipped = []int{}
 	game.playerScores = map[int]*scoring.ScoreProcessor{}
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameEnded())
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -352,7 +356,7 @@ func (game *Game) ChangeName(requester *sessions.User, name string) {
 	}
 
 	game.Data.Name = name
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameNameChanged(game.Data.Name))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -383,7 +387,7 @@ func (game *Game) SetPassword(requester *sessions.User, password string) {
 	}
 
 	game.Password = password
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -396,7 +400,7 @@ func (game *Game) SetDifficultyRange(requester *sessions.User, min float32, max 
 
 	game.Data.FilterMinDifficultyRating = min
 	game.Data.FilterMaxDifficultyRating = max
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	packet := packets.NewServerGameDifficultyRangeChanged(game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating)
 	game.sendPacketToPlayers(packet)
@@ -411,7 +415,7 @@ func (game *Game) SetMaxSongLength(requester *sessions.User, lengthSeconds int) 
 	}
 
 	game.Data.FilterMaxSongLength = lengthSeconds
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameMaxSongLengthChanged(game.Data.FilterMaxSongLength))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -424,7 +428,7 @@ func (game *Game) SetAllowedGameModes(requester *sessions.User, gameModes []comm
 	}
 
 	game.Data.FilterAllowedGameModes = gameModes
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameAllowedModesChanged(game.Data.FilterAllowedGameModes))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -442,7 +446,7 @@ func (game *Game) SetGlobalModifiers(requester *sessions.User, mods common.Mods,
 
 	game.Data.GlobalModifiers = mods
 	game.Data.MapDifficultyRating = difficultyRating
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeModifiers(game.Data.GlobalModifiers, game.Data.MapDifficultyRating))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -460,7 +464,7 @@ func (game *Game) SetFreeMod(requester *sessions.User, freeMod objects.Multiplay
 
 	game.Data.FreeModType = freeMod
 	game.resetAllModifiers()
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeFreeMod(game.Data.FreeModType))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -495,6 +499,7 @@ func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
 
 	game.Data.IsHostRotation = enabled
 	game.sendPacketToPlayers(packets.NewServerGameHostRotation(game.Data.IsHostRotation))
+	game.validateAndCacheSettings()
 
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -507,7 +512,7 @@ func (game *Game) SetLongNotePercent(requester *sessions.User, min int, max int)
 
 	game.Data.FilterMinLongNotePercent = min
 	game.Data.FilterMaxLongNotePercent = max
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameLongNotePercent(game.Data.FilterMinLongNotePercent, game.Data.FilterMaxLongNotePercent))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -525,7 +530,7 @@ func (game *Game) SetMaxPlayerCount(requester *sessions.User, count int) {
 	}
 
 	game.Data.MaxPlayers = count
-	game.validateSettings()
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameChangeMaxPlayers(game.Data.MaxPlayers))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -655,6 +660,7 @@ func (game *Game) SetTournamentMode(requester *sessions.User, enabled bool) {
 	}
 
 	game.Data.IsTournamentMode = enabled
+	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameTournamentMode(game.Data.IsTournamentMode))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -672,7 +678,7 @@ func (game *Game) SetClientProvidedDifficultyRatings(md5 string, alternativeMd5 
 	}
 
 	game.Data.MapDifficultyRatingAll = difficulties
-	game.validateSettings()
+	game.validateAndCacheSettings()
 	game.sendPacketToPlayers(packets.NewServerGameNeedDifficultyRatings(game.Data.MapMD5, game.Data.MapMD5Alternative, false))
 
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -942,8 +948,8 @@ func (game *Game) sendPacketToPlayers(packet interface{}) {
 	}
 }
 
-// validateSettings Checks the multiplayer settings to see if they are in an acceptable range
-func (game *Game) validateSettings() {
+// validateAndCacheSettings Checks the multiplayer settings to see if they are in an acceptable range
+func (game *Game) validateAndCacheSettings() {
 	data := game.Data
 
 	data.Name = utils.TruncateString(data.Name, 50)
@@ -976,6 +982,8 @@ func (game *Game) validateSettings() {
 	if len(data.FilterAllowedGameModes) == 0 {
 		data.FilterAllowedGameModes = []common.Mode{common.ModeKeys4, common.ModeKeys7}
 	}
+
+	game.cacheMatchSettings()
 }
 
 // Returns if a user is inside the game
