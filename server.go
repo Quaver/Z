@@ -3,6 +3,7 @@ package main
 import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/handlers"
+	"example.com/Quaver/Z/multiplayer"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
@@ -141,6 +142,12 @@ func clearPreviousSessions() {
 	}
 
 	err = sessions.ClearRedisUserClientStatuses()
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = multiplayer.ClearRedisGames()
 
 	if err != nil {
 		panic(err)

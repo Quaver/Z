@@ -63,3 +63,24 @@ func AddRedisSubscriberHandler(channel string, f func(message *redis.Message)) {
 
 	redisChannelHandlers[channel] = append(redisChannelHandlers[channel], f)
 }
+
+// ClearRedisKeysWithPattern Clears a given pattern of redis keys from the database
+func ClearRedisKeysWithPattern(pattern string) error {
+	keys, err := Redis.Keys(RedisCtx, pattern).Result()
+
+	if err != nil {
+		return err
+	}
+
+	if len(keys) == 0 {
+		return nil
+	}
+
+	_, err = Redis.Del(RedisCtx, keys...).Result()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

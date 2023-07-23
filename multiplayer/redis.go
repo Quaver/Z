@@ -10,6 +10,17 @@ import (
 	"strconv"
 )
 
+// ClearRedisGames Clears all cached multiplayer games in Redis (usually done once at server start)
+func ClearRedisGames() error {
+	err := db.ClearRedisKeysWithPattern("quaver:server:multiplayer:*")
+
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
 // Returns the redis key for the match settings
 func (game *Game) getMatchSettingsRedisKey() string {
 	return fmt.Sprintf("quaver:server:multiplayer:%v", game.Data.Id)
