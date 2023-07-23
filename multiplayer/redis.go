@@ -105,7 +105,12 @@ func (game *Game) cachePlayer(id int) {
 	}
 }
 
-// Returns the redis key for a player's score in the game
-func (game *Game) getPlayerScoreRedisKey(id int) string {
-	return fmt.Sprintf("quaver:server:multiplayer:%v:%v", game.Data.Id, id)
+// Deletes a cached player in redis
+func (game *Game) deleteCachedPlayer(userId int) {
+	_, err := db.Redis.Del(db.RedisCtx, game.getPlayerRedisKey(userId)).Result()
+
+	if err != nil {
+		log.Printf("Failed to remove multiplayer player  in redis - %v\n", err)
+		return
+	}
 }

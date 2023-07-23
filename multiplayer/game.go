@@ -132,6 +132,7 @@ func (game *Game) RemovePlayer(userId int) {
 	game.playersScreenLoaded = utils.Filter(game.playersScreenLoaded, func(x int) bool { return x != userId })
 	game.playersFinished = utils.Filter(game.playersFinished, func(x int) bool { return x != userId })
 	game.playersSkipped = utils.Filter(game.playersSkipped, func(x int) bool { return x != userId })
+	game.deleteCachedPlayer(userId)
 	delete(game.playerScores, userId)
 
 	// Disband game since there are no more players left
