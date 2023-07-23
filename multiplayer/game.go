@@ -100,7 +100,6 @@ func (game *Game) AddPlayer(userId int, password string) {
 	game.Data.PlayerIds = append(game.Data.PlayerIds, user.Info.Id)
 	game.Data.PlayerModifiers = append(game.Data.PlayerModifiers, &objects.MultiplayerGamePlayerMods{Id: user.Info.Id})
 	game.Data.PlayerWins = append(game.Data.PlayerWins, &objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
-
 	user.SetMultiplayerGameId(game.Data.Id)
 
 	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
@@ -111,6 +110,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 	}
 
 	game.chatChannel.AddUser(user)
+	game.cachePlayer(user.Info.Id)
 
 	RemoveUserFromLobby(user)
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -223,6 +223,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 // SetPlayerDoesntHaveMap Sets that a player does not have the map downloaded
 func (game *Game) SetPlayerDoesntHaveMap(userId int) {
 	game.Data.PlayersWithoutMap = append(game.Data.PlayersWithoutMap, userId)
+	game.cachePlayer(userId)
 
 	game.sendPacketToPlayers(packets.NewServerGamePlayerNoMap(userId))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -230,9 +231,8 @@ func (game *Game) SetPlayerDoesntHaveMap(userId int) {
 
 // SetPlayerHasMap Sets that a player now has the currently played map
 func (game *Game) SetPlayerHasMap(userId int) {
-	game.Data.PlayersWithoutMap = utils.Filter(game.Data.PlayersWithoutMap, func(x int) bool {
-		return x != userId
-	})
+	game.Data.PlayersWithoutMap = utils.Filter(game.Data.PlayersWithoutMap, func(x int) bool { return x != userId })
+	game.cachePlayer(userId)
 
 	game.sendPacketToPlayers(packets.NewServerGamePlayerHasMap(userId))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -248,15 +248,16 @@ func (game *Game) SetPlayerReady(userId int) {
 		game.Data.PlayersReady = append(game.Data.PlayersReady, userId)
 	}
 
+	game.cachePlayer(userId)
+
 	game.sendPacketToPlayers(packets.NewServerGamePlayerReady(userId))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
 // SetPlayerNotReady Sets that a player is not ready to play
 func (game *Game) SetPlayerNotReady(userId int) {
-	game.Data.PlayersReady = utils.Filter(game.Data.PlayersReady, func(i int) bool {
-		return i != userId
-	})
+	game.Data.PlayersReady = utils.Filter(game.Data.PlayersReady, func(i int) bool { return i != userId })
+	game.cachePlayer(userId)
 
 	game.sendPacketToPlayers(packets.NewServerGamePlayerNotReady(userId))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -487,8 +488,9 @@ func (game *Game) SetPlayerModifiers(userId int, mods common.Mods) {
 	}
 
 	playerMods.Modifiers = mods
-	game.sendPacketToPlayers(packets.NewServerGameChangePlayerModifiers(userId, mods))
+	game.cachePlayer(userId)
 
+	game.sendPacketToPlayers(packets.NewServerGameChangePlayerModifiers(userId, mods))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
@@ -561,6 +563,7 @@ func (game *Game) SetPlayerWinCount(userId int, wins int) {
 	}
 
 	playerWins.Wins = wins
+	game.cachePlayer(userId)
 
 	game.sendPacketToPlayers(packets.NewServerGamePlayerWinCount(userId, playerWins.Wins))
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -734,11 +737,13 @@ func (game *Game) isUserHost(user *sessions.User) bool {
 
 // Clears all players that are ready.
 func (game *Game) clearReadyPlayers(sendToLobby bool) {
+	readyPlayers := game.Data.PlayersReady
+	game.Data.PlayersReady = readyPlayers
+
 	for _, id := range game.Data.PlayersReady {
+		game.cachePlayer(id)
 		game.sendPacketToPlayers(packets.NewServerGamePlayerNotReady(id))
 	}
-
-	game.Data.PlayersReady = []int{}
 
 	if sendToLobby {
 		sendLobbyUsersGameInfoPacket(game, true)
@@ -803,9 +808,7 @@ func (game *Game) updatePlayerWinCount() {
 			continue
 		}
 
-		playerWins, err := utils.Find(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool {
-			return x.Id == userId
-		})
+		playerWins, err := utils.Find(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id == userId })
 
 		if err != nil {
 			continue

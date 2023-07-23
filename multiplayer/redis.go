@@ -2,6 +2,8 @@ package multiplayer
 
 import (
 	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/objects"
+	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"log"
@@ -60,6 +62,47 @@ func (game *Game) deleteCachedMatchSettings() {
 // Returns the redis key for an individual user in the game
 func (game *Game) getPlayerRedisKey(id int) string {
 	return fmt.Sprintf("quaver:server:multiplayer:%v:player:%v", game.Data.Id, id)
+}
+
+// Caches a player in Redis
+func (game *Game) cachePlayer(id int) {
+	user := sessions.GetUserById(id)
+
+	if user == nil {
+		return
+	}
+
+	wins, err := utils.Find(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id == id })
+
+	if err != nil {
+		wins = &objects.MultiplayerGamePlayerWins{Wins: 0}
+	}
+
+	mods, err := utils.Find(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool { return x.Id == id })
+
+	if err != nil {
+		mods = &objects.MultiplayerGamePlayerMods{Modifiers: 0}
+	}
+
+	player := []string{
+		"id", strconv.Itoa(user.Info.Id),
+		"u", user.Info.Username,
+		"sid", user.Info.SteamId,
+		"a", user.Info.AvatarUrl,
+		"c", user.Info.Country,
+		"w", strconv.Itoa(wins.Wins),
+		"m", strconv.Itoa(int(mods.Modifiers)),
+		"r", strconv.Itoa(utils.BoolToInt(utils.Includes(game.Data.PlayersReady, id))),
+		"hm", strconv.Itoa(utils.BoolToInt(!utils.Includes(game.Data.PlayersWithoutMap, id))),
+		// "t", strconv.Itoa(0) - Team
+	}
+
+	_, err = db.Redis.HSet(db.RedisCtx, game.getPlayerRedisKey(id), player).Result()
+
+	if err != nil {
+		log.Printf("Failed to cache multiplayer player in redis - %v\n", err)
+		return
+	}
 }
 
 // Returns the redis key for a player's score in the game
