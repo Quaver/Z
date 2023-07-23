@@ -99,7 +99,14 @@ func (game *Game) AddPlayer(userId int, password string) {
 
 	game.Data.PlayerIds = append(game.Data.PlayerIds, user.Info.Id)
 	game.Data.PlayerModifiers = append(game.Data.PlayerModifiers, &objects.MultiplayerGamePlayerMods{Id: user.Info.Id})
-	game.Data.PlayerWins = append(game.Data.PlayerWins, &objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
+
+	// Player wins persist even if a user leaves and joins the game pack at a later time
+	_, err := utils.Find(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id == user.Info.Id })
+
+	if err != nil {
+		game.Data.PlayerWins = append(game.Data.PlayerWins, &objects.MultiplayerGamePlayerWins{Id: user.Info.Id})
+	}
+
 	user.SetMultiplayerGameId(game.Data.Id)
 
 	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
@@ -127,7 +134,6 @@ func (game *Game) RemovePlayer(userId int) {
 
 	game.Data.PlayerIds = utils.Filter(game.Data.PlayerIds, func(x int) bool { return x != userId })
 	game.Data.PlayerModifiers = utils.Filter(game.Data.PlayerModifiers, func(x *objects.MultiplayerGamePlayerMods) bool { return x.Id != userId })
-	game.Data.PlayerWins = utils.Filter(game.Data.PlayerWins, func(x *objects.MultiplayerGamePlayerWins) bool { return x.Id != userId })
 	game.playersInMatch = utils.Filter(game.playersInMatch, func(x int) bool { return x != userId })
 	game.playersScreenLoaded = utils.Filter(game.playersScreenLoaded, func(x int) bool { return x != userId })
 	game.playersFinished = utils.Filter(game.playersFinished, func(x int) bool { return x != userId })
