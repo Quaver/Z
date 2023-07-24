@@ -21,3 +21,19 @@ var (
 		TwitchUsername: sql.NullString{},
 	})
 )
+
+// Adds chat handlers for bot messages
+func addBotChatHandlers() {
+	AddPublicMessageHandler(handlePublicChatBotCommands)
+	AddPrivateMessageHandler(handlePrivateChatBotCommands)
+}
+
+// Handles bot commands for public messages
+func handlePublicChatBotCommands(user *sessions.User, channel *Channel, args []string) string {
+	return ""
+}
+
+// Handles bot commands for private messages
+func handlePrivateChatBotCommands(user *sessions.User, receivingUser *sessions.User, args []string) string {
+	return ""
+}

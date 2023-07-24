@@ -34,6 +34,7 @@ func Initialize() {
 	}
 
 	_ = sessions.AddUser(Bot)
+	addBotChatHandlers()
 }
 
 // GetAvailableChannels Returns the available channels that the user is able to join
@@ -148,6 +149,14 @@ func AddPublicMessageHandler(f func(user *sessions.User, channel *Channel, args 
 	defer chatMutex.Unlock()
 
 	publicMessageHandlers = append(publicMessageHandlers, f)
+}
+
+// AddPrivateMessageHandler Adds a message handler for private chats
+func AddPrivateMessageHandler(f func(user *sessions.User, receivingUser *sessions.User, args []string) string) {
+	chatMutex.Lock()
+	defer chatMutex.Unlock()
+
+	privateMessageHandlers = append(privateMessageHandlers, f)
 }
 
 // Sends a message to a public chat channel
