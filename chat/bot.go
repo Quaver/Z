@@ -65,6 +65,8 @@ func handleBotCommands(user *sessions.User, args []string) string {
 		return handleBotCommandKick(user, args)
 	case "alertall", "notifyall":
 		return handleBotCommandNotifyAll(user, args)
+	case "alertuser", "notifyuser":
+		return handleBotCommandNotifyUser(user, args)
 	default:
 		return ""
 	}
@@ -113,6 +115,38 @@ func handleBotCommandNotifyAll(user *sessions.User, args []string) string {
 	}
 
 	return "Your message has been notified to all online users."
+}
+
+// Handles the command to notify a specific user of something.
+func handleBotCommandNotifyUser(user *sessions.User, args []string) string {
+	if !common.HasPrivilege(user.Info.Privileges, common.PrivilegeNotifyUsers) {
+		return ""
+	}
+
+	if len(args) < 2 {
+		return "You must specify a user to send a notification to."
+	}
+
+	target := getUserFromCommandArgs(args)
+
+	if target == nil {
+		return "That user is not online."
+	}
+
+	if target == Bot {
+		return "I'm a bot. I don't need to receive notifications."
+	}
+
+	if len(args) < 3 {
+		return "You must provide a message to notify this user with."
+	}
+
+	notification := strings.Join(args[2:], " ")
+
+	sessions.SendPacketToUser(packets.NewServerNotificationInfo(notification), target)
+	sendPrivateMessage(Bot, target, notification)
+
+	return fmt.Sprintf("Your notification has been sent to: %v.", target.Info.Username)
 }
 
 // getUserFromCommandArgs Returns a target user from command args
