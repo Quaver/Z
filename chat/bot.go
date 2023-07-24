@@ -63,6 +63,8 @@ func handleBotCommands(user *sessions.User, args []string) string {
 	switch strings.ToLower(strings.Split(args[0], "!")[1]) {
 	case "kick":
 		return handleBotCommandKick(user, args)
+	case "alertall", "notifyall":
+		return handleBotCommandNotifyAll(user, args)
 	default:
 		return ""
 	}
@@ -91,6 +93,26 @@ func handleBotCommandKick(user *sessions.User, args []string) string {
 	sessions.SendPacketToUser(packets.NewServerNotificationError("You have been kicked from the server."), target)
 	utils.CloseConnectionDelayed(target.Conn)
 	return fmt.Sprintf("%v has been kicked from the server.", target.Info.Username)
+}
+
+// Handles the command to notify all users of something
+func handleBotCommandNotifyAll(user *sessions.User, args []string) string {
+	if !common.HasPrivilege(user.Info.Privileges, common.PrivilegeNotifyUsers) {
+		return ""
+	}
+
+	if len(args) < 2 {
+		return "You must provide a message to notify everyone with."
+	}
+
+	notification := strings.Join(args[1:], " ")
+
+	for _, onlineUser := range sessions.GetOnlineUsers() {
+		sessions.SendPacketToUser(packets.NewServerNotificationInfo(notification), onlineUser)
+		sendPrivateMessage(Bot, onlineUser, notification)
+	}
+
+	return "Your message has been notified to all online users."
 }
 
 // getUserFromCommandArgs Returns a target user from command args
