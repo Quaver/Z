@@ -16,9 +16,10 @@ import (
 )
 
 var (
-	channels              map[string]*Channel
-	chatMutex             *sync.Mutex
-	publicMessageHandlers []func(user *sessions.User, channel *Channel, args []string) string
+	channels               map[string]*Channel
+	chatMutex              *sync.Mutex
+	publicMessageHandlers  []func(user *sessions.User, channel *Channel, args []string) string
+	privateMessageHandlers []func(user *sessions.User, receiver *sessions.User, args []string) string
 )
 
 // Initialize Initializes the chat channels
@@ -26,6 +27,7 @@ func Initialize() {
 	channels = make(map[string]*Channel)
 	chatMutex = &sync.Mutex{}
 	publicMessageHandlers = []func(user *sessions.User, channel *Channel, args []string) string{}
+	privateMessageHandlers = []func(user *sessions.User, receiver *sessions.User, args []string) string{}
 
 	for _, channel := range config.Instance.ChatChannels {
 		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, false, channel.DiscordWebhook))
@@ -110,6 +112,14 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 		sendPrivateMessage(sender, receivingUser, message)
 		webhooks.SendChatMessage(discordWebhook, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
+
+		for _, handler := range privateMessageHandlers {
+			responseMsg := handler(sender, receivingUser, strings.Split(message, " "))
+
+			if responseMsg != "" {
+				sendPrivateMessage(Bot, sender, message)
+			}
+		}
 	}
 }
 
