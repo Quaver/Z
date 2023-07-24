@@ -9,7 +9,9 @@ import (
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -67,6 +69,8 @@ func handleBotCommands(user *sessions.User, args []string) string {
 		return handleBotCommandNotifyAll(user, args)
 	case "alertuser", "notifyuser":
 		return handleBotCommandNotifyUser(user, args)
+	case "mute":
+		return handleBotCommandMuteUser(user, args)
 	default:
 		return ""
 	}
@@ -147,6 +151,75 @@ func handleBotCommandNotifyUser(user *sessions.User, args []string) string {
 	sendPrivateMessage(Bot, target, notification)
 
 	return fmt.Sprintf("Your notification has been sent to: %v.", target.Info.Username)
+}
+
+// Handles the command to mute a given user
+func handleBotCommandMuteUser(user *sessions.User, args []string) string {
+	if !common.HasPrivilege(user.Info.Privileges, common.PrivilegeMuteUsers) {
+		return ""
+	}
+
+	if len(args) < 2 {
+		return "You must specify a user to mute."
+	}
+
+	target, err := db.GetUserByUsername(strings.ToLower(strings.ReplaceAll(args[1], "_", " ")))
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "That user does not exist."
+		}
+
+		log.Printf("Error retrieving user from the database - %v\n", err)
+		return "An error occurred while executing this command."
+	}
+
+	if len(args) < 3 {
+		return "You must provide a time! value."
+	}
+
+	timeVal, err := strconv.Atoi(args[2])
+
+	if err != nil {
+		return "You must provide a valid number as a timeVal value."
+	}
+
+	if len(args) < 4 {
+		return "You must provide a duration value (ex. s/m/h/d)."
+	}
+
+	var duration time.Duration
+
+	switch strings.ToLower(args[3]) {
+	case "s":
+		duration = time.Second * time.Duration(timeVal)
+	case "m":
+		duration = time.Minute * time.Duration(timeVal)
+	case "h":
+		duration = time.Hour * time.Duration(timeVal)
+	case "d":
+		duration = time.Hour * 24 * time.Duration(timeVal)
+	default:
+		return "You have specified an invalid duration of time."
+	}
+
+	// Try to find the user online. If not, create a "temp" user since that has mute capabilities.
+	// Doing it this way because we need to update the mute time of the online user right away,
+	// but if they're offline, we can just skip to updating it in the DB.
+	onlineUser := getUserFromCommandArgs(args)
+
+	if onlineUser != nil {
+		err = onlineUser.MuteUser(duration)
+	} else {
+		err = sessions.NewUser(nil, target).MuteUser(duration)
+	}
+
+	if err != nil {
+		log.Printf("Error while muting user - %v - %v\n", target.Id, err)
+		return "An error occurred while muting this user."
+	}
+
+	return fmt.Sprintf("%v has been muted for %v", target.Username, duration.String())
 }
 
 // getUserFromCommandArgs Returns a target user from command args
