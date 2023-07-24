@@ -71,6 +71,8 @@ func handleBotCommands(user *sessions.User, args []string) string {
 		return handleBotCommandNotifyUser(user, args)
 	case "mute":
 		return handleBotCommandMuteUser(user, args)
+	case "unmute":
+		return handleBotCommandUnmuteUser(user, args)
 	default:
 		return ""
 	}
@@ -174,8 +176,12 @@ func handleBotCommandMuteUser(user *sessions.User, args []string) string {
 		return "An error occurred while executing this command."
 	}
 
+	if common.HasUserGroup(target.UserGroups, common.UserGroupBot) {
+		return "You cannot mute bot users."
+	}
+
 	if len(args) < 3 {
-		return "You must provide a time! value."
+		return "You must provide a time value."
 	}
 
 	timeVal, err := strconv.Atoi(args[2])
@@ -219,7 +225,21 @@ func handleBotCommandMuteUser(user *sessions.User, args []string) string {
 		return "An error occurred while muting this user."
 	}
 
+	if duration == time.Duration(0) {
+		return fmt.Sprintf("%v has been unmuted.", target.Username)
+	}
+
 	return fmt.Sprintf("%v has been muted for %v", target.Username, duration.String())
+}
+
+// Handles the command to unmute a user.
+func handleBotCommandUnmuteUser(user *sessions.User, args []string) string {
+	if len(args) < 2 {
+		return "You must specify a user to unmute."
+	}
+
+	// Simply mute the user for zero seconds to unmute them.
+	return handleBotCommandMuteUser(user, []string{"unmute", args[1], "0", "s"})
 }
 
 // getUserFromCommandArgs Returns a target user from command args
