@@ -10,6 +10,7 @@ import (
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/spectator"
 	"example.com/Quaver/Z/utils"
 	"example.com/Quaver/Z/webhooks"
 	"fmt"
@@ -141,6 +142,8 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+
+	spectator.InitializeUser(sessionUser)
 
 	log.Printf("[%v #%v] Logged in (%v users online).\n", user.Username, user.Id, sessions.GetOnlineUserCount())
 	return nil

@@ -22,8 +22,8 @@ type User struct {
 	// All user table information from the database
 	Info *db.User
 
-	// mutex for all operations regarding changes in the user
-	mutex *sync.Mutex
+	// Mutex for all operations regarding changes in the user
+	Mutex *sync.Mutex
 
 	// Player statistics from the database
 	stats map[common.Mode]*db.UserStats
@@ -56,7 +56,7 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		Conn:              conn,
 		token:             utils.GenerateRandomString(64),
 		Info:              user,
-		mutex:             &sync.Mutex{},
+		Mutex:             &sync.Mutex{},
 		stats:             map[common.Mode]*db.UserStats{},
 		lastPingTimestamp: time.Now().UnixMilli(),
 		lastPongTimestamp: time.Now().UnixMilli(),
@@ -78,8 +78,8 @@ func (u *User) GetToken() string {
 
 // GetStats Retrieves the stats for the user
 func (u *User) GetStats() map[common.Mode]*db.UserStats {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return u.stats
 }
@@ -96,8 +96,8 @@ func (u *User) GetStatsSlice() []*db.PacketUserStats {
 
 // SetStats Updates the statistics for the user
 func (u *User) SetStats() error {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	for i := 1; i < int(common.ModeEnumMaxValue); i++ {
 		mode := common.Mode(i)
@@ -115,65 +115,65 @@ func (u *User) SetStats() error {
 
 // GetLastPingTimestamp Retrieves the last ping timestamp
 func (u *User) GetLastPingTimestamp() int64 {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return u.lastPingTimestamp
 }
 
 // SetLastPingTimestamp Sets the last ping timestamp to the current time
 func (u *User) SetLastPingTimestamp() {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	u.lastPingTimestamp = time.Now().UnixMilli()
 }
 
 // GetLastPongTimestamp Retrieves the last pong timestamp
 func (u *User) GetLastPongTimestamp() int64 {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return u.lastPongTimestamp
 }
 
 // SetLastPongTimestamp Sets the last pong timestamp to the current time
 func (u *User) SetLastPongTimestamp() {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	u.lastPongTimestamp = time.Now().UnixMilli()
 }
 
 // GetLastDetectedProcesses Gets the last detected processes for the user
 func (u *User) GetLastDetectedProcesses() []string {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return u.lastDetectedProcesses
 }
 
 // SetLastDetectedProcesses Sets the last detected processes for the user
 func (u *User) SetLastDetectedProcesses(processes []string) {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	u.lastDetectedProcesses = processes
 }
 
 // GetClientStatus Gets the current user client status
 func (u *User) GetClientStatus() *objects.ClientStatus {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return u.status
 }
 
 // SetClientStatus Sets the current user client status
 func (u *User) SetClientStatus(status *objects.ClientStatus) {
-	u.mutex.Lock()
+	u.Mutex.Lock()
 	u.status = status
-	u.mutex.Unlock()
+	u.Mutex.Unlock()
 
 	err := addUserClientStatusToRedis(u)
 
@@ -184,70 +184,70 @@ func (u *User) SetClientStatus(status *objects.ClientStatus) {
 
 // GetSpammedMessagesCount Gets the amount of messages the user has spammed
 func (u *User) GetSpammedMessagesCount() int {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return u.spammedChatMessages
 }
 
 // IncrementSpammedMessagesCount Increments the amount of spammed messages by 1.
 func (u *User) IncrementSpammedMessagesCount() {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	u.spammedChatMessages++
 }
 
 // ResetSpammedMessagesCount Resets the amount of spammed messages back to zero
 func (u *User) ResetSpammedMessagesCount() {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	u.spammedChatMessages = 0
 }
 
 // GetSpammedChatLastTimeCleared Gets the last time the user's chat spam rate was cleared
 func (u *User) GetSpammedChatLastTimeCleared() int64 {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return u.spammedChatLastTimeCleared
 }
 
 // SetSpammedChatLastTimeCleared Sets the time the user's chat spam rate was cleared
 func (u *User) SetSpammedChatLastTimeCleared(time int64) {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 	u.spammedChatLastTimeCleared = time
 }
 
 // GetMultiplayerGameId Gets the id of the multiplayer game the user is currently inside of (if any)
 func (u *User) GetMultiplayerGameId() int {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return u.multiplayerGameId
 }
 
 // SetMultiplayerGameId Sets the id of the multiplayer game if the user is inside of one
 func (u *User) SetMultiplayerGameId(id int) {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 	u.multiplayerGameId = id
 }
 
 // IsMuted Returns if the user is muted
 func (u *User) IsMuted() bool {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return u.Info.MuteEndTime > time.Now().UnixMilli()
 }
 
 // MuteUser Mutes a user for a specified duration
 func (u *User) MuteUser(duration time.Duration) error {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	endTime := time.Now().UnixMilli() + duration.Milliseconds()
 
@@ -264,8 +264,8 @@ func (u *User) MuteUser(duration time.Duration) error {
 
 // SerializeForPacket Serializes the user to be used in a packet
 func (u *User) SerializeForPacket() *objects.PacketUser {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
 
 	return &objects.PacketUser{
 		Id:          u.Info.Id,

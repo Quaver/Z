@@ -5,6 +5,7 @@ import (
 	"example.com/Quaver/Z/multiplayer"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/spectator"
 	"example.com/Quaver/Z/utils"
 	"log"
 	"net"
@@ -24,6 +25,7 @@ func HandleLogout(conn net.Conn) error {
 
 		chat.RemoveUserFromAllChannels(user)
 		multiplayer.RemoveUserFromLobby(user)
+		spectator.UninitializeUser(user)
 
 		game := multiplayer.GetGameById(user.GetMultiplayerGameId())
 
