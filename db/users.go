@@ -42,6 +42,20 @@ func GetUserBySteamId(steamId string) (*User, error) {
 	return &user, nil
 }
 
+// GetUserByUsername Rerieves a user from the database by their username
+func GetUserByUsername(username string) (*User, error) {
+	query := "SELECT id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username FROM users WHERE username = ? LIMIT 1"
+
+	var user User
+	err := SQL.Get(&user, query, username)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 // UpdateUserLatestActivity Updates the latest_activity of a user to the current time
 func UpdateUserLatestActivity(id int) error {
 	_, err := SQL.Exec("UPDATE users SET latest_activity = ? WHERE id = ?", time.Now().UnixMilli(), id)
@@ -85,7 +99,7 @@ func UpdateUserSteamAvatar(steamId string) (string, error) {
 
 // MuteUser Mutes a user for a given duration
 func MuteUser(id int, endTime int64) error {
-	_, err := SQL.Exec("UPDATE users SET mute_end_time = ? WHERE id = ?", endTime, id)
+	_, err := SQL.Exec("UPDATE users SET mute_endtime = ? WHERE id = ?", endTime, id)
 
 	if err != nil {
 		return err
@@ -104,4 +118,3 @@ func UnlinkUserTwitch(id int) error {
 
 	return nil
 }
-
