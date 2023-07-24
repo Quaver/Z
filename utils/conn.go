@@ -7,6 +7,10 @@ import (
 
 // CloseConnection Closes a connection
 func CloseConnection(conn net.Conn) {
+	if conn == nil {
+		return
+	}
+
 	_ = conn.Close()
 }
 

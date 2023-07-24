@@ -588,7 +588,7 @@ func handleCommandRoll(user *sessions.User) string {
 	return fmt.Sprintf("%v has rolled a: %v.", user.Info.Username, randomNumber)
 }
 
-// Returns a target user from command args
+// getUserFromCommandArgs Returns a target user from command args
 func getUserFromCommandArgs(args []string) *sessions.User {
 	return sessions.GetUserByUsername(strings.ToLower(strings.ReplaceAll(args[2], "_", " ")))
 }
