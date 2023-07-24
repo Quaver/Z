@@ -4,7 +4,6 @@ import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
-	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"log"
@@ -260,7 +259,6 @@ func (u *User) MuteUser(duration time.Duration) error {
 	}
 
 	u.Info.MuteEndTime = endTime
-	SendPacketToUser(packets.NewServerPing(), u)
 	return nil
 }
 
