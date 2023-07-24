@@ -733,7 +733,7 @@ func (game *Game) isUserHost(user *sessions.User) bool {
 		return true
 	}
 
-	if user.Info.Id != game.Data.HostId {
+	if user.Info.Id != game.Data.HostId && user.Info.Id != game.CreatorId && !common.HasUserGroup(user.Info.UserGroups, common.UserGroupDeveloper) {
 		return false
 	}
 
