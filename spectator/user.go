@@ -9,8 +9,9 @@ import (
 
 type User struct {
 	*sessions.User
-	spectators []*User // People who are currently spectating this user
-	spectating []*User // People who the user is currently spectating
+	spectators []*User                                // People who are currently spectating this user
+	spectating []*User                                // People who the user is currently spectating
+	frames     []*packets.ClientSpectatorReplayFrames // The replay frames for the user's current play session
 }
 
 // GetSpectators Returns the people who are currently spectating this user
@@ -90,9 +91,25 @@ func (u *User) StopSpectatingAll() {
 	}
 }
 
-// HandleFrames Handles incoming replay frames
-func (u *User) HandleFrames(packet *packets.ClientSpectatorReplayFrames) {
+// HandleIncomingFrames Handles incoming replay frames
+func (u *User) HandleIncomingFrames(packet *packets.ClientSpectatorReplayFrames) {
 	u.Mutex.Lock()
-	defer u.Mutex.Unlock()
 
+	if u.frames == nil {
+		u.frames = []*packets.ClientSpectatorReplayFrames{}
+	}
+
+	switch packet.Status {
+	case packets.SpectatorFrameNewSong, packets.SpectatorFrameSelectingSong:
+		u.frames = []*packets.ClientSpectatorReplayFrames{}
+	default:
+		u.frames = append(u.frames, packet)
+	}
+
+	u.Mutex.Unlock()
+
+	for _, spectator := range u.GetSpectators() {
+		sessions.SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, u.GetClientStatus()), spectator.User)
+		sessions.SendPacketToUser(packets.NewServerSpectatorReplayFrames(u.Info.Id, packet.Status, packet.AudioTime, packet.Frames), spectator.User)
+	}
 }

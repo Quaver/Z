@@ -12,5 +12,5 @@ func handleClientSpectatorReplayFrames(user *sessions.User, packet *packets.Clie
 		return
 	}
 
-	spectator.GetUser(user).HandleFrames(packet)
+	spectator.GetUser(user).HandleIncomingFrames(packet)
 }

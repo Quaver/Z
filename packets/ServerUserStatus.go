@@ -15,3 +15,9 @@ func NewServerUserStatus(userStatuses ClientStatus) *ServerUserStatus {
 		Statuses: userStatuses,
 	}
 }
+
+func NewServerUserStatusSingle(userId int, status *objects.ClientStatus) *ServerUserStatus {
+	return NewServerUserStatus(ClientStatus{
+		userId: status,
+	})
+}
