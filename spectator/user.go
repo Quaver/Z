@@ -65,7 +65,10 @@ func (u *User) RemoveSpectator(spectator *User) {
 	defer u.Mutex.Unlock()
 
 	u.spectators = utils.Filter(u.spectators, func(x *User) bool { return x != spectator })
+	sessions.SendPacketToUser(packets.NewServerSpectatorLeft(spectator.User.Info.Id), u.User)
+
 	spectator.spectating = utils.Filter(spectator.spectating, func(x *User) bool { return x != u })
+	// TODO: Stop Spectating
 
 	channel := chat.GetSpectatorChannel(u.Info.Id)
 
