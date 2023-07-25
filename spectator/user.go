@@ -89,3 +89,10 @@ func (u *User) StopSpectatingAll() {
 		user.RemoveSpectator(u)
 	}
 }
+
+// HandleFrames Handles incoming replay frames
+func (u *User) HandleFrames(packet *packets.ClientSpectatorReplayFrames) {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
+}
