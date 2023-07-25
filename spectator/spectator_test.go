@@ -76,3 +76,32 @@ func TestRemoveSpectator(t *testing.T) {
 	UninitializeUser(user1)
 	UninitializeUser(user2)
 }
+
+func TestStopSpectatingAll(t *testing.T) {
+	_ = config.Load("../config.json")
+
+	if config.Instance == nil {
+		return
+	}
+
+	db.InitializeRedis()
+	chat.Initialize()
+
+	user1 := sessions.NewUser(nil, &db.User{Id: 1, SteamId: "1", Username: "User #1"})
+	InitializeUser(user1)
+
+	user2 := sessions.NewUser(nil, &db.User{Id: 2, SteamId: "2", Username: "User #2"})
+	InitializeUser(user2)
+
+	GetUser(user1).AddSpectator(GetUser(user2))
+	GetUser(user2).StopSpectatingAll()
+
+	channel := chat.GetSpectatorChannel(user1.Info.Id)
+
+	if channel != nil {
+		t.Fatal("Spectator chat channel is still active")
+	}
+
+	UninitializeUser(user1)
+	UninitializeUser(user2)
+}
