@@ -2,6 +2,7 @@ package spectator
 
 import (
 	"example.com/Quaver/Z/chat"
+	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 )
@@ -36,7 +37,10 @@ func (u *User) AddSpectator(spectator *User) {
 	}
 
 	u.spectators = append(u.spectators, spectator)
+	// TODO: Send packet that a user started spectating
+
 	spectator.spectating = append(spectator.spectating, u)
+	sessions.SendPacketToUser(packets.NewServerStartSpectatePlayer(u.Info.Id), spectator.User)
 
 	// Create spectator channel, and add the users to it
 	if len(u.spectators) == 1 {
