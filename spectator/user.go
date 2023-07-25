@@ -37,7 +37,7 @@ func (u *User) AddSpectator(spectator *User) {
 	}
 
 	u.spectators = append(u.spectators, spectator)
-	// TODO: Send packet that a user started spectating
+	sessions.SendPacketToUser(packets.NewServerSpectatorJoined(spectator.User.Info.Id), u.User)
 
 	spectator.spectating = append(spectator.spectating, u)
 	sessions.SendPacketToUser(packets.NewServerStartSpectatePlayer(u.Info.Id), spectator.User)
