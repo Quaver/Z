@@ -226,6 +226,7 @@ func removeChannel(channel *Channel) {
 
 	channel.removeAllUsers()
 	delete(channels, channel.Name)
+	log.Printf("Uninitialized chat channel: %v\n", channel.Name)
 }
 
 // Returns if the user is a moderator of the chat
