@@ -1,6 +1,7 @@
 package spectator
 
 import (
+	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 )
@@ -37,12 +38,21 @@ func (u *User) AddSpectator(spectator *User) {
 	u.spectators = append(u.spectators, spectator)
 	spectator.spectating = append(spectator.spectating, u)
 
-	// Create spectator chat channel
+	// Create spectator channel, and add the users to it
 	if len(u.spectators) == 1 {
-
+		channel := chat.AddSpectatorChannel(u.Info.Id)
+		channel.AddUser(u.User)
+		channel.AddUser(spectator.User)
+		return
 	}
 
-	// Add user to spectator channel
+	channel := chat.GetSpectatorChannel(u.Info.Id)
+
+	if channel == nil {
+		return
+	}
+
+	channel.AddUser(spectator.User)
 }
 
 // RemoveSpectator Removes a person from their list of spectators
@@ -53,10 +63,16 @@ func (u *User) RemoveSpectator(spectator *User) {
 	u.spectators = utils.Filter(u.spectators, func(x *User) bool { return x != spectator })
 	spectator.spectating = utils.Filter(spectator.spectating, func(x *User) bool { return x != u })
 
-	// Remove user from spectator chat channel
-	// Remove spectator chat channel
-	if len(u.spectators) == 0 {
+	channel := chat.GetSpectatorChannel(u.Info.Id)
 
+	if channel != nil {
+		channel.RemoveUser(spectator.User)
+
+		// Remove spectator channel now that there are no longer any spectators.
+		if len(u.spectators) == 0 {
+			channel.RemoveUser(u.User)
+			chat.RemoveSpectatorChannel(u.Info.Id)
+		}
 	}
 }
 

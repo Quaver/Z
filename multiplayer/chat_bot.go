@@ -51,7 +51,7 @@ func handleJoinMultiplayerChatCommand(user *sessions.User, channel *chat.Channel
 
 // Handles commands made for multiplayer
 func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args []string) string {
-	if !channel.IsMultiplayer {
+	if channel.Type != chat.ChannelTypeMultiplayer {
 		return ""
 	}
 

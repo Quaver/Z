@@ -11,6 +11,7 @@ import (
 )
 
 type Channel struct {
+	Type           ChannelType            `json:"-"`
 	Name           string                 `json:"name"`
 	Description    string                 `json:"description"`
 	AdminOnly      bool                   `json:"admin_only"`
@@ -18,13 +19,21 @@ type Channel struct {
 	DiscordWebhook string                 `json:"discord_webhook"`
 	WebhookClient  webhook.Client         `json:"-"`
 	Participants   map[int]*sessions.User `json:"-"`
-	IsMultiplayer  bool                   `json:"-"`
 	mutex          *sync.Mutex
 }
 
+type ChannelType int
+
+const (
+	ChannelNormal ChannelType = iota
+	ChannelTypeMultiplayer
+	ChannelTypeSpectator
+)
+
 // NewChannel Creates a new chat channel instance
-func NewChannel(name string, description string, adminOnly bool, autoJoin bool, isMultiplayer bool, discordWebhook string) *Channel {
+func NewChannel(channelType ChannelType, name string, description string, adminOnly bool, autoJoin bool, discordWebhook string) *Channel {
 	channel := Channel{
+		Type:           channelType,
 		Name:           name,
 		Description:    description,
 		AdminOnly:      adminOnly,
@@ -32,7 +41,6 @@ func NewChannel(name string, description string, adminOnly bool, autoJoin bool, 
 		DiscordWebhook: discordWebhook,
 		WebhookClient:  nil,
 		Participants:   map[int]*sessions.User{},
-		IsMultiplayer:  isMultiplayer,
 		mutex:          &sync.Mutex{},
 	}
 

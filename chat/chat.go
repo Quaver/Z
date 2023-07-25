@@ -30,7 +30,7 @@ func Initialize() {
 	privateMessageHandlers = []func(user *sessions.User, receiver *sessions.User, args []string) string{}
 
 	for _, channel := range config.Instance.ChatChannels {
-		addChannel(NewChannel(channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, false, channel.DiscordWebhook))
+		addChannel(NewChannel(ChannelNormal, channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, channel.DiscordWebhook))
 	}
 
 	_ = sessions.AddUser(Bot)
@@ -45,7 +45,7 @@ func GetAvailableChannels(userGroups common.UserGroups) []*Channel {
 	var availableChannels []*Channel
 
 	for _, channel := range channels {
-		if (!channel.IsMultiplayer && !channel.AdminOnly) || (channel.AdminOnly && isChatModerator(userGroups)) {
+		if (channel.Type != ChannelTypeMultiplayer && channel.Type != ChannelTypeSpectator && !channel.AdminOnly) || (channel.AdminOnly && isChatModerator(userGroups)) {
 			availableChannels = append(availableChannels, channel)
 		}
 	}
@@ -126,7 +126,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 // AddMultiplayerChannel Adds a multiplayer channel.
 func AddMultiplayerChannel(id string) *Channel {
-	channel := NewChannel(fmt.Sprintf("#multiplayer_%v", id), "", false, false, true, "")
+	channel := NewChannel(ChannelTypeMultiplayer, fmt.Sprintf("#multiplayer_%v", id), "", false, false, "")
 	addChannel(channel)
 
 	return channel
@@ -135,6 +135,30 @@ func AddMultiplayerChannel(id string) *Channel {
 // RemoveMultiplayerChannel Removes a multiplayer channel
 func RemoveMultiplayerChannel(id string) {
 	channel := GetChannelByName(fmt.Sprintf("#multiplayer_%v", id))
+
+	if channel == nil {
+		return
+	}
+
+	removeChannel(channel)
+}
+
+// GetSpectatorChannel Returns a user's spectator channel
+func GetSpectatorChannel(userId int) *Channel {
+	return GetChannelByName(getSpectatorChannelName(userId))
+}
+
+// AddSpectatorChannel Adds a spectator channel for a user
+func AddSpectatorChannel(userId int) *Channel {
+	channel := NewChannel(ChannelTypeSpectator, getSpectatorChannelName(userId), "", false, false, "")
+	addChannel(channel)
+
+	return channel
+}
+
+// RemoveSpectatorChannel Removes a user's spectator channel
+func RemoveSpectatorChannel(userId int) {
+	channel := GetChannelByName(getSpectatorChannelName(userId))
 
 	if channel == nil {
 		return
@@ -212,4 +236,9 @@ func isChatModerator(userGroups common.UserGroups) bool {
 		common.UserGroupAdmin,
 		common.UserGroupModerator,
 	})
+}
+
+// Returns a user's spectator channel name
+func getSpectatorChannelName(userId int) string {
+	return fmt.Sprintf("#spectator_%v", userId)
 }
