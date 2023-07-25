@@ -106,6 +106,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientGameDifficultyRatings(user, unmarshalPacket[packets.ClientGameDifficultyRatings](msg))
 	case packets.PacketIdClientStartSpectatePlayer:
 		handleClientStartSpectatingPlayer(user, unmarshalPacket[packets.ClientStartSpectatingPlayer](msg))
+	case packets.PacketIdClientStopSpectatePlayer:
+		handleClientStopSpectatingPlayer(user, unmarshalPacket[packets.ClientStopSpectatingPlayer](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}
