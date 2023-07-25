@@ -37,7 +37,7 @@ func (u *User) AddSpectator(spectator *User) {
 	}
 
 	u.spectators = append(u.spectators, spectator)
-	sessions.SendPacketToUser(packets.NewServerSpectatorJoined(spectator.User.Info.Id), u.User)
+	sessions.SendPacketToUser(packets.NewServerSpectatorJoined(spectator.Info.Id), u.User)
 
 	spectator.spectating = append(spectator.spectating, u)
 	sessions.SendPacketToUser(packets.NewServerStartSpectatePlayer(u.Info.Id), spectator.User)
@@ -65,10 +65,10 @@ func (u *User) RemoveSpectator(spectator *User) {
 	defer u.Mutex.Unlock()
 
 	u.spectators = utils.Filter(u.spectators, func(x *User) bool { return x != spectator })
-	sessions.SendPacketToUser(packets.NewServerSpectatorLeft(spectator.User.Info.Id), u.User)
+	sessions.SendPacketToUser(packets.NewServerSpectatorLeft(spectator.Info.Id), u.User)
 
 	spectator.spectating = utils.Filter(spectator.spectating, func(x *User) bool { return x != u })
-	// TODO: Stop Spectating
+	sessions.SendPacketToUser(packets.NewServerStopSpectatePlayer(u.Info.Id), spectator.User)
 
 	channel := chat.GetSpectatorChannel(u.Info.Id)
 
