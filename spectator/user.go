@@ -33,6 +33,10 @@ func (u *User) AddSpectator(spectator *User) {
 	u.Mutex.Lock()
 	defer u.Mutex.Unlock()
 
+	if u.Info.Id == spectator.Info.Id {
+		return
+	}
+
 	if utils.Includes(u.spectators, spectator) {
 		return
 	}
