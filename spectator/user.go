@@ -41,6 +41,7 @@ func (u *User) AddSpectator(spectator *User) {
 	sessions.SendPacketToUser(packets.NewServerSpectatorJoined(spectator.Info.Id), u.User)
 
 	spectator.spectating = append(spectator.spectating, u)
+	sessions.SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, u.GetClientStatus()), spectator.User)
 	sessions.SendPacketToUser(packets.NewServerStartSpectatePlayer(u.Info.Id), spectator.User)
 
 	// In the event that the user is already being spectated, dump all the previous frames to them so they can join in the middle.
