@@ -110,6 +110,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientStopSpectatingPlayer(user, unmarshalPacket[packets.ClientStopSpectatingPlayer](msg))
 	case packets.PacketIdClientSpectatorReplayFrames:
 		handleClientSpectatorReplayFrames(user, unmarshalPacket[packets.ClientSpectatorReplayFrames](msg))
+	case packets.PacketIdClientSpectateMultiplayerGame:
+		handleClientSpectateMultiplayerGame(user, unmarshalPacket[packets.ClientSpectateMultiplayerGame](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}

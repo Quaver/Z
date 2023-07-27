@@ -29,6 +29,7 @@ type Game struct {
 	playersSkipped      []int                           // A list of players who have skipped the map in multiplayer
 	playerScores        map[int]*scoring.ScoreProcessor // Score processors for players in the game
 	chatChannel         *chat.Channel                   // The multiplayer chat
+	spectators          []int                           // The players who are currently spectating the game
 }
 
 const (
@@ -49,6 +50,7 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 		playersFinished:     []int{},
 		playersSkipped:      []int{},
 		playerScores:        map[int]*scoring.ScoreProcessor{},
+		spectators:          []int{},
 	}
 
 	game.Data.GameId = utils.GenerateRandomString(32)
@@ -126,6 +128,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 
 // RemovePlayer Removes a player from the multiplayer game and disbands the game if necessary
 func (game *Game) RemovePlayer(userId int) {
+	wasSpectator := utils.Includes(game.spectators, userId)
 	user := sessions.GetUserById(userId)
 
 	if user != nil {
@@ -139,8 +142,14 @@ func (game *Game) RemovePlayer(userId int) {
 	game.playersScreenLoaded = utils.Filter(game.playersScreenLoaded, func(x int) bool { return x != userId })
 	game.playersFinished = utils.Filter(game.playersFinished, func(x int) bool { return x != userId })
 	game.playersSkipped = utils.Filter(game.playersSkipped, func(x int) bool { return x != userId })
+	game.spectators = utils.Filter(game.spectators, func(x int) bool { return x != userId })
 	game.deleteCachedPlayer(userId)
 	delete(game.playerScores, userId)
+
+	if wasSpectator {
+		spectator.GetUserById(userId).StopSpectatingAll()
+		return
+	}
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
@@ -151,7 +160,10 @@ func (game *Game) RemovePlayer(userId int) {
 		return
 	}
 
-	game.SetHost(nil, game.Data.PlayerIds[0])
+	if game.Data.HostId == userId {
+		game.SetHost(nil, game.Data.PlayerIds[0])
+	}
+
 	game.sendPacketToPlayers(packets.NewServerUserLeftGame(userId))
 	game.checkScreenLoadedPlayers()
 	game.checkAllPlayersSkipped()
@@ -178,6 +190,37 @@ func (game *Game) KickPlayer(requester *sessions.User, userId int) {
 	}
 
 	sessions.SendPacketToUser(packets.NewServerGameKicked(), user)
+}
+
+// AddSpectator Adds a spectator to the game.
+func (game *Game) AddSpectator(user *sessions.User, password string) {
+	// Require the user to have either Donator or EnableTournamentMode in order to spectate
+	if !common.HasUserGroup(user.Info.UserGroups, common.UserGroupDonator) && !common.HasPrivilege(user.Info.Privileges, common.PrivilegeEnableTournamentMode) {
+		return
+	}
+
+	if (game.Data.HasPassword && game.Password != password) && !common.IsSwan(user.Info.UserGroups) {
+		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorPassword), user)
+		return
+	}
+
+	if utils.Includes(game.spectators, user.Info.Id) {
+		return
+	}
+
+	currGame := GetGameById(user.GetMultiplayerGameId())
+
+	if currGame != nil {
+		currGame.RemovePlayer(user.Info.Id)
+	}
+
+	game.spectators = append(game.spectators, user.Info.Id)
+	game.chatChannel.AddUser(user)
+	user.SetMultiplayerGameId(game.Data.Id)
+	RemoveUserFromLobby(user)
+
+	sessions.SendPacketToUser(packets.NewServerSpectateMultiplayerGame(game.Data.GameId), user)
+	sendLobbyUsersGameInfoPacket(game, true)
 }
 
 // SetHost Sets the host of the game. Set requester to nil if this is meant to be a forced action.
@@ -950,6 +993,16 @@ func (game *Game) checkAllPlayersSkipped() {
 // Sends a packet to all players in the game.
 func (game *Game) sendPacketToPlayers(packet interface{}) {
 	for _, id := range game.Data.PlayerIds {
+		user := sessions.GetUserById(id)
+
+		if user == nil {
+			continue
+		}
+
+		sessions.SendPacketToUser(packet, user)
+	}
+
+	for _, id := range game.spectators {
 		user := sessions.GetUserById(id)
 
 		if user == nil {
