@@ -30,6 +30,8 @@ func (u *User) GetSpectating() []*User {
 
 // AddSpectator Adds a person to the list of spectators
 func (u *User) AddSpectator(spectator *User) {
+	clientStatus := u.GetClientStatus()
+
 	u.Mutex.Lock()
 	defer u.Mutex.Unlock()
 
@@ -45,7 +47,7 @@ func (u *User) AddSpectator(spectator *User) {
 	sessions.SendPacketToUser(packets.NewServerSpectatorJoined(spectator.Info.Id), u.User)
 
 	spectator.spectating = append(spectator.spectating, u)
-	sessions.SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, u.GetClientStatus()), spectator.User)
+	sessions.SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, clientStatus), spectator.User)
 	sessions.SendPacketToUser(packets.NewServerStartSpectatePlayer(u.Info.Id), spectator.User)
 
 	// In the event that the user is already being spectated, dump all the previous frames to them so they can join in the middle.
@@ -118,8 +120,20 @@ func (u *User) HandleIncomingFrames(packet *packets.ClientSpectatorReplayFrames)
 
 	u.Mutex.Unlock()
 
+	status := u.GetClientStatus()
+
+	for _, spectator := range u.GetSpectators() {
+		if packet.Status == packets.SpectatorFrameNewSong || packet.Status == packets.SpectatorFrameSelectingSong {
+			sessions.SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, status), spectator.User)
+		}
+
+		sessions.SendPacketToUser(packets.NewServerSpectatorReplayFrames(u.Info.Id, packet.Status, packet.AudioTime, packet.Frames), spectator.User)
+	}
+}
+
+// SendClientStatusToSpectators Sends an updated user client status to all spectators
+func (u *User) SendClientStatusToSpectators() {
 	for _, spectator := range u.GetSpectators() {
 		sessions.SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, u.GetClientStatus()), spectator.User)
-		sessions.SendPacketToUser(packets.NewServerSpectatorReplayFrames(u.Info.Id, packet.Status, packet.AudioTime, packet.Frames), spectator.User)
 	}
 }
