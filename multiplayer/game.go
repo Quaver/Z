@@ -9,6 +9,7 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/scoring"
 	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/spectator"
 	"example.com/Quaver/Z/utils"
 	"log"
 	"math"
@@ -107,6 +108,8 @@ func (game *Game) AddPlayer(userId int, password string) {
 	}
 
 	user.SetMultiplayerGameId(game.Data.Id)
+	spectator.GetUser(user).StopSpectatingAll()
+
 	game.cachePlayer(user.Info.Id)
 	game.chatChannel.AddUser(user)
 
