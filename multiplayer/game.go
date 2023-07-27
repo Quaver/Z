@@ -210,7 +210,7 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 
 	currGame := GetGameById(user.GetMultiplayerGameId())
 
-	if currGame != nil {
+	if currGame != nil && currGame != game {
 		currGame.RemovePlayer(user.Info.Id)
 	}
 
@@ -632,6 +632,10 @@ func (game *Game) SetReferee(requester *sessions.User, userId int) {
 
 	game.Data.RefereeId = userId
 
+	if !utils.Includes(game.spectators, userId) {
+		game.spectators = append(game.spectators, userId)
+	}
+
 	game.sendPacketToPlayers(packets.NewServerGameSetReferee(game.Data.RefereeId))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -1003,6 +1007,11 @@ func (game *Game) sendPacketToPlayers(packet interface{}) {
 	}
 
 	for _, id := range game.spectators {
+		// Referee will have already gotten the packet above.
+		if id == game.Data.RefereeId {
+			continue
+		}
+
 		user := sessions.GetUserById(id)
 
 		if user == nil {
