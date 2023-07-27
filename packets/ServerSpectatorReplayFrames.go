@@ -3,7 +3,7 @@ package packets
 type ServerSpectatorReplayFrames struct {
 	Packet
 	UserId    int                  `json:"u"`
-	Status    SpectatorFrameStatus `json:"d"`
+	Status    SpectatorFrameStatus `json:"s"`
 	AudioTime float64              `json:"a"`
 	Frames    *string              `json:"f"`
 }
