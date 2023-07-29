@@ -118,6 +118,10 @@ func (game *Game) AddPlayer(userId int, password string) {
 		game.SetHost(nil, user.Info.Id)
 	}
 
+	if game.Data.RefereeId == game.Data.HostId {
+		game.SetReferee(nil, user.Info.Id)
+	}
+
 	RemoveUserFromLobby(user)
 
 	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
