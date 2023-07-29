@@ -359,6 +359,7 @@ func (game *Game) StartGame() {
 		return x != game.Data.RefereeId && !utils.Includes(game.Data.PlayersWithoutMap, x)
 	})
 
+	game.initializeSpectators()
 	game.createScoreProcessors()
 	game.clearCountdown()
 	game.clearReadyPlayers(false)
@@ -801,6 +802,25 @@ func (game *Game) clearReadyPlayers(sendToLobby bool) {
 
 	if sendToLobby {
 		sendLobbyUsersGameInfoPacket(game, true)
+	}
+}
+
+// Makes  the spectators start spectating playersInMatch.
+func (game *Game) initializeSpectators() {
+	for _, userId := range game.spectators {
+		user := sessions.GetUserById(userId)
+
+		if user == nil {
+			continue
+		}
+
+		user.StopSpectatingAll()
+
+		for _, playerId := range game.playersInMatch {
+			if player := sessions.GetUserById(playerId); player != nil {
+				player.AddSpectator(user)
+			}
+		}
 	}
 }
 
