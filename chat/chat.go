@@ -67,9 +67,6 @@ func GetChannelByName(name string) *Channel {
 
 // SendMessage Sends a message to a given a receiver
 func SendMessage(sender *sessions.User, receiver string, message string) {
-	chatMutex.Lock()
-	defer chatMutex.Unlock()
-
 	if receiver == "" || message == "" {
 		return
 	}
@@ -88,7 +85,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 	var discordWebhook webhook.Client
 
 	if receiver[0] == '#' {
-		channel := channels[receiver]
+		channel := GetChannelByName(receiver)
 
 		if channel == nil {
 			return
@@ -96,14 +93,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 		sendPublicMessage(sender, channel, message)
 		webhooks.SendChatMessage(channel.WebhookClient, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
-
-		for _, handler := range publicMessageHandlers {
-			responseMsg := handler(sender, channel, strings.Split(message, " "))
-
-			if responseMsg != "" {
-				sendPublicMessage(Bot, channel, responseMsg)
-			}
-		}
+		runPublicMessageHandlers(sender, channel, message)
 	} else {
 		receivingUser := sessions.GetUserByUsername(receiver)
 
@@ -113,14 +103,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 		sendPrivateMessage(sender, receivingUser, message)
 		webhooks.SendChatMessage(discordWebhook, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
-
-		for _, handler := range privateMessageHandlers {
-			responseMsg := handler(sender, receivingUser, strings.Split(message, " "))
-
-			if responseMsg != "" {
-				sendPrivateMessage(Bot, sender, message)
-			}
-		}
+		runPrivateMessageHandlers(sender, receivingUser, message)
 	}
 }
 
@@ -198,6 +181,34 @@ func sendPrivateMessage(sender *sessions.User, receiver *sessions.User, message 
 		log.Printf("Error inserting private chat into DB: %v\n", err)
 		return
 	}
+}
+
+// Runs all the chat message handlers for a given public channel message.
+// Ran in separate goroutine due to possible chat deadlocks.
+func runPublicMessageHandlers(sender *sessions.User, channel *Channel, message string) {
+	go func() {
+		for _, handler := range publicMessageHandlers {
+			responseMsg := handler(sender, channel, strings.Split(message, " "))
+
+			if responseMsg != "" {
+				sendPublicMessage(Bot, channel, responseMsg)
+			}
+		}
+	}()
+}
+
+// Runs all the private message handlers for a given private channel message.
+// Ran in separate goroutine due to separate chat deadlocks
+func runPrivateMessageHandlers(sender *sessions.User, receivingUser *sessions.User, message string) {
+	go func() {
+		for _, handler := range privateMessageHandlers {
+			responseMsg := handler(sender, receivingUser, strings.Split(message, " "))
+
+			if responseMsg != "" {
+				sendPrivateMessage(Bot, sender, message)
+			}
+		}
+	}()
 }
 
 // RemoveUserFromAllChannels Removes a user from every single channel if they are in them

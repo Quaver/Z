@@ -130,9 +130,10 @@ func (channel *Channel) sendWebhook(sender *sessions.User, message string) {
 // Removes all users from the channel
 func (channel *Channel) removeAllUsers() {
 	channel.mutex.Lock()
-	defer channel.mutex.Unlock()
+	participants := channel.Participants
+	channel.mutex.Unlock()
 
-	for _, user := range channel.Participants {
+	for _, user := range participants {
 		channel.RemoveUser(user)
 	}
 }
