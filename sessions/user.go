@@ -305,6 +305,7 @@ func (u *User) AddSpectator(spectator *User) {
 	}
 
 	u.spectators = append(u.spectators, spectator)
+	SendPacketToUser(packets.NewServerUserInfo([]*objects.PacketUser{spectator.SerializeForPacket()}), u)
 	SendPacketToUser(packets.NewServerSpectatorJoined(spectator.Info.Id), u)
 
 	spectator.spectating = append(spectator.spectating, u)
