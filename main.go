@@ -6,7 +6,6 @@ import (
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/handlers"
 	"example.com/Quaver/Z/multiplayer"
-	"example.com/Quaver/Z/spectator"
 	"example.com/Quaver/Z/webhooks"
 )
 
@@ -22,7 +21,6 @@ func main() {
 	handlers.AddRedisHandlers()
 	webhooks.Initialize()
 	chat.Initialize()
-	spectator.InitializeUser(chat.Bot)
 	multiplayer.InitializeChatBot()
 	multiplayer.InitializeLobby()
 

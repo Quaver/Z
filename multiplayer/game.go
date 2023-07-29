@@ -9,7 +9,6 @@ import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/scoring"
 	"example.com/Quaver/Z/sessions"
-	"example.com/Quaver/Z/spectator"
 	"example.com/Quaver/Z/utils"
 	"log"
 	"math"
@@ -110,7 +109,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 	}
 
 	user.SetMultiplayerGameId(game.Data.Id)
-	spectator.GetUser(user).StopSpectatingAll()
+	user.StopSpectatingAll()
 
 	game.cachePlayer(user.Info.Id)
 	game.chatChannel.AddUser(user)
@@ -133,6 +132,7 @@ func (game *Game) RemovePlayer(userId int) {
 
 	if user != nil {
 		user.SetMultiplayerGameId(0)
+		user.StopSpectatingAll()
 		game.chatChannel.RemoveUser(user)
 	}
 
@@ -147,7 +147,6 @@ func (game *Game) RemovePlayer(userId int) {
 	delete(game.playerScores, userId)
 
 	if wasSpectator {
-		spectator.GetUserById(userId).StopSpectatingAll()
 		return
 	}
 

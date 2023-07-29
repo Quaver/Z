@@ -3,7 +3,6 @@ package handlers
 import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
-	"example.com/Quaver/Z/spectator"
 )
 
 // Handles when the client wishes to stop spectating the player
@@ -12,5 +11,5 @@ func handleClientStopSpectatingPlayer(user *sessions.User, packet *packets.Clien
 		return
 	}
 
-	spectator.GetUser(user).StopSpectatingAll()
+	user.StopSpectatingAll()
 }

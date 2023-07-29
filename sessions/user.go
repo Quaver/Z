@@ -4,6 +4,7 @@ import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
+	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"log"
@@ -48,6 +49,15 @@ type User struct {
 
 	// The id of the multiplayer game if the user is inside of one
 	multiplayerGameId int
+
+	// People who are currently watching this user
+	spectators []*User
+
+	// People who the user is currently watching
+	spectating []*User
+
+	// The replay frames for the user's current play session
+	frames []*packets.ClientSpectatorReplayFrames
 }
 
 // NewUser Creates a new user session struct object
@@ -68,6 +78,9 @@ func NewUser(conn net.Conn, user *db.User) *User {
 			Content:   "",
 			Modifiers: 0,
 		},
+		spectators: []*User{},
+		spectating: []*User{},
+		frames:     []*packets.ClientSpectatorReplayFrames{},
 	}
 }
 
@@ -260,6 +273,100 @@ func (u *User) MuteUser(duration time.Duration) error {
 
 	u.Info.MuteEndTime = endTime
 	return nil
+}
+
+// GetSpectators Returns the people who are currently spectating this user
+func (u *User) GetSpectators() []*User {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+	return u.spectators
+}
+
+// GetSpectating Returns the people the user is currently spectating
+func (u *User) GetSpectating() []*User {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+	return u.spectating
+}
+
+// AddSpectator Adds a person to the list of spectators
+func (u *User) AddSpectator(spectator *User) {
+	clientStatus := u.GetClientStatus()
+
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
+	if u.Info.Id == spectator.Info.Id {
+		return
+	}
+
+	if utils.Includes(u.spectators, spectator) {
+		return
+	}
+
+	u.spectators = append(u.spectators, spectator)
+	SendPacketToUser(packets.NewServerSpectatorJoined(spectator.Info.Id), u)
+
+	spectator.spectating = append(spectator.spectating, u)
+	SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, clientStatus), spectator)
+	SendPacketToUser(packets.NewServerStartSpectatePlayer(u.Info.Id), spectator)
+
+	// In the event that the user is already being spectated, dump all the previous frames to them so they can join in the middle.
+	for _, frame := range u.frames {
+		SendPacketToUser(packets.NewServerSpectatorReplayFrames(u.Info.Id, frame.Status, frame.AudioTime, frame.Frames), spectator)
+	}
+}
+
+// RemoveSpectator Removes a person from their list of spectators
+func (u *User) RemoveSpectator(spectator *User) {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
+	u.spectators = utils.Filter(u.spectators, func(x *User) bool { return x != spectator })
+	SendPacketToUser(packets.NewServerSpectatorLeft(spectator.Info.Id), u)
+
+	spectator.spectating = utils.Filter(spectator.spectating, func(x *User) bool { return x != u })
+	SendPacketToUser(packets.NewServerStopSpectatePlayer(u.Info.Id), spectator)
+}
+
+// StopSpectatingAll Stops spectating every user that they are currently spectating
+func (u *User) StopSpectatingAll() {
+	for _, user := range u.GetSpectating() {
+		user.RemoveSpectator(u)
+	}
+}
+
+// HandleNewSpectatorFrames Handles incoming replay frames
+func (u *User) HandleNewSpectatorFrames(packet *packets.ClientSpectatorReplayFrames) {
+	u.Mutex.Lock()
+
+	if u.frames == nil {
+		u.frames = []*packets.ClientSpectatorReplayFrames{}
+	}
+
+	switch packet.Status {
+	case packets.SpectatorFrameNewSong, packets.SpectatorFrameSelectingSong:
+		u.frames = []*packets.ClientSpectatorReplayFrames{}
+	default:
+		u.frames = append(u.frames, packet)
+	}
+
+	u.Mutex.Unlock()
+
+	for _, spectator := range u.GetSpectators() {
+		if packet.Status == packets.SpectatorFrameNewSong || packet.Status == packets.SpectatorFrameSelectingSong {
+			SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, u.status), spectator)
+		}
+
+		SendPacketToUser(packets.NewServerSpectatorReplayFrames(u.Info.Id, packet.Status, packet.AudioTime, packet.Frames), spectator)
+	}
+}
+
+// SendClientStatusToSpectators Sends an updated user client status to all spectators
+func (u *User) SendClientStatusToSpectators() {
+	for _, spectator := range u.GetSpectators() {
+		SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, u.status), spectator)
+	}
 }
 
 // SerializeForPacket Serializes the user to be used in a packet

@@ -3,7 +3,6 @@ package handlers
 import (
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
-	"example.com/Quaver/Z/spectator"
 )
 
 // Handles when a client provides spectator replay frames
@@ -12,5 +11,5 @@ func handleClientSpectatorReplayFrames(user *sessions.User, packet *packets.Clie
 		return
 	}
 
-	spectator.GetUser(user).HandleIncomingFrames(packet)
+	user.HandleNewSpectatorFrames(packet)
 }
