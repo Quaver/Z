@@ -118,7 +118,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 		game.SetHost(nil, user.Info.Id)
 	}
 
-	if game.Data.RefereeId == game.Data.HostId {
+	if game.Data.RefereeId == user.Info.Id {
 		game.SetReferee(nil, user.Info.Id)
 	}
 
