@@ -32,3 +32,22 @@ func GetSongMapById(id int) (*SongMap, error) {
 
 	return &songMap, nil
 }
+
+// GetRandomSongMap Retrieves a random map from the database with min/max difficulty rating filter
+func GetRandomSongMap(minDiff float32, maxDiff float32) (*SongMap, error) {
+	query := "SELECT id, mapset_id, md5, alternative_md5, game_mode, artist, title, difficulty_name, difficulty_rating " +
+		"FROM maps " +
+		"WHERE difficulty_rating > ? AND difficulty_rating < ? AND ranked_status = 2 " +
+		"ORDER BY RAND() " +
+		"LIMIT 1"
+
+	var songMap SongMap
+
+	err := SQL.Get(&songMap, query, minDiff, maxDiff)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &songMap, nil
+}

@@ -10,6 +10,7 @@ import (
 	"example.com/Quaver/Z/scoring"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
+	"fmt"
 	"log"
 	"math"
 	"time"
@@ -1020,6 +1021,27 @@ func (game *Game) checkAllPlayersSkipped() {
 	}
 
 	game.sendPacketToPlayers(packets.NewServerGameAllPlayersSkipped())
+}
+
+// Selects a random map from the database according to difficulty filters
+func (game *Game) selectRandomMap() {
+	song, err := db.GetRandomSongMap(game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating)
+
+	if err != nil {
+		log.Printf("error selecting random map in multiplayer - %v\n", err)
+		return
+	}
+
+	game.ChangeMap(nil, &packets.ClientChangeGameMap{
+		MD5:                 song.Md5.String,
+		AlternativeMD5:      song.AlternativeMd5.String,
+		MapId:               song.Id,
+		MapsetId:            song.MapsetId,
+		Name:                fmt.Sprintf("%v - %v [%v]", song.Artist, song.Title, song.DifficultyName),
+		Mode:                song.GameMode,
+		DifficultyRating:    song.DifficultyRating,
+		DifficultyRatingAll: []float64{},
+	})
 }
 
 // Sends a packet to all players in the game.
