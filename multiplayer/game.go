@@ -393,6 +393,7 @@ func (game *Game) EndGame() {
 	game.playersFinished = []int{}
 	game.playersSkipped = []int{}
 	game.playerScores = map[int]*scoring.ScoreProcessor{}
+	game.selectAutohostMap()
 	game.validateAndCacheSettings()
 
 	game.sendPacketToPlayers(packets.NewServerGameEnded())
@@ -1024,7 +1025,11 @@ func (game *Game) checkAllPlayersSkipped() {
 }
 
 // Selects a random map from the database according to difficulty filters
-func (game *Game) selectRandomMap() {
+func (game *Game) selectAutohostMap() {
+	if !game.Data.IsAutoHost {
+		return
+	}
+
 	song, err := db.GetRandomSongMap(game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating)
 
 	if err != nil {
@@ -1037,7 +1042,7 @@ func (game *Game) selectRandomMap() {
 		AlternativeMD5:      song.AlternativeMd5.String,
 		MapId:               song.Id,
 		MapsetId:            song.MapsetId,
-		Name:                fmt.Sprintf("%v - %v [%v]", song.Artist, song.Title, song.DifficultyName),
+		Name:                fmt.Sprintf("%v - %v [%v]", song.Artist.String, song.Title.String, song.DifficultyName.String),
 		Mode:                song.GameMode,
 		DifficultyRating:    song.DifficultyRating,
 		DifficultyRatingAll: []float64{},
