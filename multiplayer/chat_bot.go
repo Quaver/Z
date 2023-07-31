@@ -120,6 +120,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandInvite(user, game, args)
 		case "roll":
 			message = handleCommandRoll(user)
+		case "autohost":
+			message = handleCommandAutoHost(user, game)
 		}
 	})
 
@@ -574,6 +576,21 @@ func handleCommandRoll(user *sessions.User) string {
 	randomNumber := rand.Intn(101)
 
 	return fmt.Sprintf("%v has rolled a: %v.", user.Info.Username, randomNumber)
+}
+
+// Enables/Disables AutoHost for the game.
+func handleCommandAutoHost(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	game.SetAutoHost(user, !game.Data.IsAutoHost)
+
+	if game.Data.IsAutoHost {
+		return fmt.Sprintf("AutoHost has been enabled. Use the `!mp mindiff` and `!mp maxdiff` commands to set the difficulty range.")
+	}
+
+	return fmt.Sprintf("AutoHost has been disabled.")
 }
 
 // getUserFromCommandArgs Returns a target user from command args

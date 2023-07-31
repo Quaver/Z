@@ -759,6 +759,18 @@ func (game *Game) SetDonatorMapsetShared(isShared bool, sendToLobby bool) {
 	}
 }
 
+// SetAutoHost Sets whether auto host is enabled for the game
+func (game *Game) SetAutoHost(requester *sessions.User, enabled bool) {
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	game.Data.IsAutoHost = enabled
+
+	game.sendPacketToPlayers(packets.NewServerGameAutoHost(game.Data.IsAutoHost))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // rotateHost Rotates the host to the next person in line.
 func (game *Game) rotateHost() {
 	if !game.Data.IsHostRotation {

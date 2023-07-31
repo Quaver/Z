@@ -136,4 +136,6 @@ const (
 	PacketIdServerGameTournamentMode
 	PacketIdServerGameNeedDifficultyRatings
 	PacketIdClientGameDifficultyRatings
+	PacketIdClientGameAutoHost
+	PacketIdServerGameAutoHost
 )
