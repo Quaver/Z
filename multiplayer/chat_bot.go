@@ -6,7 +6,6 @@ import (
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
-	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
@@ -221,18 +220,7 @@ func handleCommandChangeMap(user *sessions.User, game *Game, args []string) stri
 	}
 
 	mapName := fmt.Sprintf("%v - %v [%v]", song.Artist.String, song.Title.String, song.DifficultyName.String)
-
-	game.ChangeMap(user, &packets.ClientChangeGameMap{
-		Packet:              packets.Packet{Id: packets.PacketIdClientChangeGameMap},
-		MD5:                 song.Md5.String,
-		AlternativeMD5:      song.AlternativeMd5.String,
-		MapId:               song.Id,
-		MapsetId:            song.MapsetId,
-		Name:                mapName,
-		Mode:                song.GameMode,
-		DifficultyRating:    song.DifficultyRating,
-		DifficultyRatingAll: []float64{},
-	})
+	game.changeMapFromDbSong(song)
 
 	return fmt.Sprintf("The map has been changed to: %v.", mapName)
 }

@@ -1046,6 +1046,10 @@ func (game *Game) selectAutohostMap() {
 		return
 	}
 
+	game.changeMapFromDbSong(song)
+}
+
+func (game *Game) changeMapFromDbSong(song *db.SongMap) {
 	game.ChangeMap(nil, &packets.ClientChangeGameMap{
 		MD5:                 song.Md5.String,
 		AlternativeMD5:      song.AlternativeMd5.String,
