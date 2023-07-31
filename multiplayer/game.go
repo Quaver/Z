@@ -796,6 +796,15 @@ func (game *Game) isUserHost(user *sessions.User) bool {
 	return true
 }
 
+// Returns if a user is inside the game
+func (game *Game) isUserInGame(user *sessions.User) bool {
+	if user == nil {
+		return false
+	}
+
+	return utils.Includes(game.Data.PlayerIds, user.Info.Id)
+}
+
 // Clears all players that are ready.
 func (game *Game) clearReadyPlayers(sendToLobby bool) {
 	readyPlayers := game.Data.PlayersReady
@@ -1113,13 +1122,4 @@ func (game *Game) validateAndCacheSettings() {
 	}
 
 	game.cacheMatchSettings()
-}
-
-// Returns if a user is inside the game
-func (game *Game) isUserInGame(user *sessions.User) bool {
-	if user == nil {
-		return false
-	}
-
-	return utils.Includes(game.Data.PlayerIds, user.Info.Id)
 }
