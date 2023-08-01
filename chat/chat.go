@@ -247,6 +247,7 @@ func isChatModerator(userGroups common.UserGroups) bool {
 		common.UserGroupDeveloper,
 		common.UserGroupAdmin,
 		common.UserGroupModerator,
+		common.UserGroupBot,
 	})
 }
 
