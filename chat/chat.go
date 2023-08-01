@@ -8,7 +8,7 @@ import (
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/webhooks"
 	"fmt"
-	"github.com/disgoorg/disgo/webhook"
+	"github.com/TwiN/go-away"
 	"log"
 	"strings"
 	"sync"
@@ -82,7 +82,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		return
 	}
 
-	var discordWebhook webhook.Client
+	message = goaway.Censor(message)
 
 	if receiver[0] == '#' {
 		channel := GetChannelByName(receiver)
@@ -102,7 +102,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		}
 
 		sendPrivateMessage(sender, receivingUser, message)
-		webhooks.SendChatMessage(discordWebhook, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
+		webhooks.SendChatMessage(webhooks.PrivateChat, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
 		runPrivateMessageHandlers(sender, receivingUser, message)
 	}
 }

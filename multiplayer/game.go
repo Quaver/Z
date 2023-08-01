@@ -11,6 +11,7 @@ import (
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
+	goaway "github.com/TwiN/go-away"
 	"log"
 	"math"
 	"time"
@@ -1144,6 +1145,8 @@ func (game *Game) validateAndCacheSettings() {
 	data := game.Data
 
 	data.Name = utils.TruncateString(data.Name, 50)
+	data.Name = goaway.Censor(data.Name)
+
 	data.HasPassword = game.Password != ""
 	data.MaxPlayers = utils.Clamp(data.MaxPlayers, 2, 16)
 	data.Ruleset = objects.MultiplayerGameRulesetFreeForAll
