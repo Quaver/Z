@@ -6,6 +6,7 @@ import (
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/utils"
 	"example.com/Quaver/Z/webhooks"
 	"fmt"
 	"github.com/TwiN/go-away"
@@ -83,6 +84,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 	}
 
 	message = goaway.Censor(message)
+	message = utils.TruncateString(message, 500)
 
 	if receiver[0] == '#' {
 		channel := GetChannelByName(receiver)
