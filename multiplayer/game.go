@@ -796,11 +796,11 @@ func (game *Game) SetAutoHost(requester *sessions.User, enabled bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 
 	if game.Data.IsAutoHost {
-		game.sendBotMessage(fmt.Sprintf("AutoHost has been enabled. Use the `!mp mindiff` and `!mp maxdiff` commands to set the difficulty range."))
+		game.sendBotMessage(fmt.Sprintf("Auto Host has been enabled. Use the `!mp mindiff` and `!mp maxdiff` commands to set the difficulty range."))
 		return
 	}
 
-	game.sendBotMessage(fmt.Sprintf("AutoHost has been disabled."))
+	game.sendBotMessage(fmt.Sprintf("Auto Host has been disabled."))
 }
 
 // rotateHost Rotates the host to the next person in line.
