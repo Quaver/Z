@@ -125,6 +125,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 
 	RemoveUserFromLobby(user)
 
+	game.sendBotMessage(fmt.Sprintf("%v has joined the game.", user.Info.Username))
 	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
 	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -139,6 +140,7 @@ func (game *Game) RemovePlayer(userId int) {
 		user.SetMultiplayerGameId(0)
 		user.StopSpectatingAll()
 		game.chatChannel.RemoveUser(user)
+		game.sendBotMessage(fmt.Sprintf("%v has left the game.", user.Info.Username))
 	}
 
 	game.Data.PlayerIds = utils.Filter(game.Data.PlayerIds, func(x int) bool { return x != userId })
@@ -193,6 +195,7 @@ func (game *Game) KickPlayer(requester *sessions.User, userId int) {
 		return
 	}
 
+	game.sendBotMessage(fmt.Sprintf("%v has been kicked from the game.", user.Info.Username))
 	sessions.SendPacketToUser(packets.NewServerGameKicked(), user)
 }
 
@@ -223,6 +226,7 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 	user.SetMultiplayerGameId(game.Data.Id)
 	RemoveUserFromLobby(user)
 
+	game.sendBotMessage(fmt.Sprintf("%v has started spectating the game.", user.Info.Username))
 	sessions.SendPacketToUser(packets.NewServerSpectateMultiplayerGame(game.Data.GameId), user)
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -236,6 +240,12 @@ func (game *Game) SetHost(requester *sessions.User, userId int) {
 
 	if !utils.Includes(game.Data.PlayerIds, userId) {
 		return
+	}
+
+	user := sessions.GetUserById(userId)
+
+	if user != nil {
+		game.sendBotMessage(fmt.Sprintf("%v is now the host of the game.", user.Info.Username))
 	}
 
 	game.Data.HostId = userId
@@ -271,6 +281,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.SetDonatorMapsetShared(false, false)
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage(fmt.Sprintf("The map has been changed to: %v", game.Data.MapName))
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -334,6 +345,7 @@ func (game *Game) StartCountdown(requester *sessions.User) {
 		})
 	})
 
+	game.sendBotMessage("The countdown has started. The match will start in 5 seconds.")
 	game.sendPacketToPlayers(packets.NewServerGameStartCountdown())
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -349,6 +361,8 @@ func (game *Game) StopCountdown(requester *sessions.User) {
 	}
 
 	game.clearCountdown()
+
+	game.sendBotMessage("The match countdown has stopped.")
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
@@ -371,6 +385,7 @@ func (game *Game) StartGame() {
 	game.SetHostSelectingMap(nil, false, false)
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage("The match has been started.")
 	game.sendPacketToPlayers(packets.NewServerGameStart())
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -396,6 +411,7 @@ func (game *Game) EndGame() {
 	game.selectAutohostMap()
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage("The match has ended.")
 	game.sendPacketToPlayers(packets.NewServerGameEnded())
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -417,6 +433,7 @@ func (game *Game) ChangeName(requester *sessions.User, name string) {
 	game.Data.Name = name
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage(fmt.Sprintf("The multiplayer game name has been changed to: %v.", game.Data.Name))
 	game.sendPacketToPlayers(packets.NewServerGameNameChanged(game.Data.Name))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -465,6 +482,7 @@ func (game *Game) SetDifficultyRange(requester *sessions.User, min float32, max 
 	game.sendPacketToPlayers(packet)
 
 	sendLobbyUsersGameInfoPacket(game, true)
+	game.sendBotMessage(fmt.Sprintf("The difficulty range has been changed to: %v - %v.", game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating))
 }
 
 // SetMaxSongLength Sets the maximum song length filter for the map
@@ -476,6 +494,7 @@ func (game *Game) SetMaxSongLength(requester *sessions.User, lengthSeconds int) 
 	game.Data.FilterMaxSongLength = lengthSeconds
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage(fmt.Sprintf("The maximum song length has been changed to: %v seconds.", game.Data.FilterMaxSongLength))
 	game.sendPacketToPlayers(packets.NewServerGameMaxSongLengthChanged(game.Data.FilterMaxSongLength))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -525,6 +544,7 @@ func (game *Game) SetFreeMod(requester *sessions.User, freeMod objects.Multiplay
 	game.resetAllModifiers()
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage("Free Mod type has been changed. All modifiers have been reset.")
 	game.sendPacketToPlayers(packets.NewServerGameChangeFreeMod(game.Data.FreeModType))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -561,6 +581,7 @@ func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
 	game.sendPacketToPlayers(packets.NewServerGameHostRotation(game.Data.IsHostRotation))
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage(fmt.Sprintf("Host Rotation has been %v.", utils.BoolToEnabledString(game.Data.IsHostRotation)))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
@@ -574,6 +595,7 @@ func (game *Game) SetLongNotePercent(requester *sessions.User, min int, max int)
 	game.Data.FilterMaxLongNotePercent = max
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage(fmt.Sprintf("The long note percentage range has been changed to: %v - %v", game.Data.FilterMinLongNotePercent, game.Data.FilterMaxLongNotePercent))
 	game.sendPacketToPlayers(packets.NewServerGameLongNotePercent(game.Data.FilterMinLongNotePercent, game.Data.FilterMaxLongNotePercent))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -592,6 +614,7 @@ func (game *Game) SetMaxPlayerCount(requester *sessions.User, count int) {
 	game.Data.MaxPlayers = count
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage(fmt.Sprintf("The max player count has been changed to: %v.", game.Data.MaxPlayers))
 	game.sendPacketToPlayers(packets.NewServerGameChangeMaxPlayers(game.Data.MaxPlayers))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -606,6 +629,7 @@ func (game *Game) SendInvite(sender *sessions.User, user *sessions.User) {
 		game.playersInvited = append(game.playersInvited, user.Info.Id)
 	}
 
+	game.sendBotMessage(fmt.Sprintf("%v has invited %v to the game.", sender.Info.Username, user.Info.Username))
 	sessions.SendPacketToUser(packets.NewServerGameInvite(game.Data.GameId, sender.Info.Username), user)
 }
 
@@ -727,6 +751,7 @@ func (game *Game) SetTournamentMode(requester *sessions.User, enabled bool) {
 	game.Data.IsTournamentMode = enabled
 	game.validateAndCacheSettings()
 
+	game.sendBotMessage(fmt.Sprintf("Tournament mode has been %v.", utils.BoolToEnabledString(game.Data.IsTournamentMode)))
 	game.sendPacketToPlayers(packets.NewServerGameTournamentMode(game.Data.IsTournamentMode))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -769,6 +794,13 @@ func (game *Game) SetAutoHost(requester *sessions.User, enabled bool) {
 
 	game.sendPacketToPlayers(packets.NewServerGameAutoHost(game.Data.IsAutoHost))
 	sendLobbyUsersGameInfoPacket(game, true)
+
+	if game.Data.IsAutoHost {
+		game.sendBotMessage(fmt.Sprintf("AutoHost has been enabled. Use the `!mp mindiff` and `!mp maxdiff` commands to set the difficulty range."))
+		return
+	}
+
+	game.sendBotMessage(fmt.Sprintf("AutoHost has been disabled."))
 }
 
 // rotateHost Rotates the host to the next person in line.
@@ -1100,6 +1132,11 @@ func (game *Game) sendPacketToPlayers(packet interface{}) {
 
 		sessions.SendPacketToUser(packet, user)
 	}
+}
+
+// Sends a message to the multiplayer chat from the bot
+func (game *Game) sendBotMessage(message string) {
+	chat.SendMessage(chat.Bot, game.chatChannel.Name, message)
 }
 
 // validateAndCacheSettings Checks the multiplayer settings to see if they are in an acceptable range

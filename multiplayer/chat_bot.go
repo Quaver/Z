@@ -153,7 +153,7 @@ func handleCommandKickPlayer(user *sessions.User, game *Game, args []string) str
 	}
 
 	game.KickPlayer(user, target.Info.Id)
-	return fmt.Sprintf("%v has been successfully kicked from the game.", target.Info.Username)
+	return ""
 }
 
 // Handles the command to change the name of the multiplayer game.
@@ -167,7 +167,7 @@ func handleCommandChangeName(user *sessions.User, game *Game, args []string) str
 	}
 
 	game.ChangeName(user, strings.Join(args[2:], " "))
-	return fmt.Sprintf("The multiplayer game name has been changed to: %v.", game.Data.Name)
+	return ""
 }
 
 // Handles the command to change the host of the game
@@ -191,7 +191,7 @@ func handleCommandChangeHost(user *sessions.User, game *Game, args []string) str
 	}
 
 	game.SetHost(user, target.Info.Id)
-	return fmt.Sprintf("The host has been transferred to: %v.", target.Info.Username)
+	return ""
 }
 
 // Handles the command to change the multiplayer map
@@ -221,10 +221,8 @@ func handleCommandChangeMap(user *sessions.User, game *Game, args []string) stri
 		return "There was an error while retrieving the map."
 	}
 
-	mapName := fmt.Sprintf("%v - %v [%v]", song.Artist.String, song.Title.String, song.DifficultyName.String)
 	game.changeMapFromDbSong(song)
-
-	return fmt.Sprintf("The map has been changed to: %v.", mapName)
+	return ""
 }
 
 // Handles the command to enable/disable host rotation
@@ -234,7 +232,7 @@ func handleCommandHostRotation(user *sessions.User, game *Game) string {
 	}
 
 	game.SetHostRotation(user, !game.Data.IsHostRotation)
-	return fmt.Sprintf("Host Rotation has been %v.", utils.BoolToEnabledString(game.Data.IsHostRotation))
+	return ""
 }
 
 // Handles the command to set the max player count
@@ -254,7 +252,7 @@ func handleCommandMaxPlayers(user *sessions.User, game *Game, args []string) str
 	}
 
 	game.SetMaxPlayerCount(user, numPlayers)
-	return fmt.Sprintf("The max player count has been changed to: %v.", game.Data.MaxPlayers)
+	return ""
 }
 
 // Handles the command to start the match
@@ -268,7 +266,7 @@ func handleCommandStartMatch(user *sessions.User, game *Game) string {
 	}
 
 	game.StartGame()
-	return "The match has been started."
+	return ""
 }
 
 // Handles the command to end the match
@@ -282,7 +280,7 @@ func handleCommandEndMatch(user *sessions.User, game *Game) string {
 	}
 
 	game.EndGame()
-	return "The match has been ended."
+	return ""
 }
 
 // Handles the command to start the match countdown.
@@ -300,7 +298,7 @@ func handleCommandStartCountdown(user *sessions.User, game *Game) string {
 	}
 
 	game.StartCountdown(user)
-	return "Countdown active. The match will begin in 5 seconds."
+	return ""
 }
 
 // Handles the command to stop the match countdown.
@@ -318,7 +316,7 @@ func handleCommandStopCountdown(user *sessions.User, game *Game) string {
 	}
 
 	game.StopCountdown(user)
-	return "The match countdown has been disabled."
+	return ""
 }
 
 // Handles the command to set the minimum/maximum difficulty
@@ -351,7 +349,7 @@ func handleCommandDifficulty(user *sessions.User, game *Game, args []string, isM
 		game.SetDifficultyRange(user, diffFloat32, game.Data.FilterMaxDifficultyRating)
 	}
 
-	return fmt.Sprintf("The difficulty range has been changed to: %v - %v.", game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating)
+	return ""
 }
 
 // Handles the command to set the max length in the multiplayer game
@@ -371,7 +369,7 @@ func handleCommandMaxLength(user *sessions.User, game *Game, args []string) stri
 	}
 
 	game.SetMaxSongLength(user, seconds)
-	return fmt.Sprintf("The maximum song length has been changed to: %v seconds.", game.Data.FilterMaxSongLength)
+	return ""
 }
 
 // Handles the command to set an allowed game mode for the game
@@ -440,7 +438,7 @@ func handleCommandLongNote(user *sessions.User, game *Game, args []string, isMax
 		game.SetLongNotePercent(user, percentage, game.Data.FilterMaxLongNotePercent)
 	}
 
-	return fmt.Sprintf("The long note percentage range has been changed to: %v - %v", game.Data.FilterMinLongNotePercent, game.Data.FilterMaxLongNotePercent)
+	return ""
 }
 
 // Handles enabling/disabling free mod / free rate for the game
@@ -455,7 +453,7 @@ func handleCommandFreeMod(user *sessions.User, game *Game, freeModType objects.M
 		game.SetFreeMod(user, game.Data.FreeModType|freeModType)
 	}
 
-	return "Free Mod type has been changed. All modifiers have been reset."
+	return ""
 }
 
 // Handles the command to clear all players' win counts
@@ -547,7 +545,7 @@ func handleCommandTournamentMode(user *sessions.User, game *Game) string {
 	}
 
 	game.SetTournamentMode(user, !game.Data.IsTournamentMode)
-	return fmt.Sprintf("Tournament mode has been %v.", utils.BoolToEnabledString(game.Data.IsTournamentMode))
+	return ""
 }
 
 // Handles the command to invite a user to the game
@@ -567,7 +565,7 @@ func handleCommandInvite(user *sessions.User, game *Game, args []string) string 
 	}
 
 	game.SendInvite(user, target)
-	return fmt.Sprintf("%v has been invited to the game.", target.Info.Username)
+	return ""
 }
 
 // Handles the command to roll a random number between 0 and 100
@@ -585,12 +583,7 @@ func handleCommandAutoHost(user *sessions.User, game *Game) string {
 	}
 
 	game.SetAutoHost(user, !game.Data.IsAutoHost)
-
-	if game.Data.IsAutoHost {
-		return fmt.Sprintf("AutoHost has been enabled. Use the `!mp mindiff` and `!mp maxdiff` commands to set the difficulty range.")
-	}
-
-	return fmt.Sprintf("AutoHost has been disabled.")
+	return ""
 }
 
 // getUserFromCommandArgs Returns a target user from command args
