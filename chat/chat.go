@@ -83,8 +83,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		return
 	}
 
-	message = goaway.Censor(message)
-	message = utils.TruncateString(message, 500)
+	message = utils.TruncateString(goaway.Censor(message), 500)
 
 	if receiver[0] == '#' {
 		channel := GetChannelByName(receiver)

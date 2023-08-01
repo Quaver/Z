@@ -1144,9 +1144,7 @@ func (game *Game) sendBotMessage(message string) {
 func (game *Game) validateAndCacheSettings() {
 	data := game.Data
 
-	data.Name = utils.TruncateString(data.Name, 50)
-	data.Name = goaway.Censor(data.Name)
-
+	data.Name = utils.TruncateString(goaway.Censor(data.Name), 50)
 	data.HasPassword = game.Password != ""
 	data.MaxPlayers = utils.Clamp(data.MaxPlayers, 2, 16)
 	data.Ruleset = objects.MultiplayerGameRulesetFreeForAll
