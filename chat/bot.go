@@ -60,8 +60,6 @@ func handleBotCommands(user *sessions.User, args []string) string {
 		return ""
 	}
 
-	log.Println(strings.ToLower(strings.Split(args[0], "!")[1]))
-
 	switch strings.ToLower(strings.Split(args[0], "!")[1]) {
 	case "kick":
 		return handleBotCommandKick(user, args)

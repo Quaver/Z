@@ -3,7 +3,6 @@ package sessions
 import (
 	"encoding/json"
 	"github.com/gobwas/ws/wsutil"
-	"log"
 	"net"
 )
 
@@ -16,18 +15,14 @@ func SendPacketToConnection(data interface{}, conn net.Conn) {
 	j, err := json.Marshal(data)
 
 	if err != nil {
-		// log.Println(err)
 		return
 	}
 
 	err = wsutil.WriteServerText(conn, j)
 
 	if err != nil {
-		log.Println(err)
 		return
 	}
-
-	// log.Printf("SENT - %v", string(j))
 }
 
 // SendPacketToUser Sends a packet to a given user

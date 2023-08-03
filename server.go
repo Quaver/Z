@@ -80,11 +80,7 @@ func (s *Server) Start() {
 					}
 
 					if err.Error() == "EOF" || strings.Contains(err.Error(), "ws closed") {
-						err := s.onClose(conn)
-
-						if err != nil {
-							log.Println(err)
-						}
+						_ = s.onClose(conn)
 					}
 
 					return
