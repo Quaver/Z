@@ -17,14 +17,14 @@ import (
 var (
 	Bot = sessions.NewUser(nil, &db.User{
 		Id:             2,
-		SteamId:        "1",
-		Username:       "Quaver",
+		SteamId:        "None",
+		Username:       "QuaverBot",
 		Allowed:        true,
 		Privileges:     common.PrivilegeNormal,
 		UserGroups:     common.UserGroupBot | common.UserGroupNormal,
 		MuteEndTime:    0,
 		Country:        "US",
-		AvatarUrl:      sql.NullString{String: "1"},
+		AvatarUrl:      sql.NullString{String: "None"},
 		TwitchUsername: sql.NullString{},
 	})
 )
