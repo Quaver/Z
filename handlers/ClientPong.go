@@ -20,8 +20,8 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	packetProcs := packet.ParseProcessList()
 
 	if packetProcs == nil || len(packetProcs) == 0 {
-		webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.Id, user.Info.GetProfileUrl(), user.Info.AvatarUrl.String, []string{"NO PROCESSES PROVIDED"})
-		log.Printf("[%v - %v] Sent a Pong packet without any process list\n", user.Info.Id, user.Info.Username)
+		// webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.Id, user.Info.GetProfileUrl(), user.Info.AvatarUrl.String, []string{"NO PROCESSES PROVIDED"})
+		// log.Printf("[%v - %v] Sent a Pong packet without any process list\n", user.Info.Id, user.Info.Username)
 		return
 	}
 
