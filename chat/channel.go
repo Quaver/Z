@@ -11,15 +11,15 @@ import (
 )
 
 type Channel struct {
-	Type           ChannelType            `json:"-"`
-	Name           string                 `json:"name"`
-	Description    string                 `json:"description"`
-	AdminOnly      bool                   `json:"admin_only"`
-	AutoJoin       bool                   `json:"auto_join"`
-	LimitedChat    bool                   `json:"only_moderators_can_chat"`
-	DiscordWebhook string                 `json:"discord_webhook"`
-	WebhookClient  webhook.Client         `json:"-"`
-	Participants   map[int]*sessions.User `json:"-"`
+	Type           ChannelType
+	Name           string
+	Description    string
+	AdminOnly      bool
+	AutoJoin       bool
+	LimitedChat    bool
+	DiscordWebhook string
+	WebhookClient  webhook.Client
+	Participants   map[int]*sessions.User
 	mutex          *sync.Mutex
 }
 
