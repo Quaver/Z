@@ -160,10 +160,7 @@ func (game *Game) RemovePlayer(userId int) {
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
-		game.EndGame()
-		game.deleteCachedMatchSettings()
-		chat.RemoveMultiplayerChannel(game.Data.GameId)
-		RemoveGameFromLobby(game)
+		game.disband()
 		return
 	}
 
@@ -826,6 +823,20 @@ func (game *Game) rotateHost() {
 	} else {
 		game.SetHost(nil, game.Data.PlayerIds[0])
 	}
+}
+
+// Handles disbandment of the multiplayer game
+func (game *Game) disband() {
+	game.EndGame()
+
+	// Tournament mode games are kept around and deleted manually
+	if game.Data.IsTournamentMode {
+		return
+	}
+
+	game.deleteCachedMatchSettings()
+	chat.RemoveMultiplayerChannel(game.Data.GameId)
+	RemoveGameFromLobby(game)
 }
 
 // Returns if the user is host of the game or has permission.
