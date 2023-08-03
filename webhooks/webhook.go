@@ -12,8 +12,6 @@ import (
 var (
 	AntiCheat   webhook.Client
 	PrivateChat webhook.Client
-	Multiplayer webhook.Client
-	Spectator   webhook.Client
 )
 
 const QuaverLogo string = "https://i.imgur.com/DkJhqvT.jpg"
@@ -23,8 +21,6 @@ func Initialize() {
 	hooks := []string{
 		config.Instance.DiscordWebhooks.AntiCheat,
 		config.Instance.DiscordWebhooks.PrivateChat,
-		config.Instance.DiscordWebhooks.Multiplayer,
-		config.Instance.DiscordWebhooks.Spectator,
 	}
 
 	for _, hook := range hooks {
@@ -39,10 +35,6 @@ func Initialize() {
 			AntiCheat, err = webhook.NewWithURL(hook)
 		case config.Instance.DiscordWebhooks.PrivateChat:
 			PrivateChat, err = webhook.NewWithURL(hook)
-		case config.Instance.DiscordWebhooks.Multiplayer:
-			Multiplayer, err = webhook.NewWithURL(hook)
-		case config.Instance.DiscordWebhooks.Spectator:
-			Spectator, err = webhook.NewWithURL(hook)
 		}
 
 		if err != nil {
