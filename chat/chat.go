@@ -110,9 +110,10 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 // AddMultiplayerChannel Adds a multiplayer channel.
 func AddMultiplayerChannel(id string) *Channel {
-	channel := NewChannel(ChannelTypeMultiplayer, fmt.Sprintf("#multiplayer_%v", id), "", false, false, "")
-	addChannel(channel)
+	channel := NewChannel(ChannelTypeMultiplayer, fmt.Sprintf("#multiplayer_%v", id), "", false, false,
+		config.Instance.DiscordWebhooks.Multiplayer)
 
+	addChannel(channel)
 	return channel
 }
 

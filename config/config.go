@@ -35,6 +35,8 @@ type Configuration struct {
 	DiscordWebhooks struct {
 		AntiCheat   string `json:"anti_cheat"`
 		PrivateChat string `json:"private_chat"`
+		Multiplayer string `json:"multiplayer"`
+		Spectator   string `json:"spectator"`
 	} `json:"discord_webhooks"`
 
 	ChatChannels []struct {
