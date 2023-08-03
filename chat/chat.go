@@ -140,7 +140,9 @@ func GetSpectatorChannel(userId int) *Channel {
 
 // AddSpectatorChannel Adds a spectator channel for a user
 func AddSpectatorChannel(userId int) *Channel {
-	channel := NewChannel(ChannelTypeSpectator, getSpectatorChannelName(userId), "", false, false, false, "")
+	channel := NewChannel(ChannelTypeSpectator, getSpectatorChannelName(userId), "", false, false,
+		false, config.Instance.DiscordWebhooks.Spectator)
+
 	addChannel(channel)
 
 	return channel
