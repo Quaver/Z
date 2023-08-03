@@ -45,6 +45,7 @@ type Configuration struct {
 		AdminOnly      bool   `json:"admin_only"`
 		AutoJoin       bool   `json:"auto_join"`
 		DiscordWebhook string `json:"discord_webhook"`
+		LimitedChat    bool   `json:"limited_chat"`
 	} `json:"chat_channels"`
 }
 

@@ -16,6 +16,7 @@ type Channel struct {
 	Description    string                 `json:"description"`
 	AdminOnly      bool                   `json:"admin_only"`
 	AutoJoin       bool                   `json:"auto_join"`
+	LimitedChat    bool                   `json:"only_moderators_can_chat"`
 	DiscordWebhook string                 `json:"discord_webhook"`
 	WebhookClient  webhook.Client         `json:"-"`
 	Participants   map[int]*sessions.User `json:"-"`
@@ -31,13 +32,14 @@ const (
 )
 
 // NewChannel Creates a new chat channel instance
-func NewChannel(channelType ChannelType, name string, description string, adminOnly bool, autoJoin bool, discordWebhook string) *Channel {
+func NewChannel(channelType ChannelType, name string, description string, adminOnly bool, autoJoin bool, limitedChat bool, discordWebhook string) *Channel {
 	channel := Channel{
 		Type:           channelType,
 		Name:           name,
 		Description:    description,
 		AdminOnly:      adminOnly,
 		AutoJoin:       autoJoin,
+		LimitedChat:    limitedChat,
 		DiscordWebhook: discordWebhook,
 		WebhookClient:  nil,
 		Participants:   map[int]*sessions.User{},

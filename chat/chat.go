@@ -31,7 +31,7 @@ func Initialize() {
 	privateMessageHandlers = []func(user *sessions.User, receiver *sessions.User, args []string) string{}
 
 	for _, channel := range config.Instance.ChatChannels {
-		addChannel(NewChannel(ChannelNormal, channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, channel.DiscordWebhook))
+		addChannel(NewChannel(ChannelNormal, channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, channel.LimitedChat, channel.DiscordWebhook))
 	}
 
 	_ = sessions.AddUser(Bot)
@@ -92,7 +92,11 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 			return
 		}
 
-		sendPublicMessage(sender, channel, message)
+		if channel.LimitedChat && !isChatModerator(sender.Info.UserGroups) {
+			return
+		}
+
+		channel.SendMessage(sender, message)
 		webhooks.SendChatMessage(channel.WebhookClient, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl.String, receiver, message)
 		runPublicMessageHandlers(sender, channel, message)
 	} else {
@@ -111,7 +115,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 // AddMultiplayerChannel Adds a multiplayer channel.
 func AddMultiplayerChannel(id string) *Channel {
 	channel := NewChannel(ChannelTypeMultiplayer, fmt.Sprintf("#multiplayer_%v", id), "", false, false,
-		config.Instance.DiscordWebhooks.Multiplayer)
+		false, config.Instance.DiscordWebhooks.Multiplayer)
 
 	addChannel(channel)
 	return channel
@@ -135,7 +139,7 @@ func GetSpectatorChannel(userId int) *Channel {
 
 // AddSpectatorChannel Adds a spectator channel for a user
 func AddSpectatorChannel(userId int) *Channel {
-	channel := NewChannel(ChannelTypeSpectator, getSpectatorChannelName(userId), "", false, false, "")
+	channel := NewChannel(ChannelTypeSpectator, getSpectatorChannelName(userId), "", false, false, false, "")
 	addChannel(channel)
 
 	return channel
@@ -168,11 +172,6 @@ func AddPrivateMessageHandler(f func(user *sessions.User, receivingUser *session
 	privateMessageHandlers = append(privateMessageHandlers, f)
 }
 
-// Sends a message to a public chat channel
-func sendPublicMessage(sender *sessions.User, channel *Channel, message string) {
-	channel.SendMessage(sender, message)
-}
-
 // Sends a private message to a user
 func sendPrivateMessage(sender *sessions.User, receiver *sessions.User, message string) {
 	sessions.SendPacketToUser(packets.NewServerChatMessage(sender.Info.Id, sender.Info.Username, receiver.Info.Username, message), receiver)
@@ -193,7 +192,7 @@ func runPublicMessageHandlers(sender *sessions.User, channel *Channel, message s
 			responseMsg := handler(sender, channel, strings.Split(message, " "))
 
 			if responseMsg != "" {
-				sendPublicMessage(Bot, channel, responseMsg)
+				channel.SendMessage(Bot, responseMsg)
 			}
 		}
 	}()

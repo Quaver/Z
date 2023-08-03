@@ -28,6 +28,7 @@
       "description": "Players who achieve a first place rank on a map are displayed here",
       "admin_only": false,
       "auto_join": true,
+      "limited_chat": true,
       "discord_webhook": ""
     },
     {
@@ -35,6 +36,7 @@
       "description": "Super secret channel for the evil dictators",
       "admin_only": true,
       "auto_join": true,
+      "limited_chat": true,
       "discord_webhook": ""
     },
     {
@@ -42,6 +44,7 @@
       "description": "General discussion about Quaver",
       "admin_only": false,
       "auto_join": true,
+      "limited_chat": false,
       "discord_webhook": ""
     }
   ]
