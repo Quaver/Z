@@ -27,7 +27,7 @@ func SendPacketToConnection(data interface{}, conn net.Conn) {
 		return
 	}
 
-	log.Printf("SENT - %v", string(j))
+	// log.Printf("SENT - %v", string(j))
 }
 
 // SendPacketToUser Sends a packet to a given user
