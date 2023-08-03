@@ -139,3 +139,12 @@ func (channel *Channel) removeAllUsers() {
 		channel.RemoveUser(user)
 	}
 }
+
+// Returns if a user is in the chat channel
+func (channel *Channel) isUserInChannel(user *sessions.User) bool {
+	channel.mutex.Lock()
+	defer channel.mutex.Unlock()
+
+	_, ok := channel.Participants[user.Info.Id]
+	return ok
+}

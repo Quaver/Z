@@ -17,7 +17,7 @@ import (
 var (
 	Bot = sessions.NewUser(nil, &db.User{
 		Id:             2,
-		SteamId:        "None",
+		SteamId:        "1",
 		Username:       "QuaverBot",
 		Allowed:        true,
 		Privileges:     common.PrivilegeNormal,

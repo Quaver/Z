@@ -19,6 +19,12 @@ var (
 
 	// A map to users with the key being their connection
 	connToUser = map[net.Conn]*User{}
+
+	// Handlers that run when a user spectates someone
+	spectatorAddedHandlers = make([]func(user *User, spectator *User), 0)
+
+	// Handlers that run when a spectator stops spectating someone
+	spectatorLeftHandlers = make([]func(user *User, spectator *User), 0)
 )
 
 // AddUser Adds a user session
@@ -140,6 +146,22 @@ func GetSerializedOnlineUsers() []*objects.PacketUser {
 	return users
 }
 
+// AddSpectatorAddedHandler Adds a handler to run when someone spectates a user
+func AddSpectatorAddedHandler(f func(user *User, spectator *User)) {
+	userMutex.Lock()
+	defer userMutex.Unlock()
+
+	spectatorAddedHandlers = append(spectatorAddedHandlers, f)
+}
+
+// AddSpectatorLeftHandler Adds a handler to run when someone stops spectating a user
+func AddSpectatorLeftHandler(f func(user *User, spectator *User)) {
+	userMutex.Lock()
+	defer userMutex.Unlock()
+
+	spectatorLeftHandlers = append(spectatorLeftHandlers, f)
+}
+
 // Adds a user to the maps that can be used to look them up
 func addUserToMaps(user *User) {
 	userMutex.Lock()
@@ -158,4 +180,13 @@ func removeUserFromMaps(user *User) {
 	delete(userIdToUser, user.Info.Id)
 	delete(usernameToUser, user.Info.Username)
 	delete(connToUser, user.Conn)
+}
+
+// Runs handlers that are used for spectator
+func runSpectatorHandlers(handlers []func(user *User, spectator *User), user *User, spectator *User) {
+	go func() {
+		for _, handler := range handlers {
+			handler(user, spectator)
+		}
+	}()
 }

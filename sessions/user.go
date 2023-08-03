@@ -316,6 +316,8 @@ func (u *User) AddSpectator(spectator *User) {
 	for _, frame := range u.frames {
 		SendPacketToUser(packets.NewServerSpectatorReplayFrames(u.Info.Id, frame.Status, frame.AudioTime, frame.Frames), spectator)
 	}
+
+	runSpectatorHandlers(spectatorAddedHandlers, u, spectator)
 }
 
 // RemoveSpectator Removes a person from their list of spectators
@@ -328,6 +330,8 @@ func (u *User) RemoveSpectator(spectator *User) {
 
 	spectator.spectating = utils.Filter(spectator.spectating, func(x *User) bool { return x != u })
 	SendPacketToUser(packets.NewServerStopSpectatePlayer(u.Info.Id), spectator)
+
+	runSpectatorHandlers(spectatorLeftHandlers, u, spectator)
 }
 
 // StopSpectatingAll Stops spectating every user that they are currently spectating

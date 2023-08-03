@@ -36,6 +36,7 @@ func Initialize() {
 
 	_ = sessions.AddUser(Bot)
 	addBotChatHandlers()
+	addSpectatorHandlers()
 }
 
 // GetAvailableChannels Returns the available channels that the user is able to join
@@ -239,6 +240,43 @@ func removeChannel(channel *Channel) {
 	channel.removeAllUsers()
 	delete(channels, channel.Name)
 	log.Printf("Uninitialized chat channel: %v\n", channel.Name)
+}
+
+// Adds handlers for when a user begins/stops spectating someone
+func addSpectatorHandlers() {
+	// Create spectator channel and add users
+	sessions.AddSpectatorAddedHandler(func(user *sessions.User, spectator *sessions.User) {
+		if len(user.GetSpectators()) == 1 {
+			AddSpectatorChannel(user.Info.Id)
+		}
+
+		channel := GetSpectatorChannel(user.Info.Id)
+
+		if channel == nil {
+			return
+		}
+
+		if !channel.isUserInChannel(user) {
+			channel.AddUser(user)
+		}
+
+		channel.AddUser(spectator)
+	})
+
+	// Remove spectators from channel and delete channel
+	sessions.AddSpectatorLeftHandler(func(user *sessions.User, spectator *sessions.User) {
+		channel := GetSpectatorChannel(user.Info.Id)
+
+		if channel == nil {
+			return
+		}
+
+		channel.RemoveUser(spectator)
+
+		if len(user.GetSpectators()) == 0 {
+			RemoveSpectatorChannel(user.Info.Id)
+		}
+	})
 }
 
 // Returns if the user is a moderator of the chat
