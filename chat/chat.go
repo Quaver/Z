@@ -93,7 +93,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		}
 
 		sendPublicMessage(sender, channel, message)
-		webhooks.SendChatMessage(channel.WebhookClient, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
+		webhooks.SendChatMessage(channel.WebhookClient, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl.String, receiver, message)
 		runPublicMessageHandlers(sender, channel, message)
 	} else {
 		receivingUser := sessions.GetUserByUsername(receiver)
@@ -103,7 +103,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		}
 
 		sendPrivateMessage(sender, receivingUser, message)
-		webhooks.SendChatMessage(webhooks.PrivateChat, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, receiver, message)
+		webhooks.SendChatMessage(webhooks.PrivateChat, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl.String, receiver, message)
 		runPrivateMessageHandlers(sender, receivingUser, message)
 	}
 }

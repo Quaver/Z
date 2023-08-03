@@ -99,7 +99,7 @@ func (game *Game) cachePlayer(id int) {
 		"id", strconv.Itoa(user.Info.Id),
 		"u", user.Info.Username,
 		"sid", user.Info.SteamId,
-		"a", user.Info.AvatarUrl,
+		"a", user.Info.AvatarUrl.String,
 		"c", user.Info.Country,
 		"w", strconv.Itoa(wins.Wins),
 		"m", strconv.Itoa(int(mods.Modifiers)),

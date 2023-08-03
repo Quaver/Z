@@ -19,7 +19,7 @@ type User struct {
 	UserGroups     common.UserGroups `db:"usergroups"`
 	MuteEndTime    int64             `db:"mute_endtime"`
 	Country        string            `db:"country"`
-	AvatarUrl      string            `db:"avatar_url"`
+	AvatarUrl      sql.NullString    `db:"avatar_url"`
 	TwitchUsername sql.NullString    `db:"twitch_username"`
 }
 

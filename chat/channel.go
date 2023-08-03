@@ -124,7 +124,7 @@ func (channel *Channel) SendMessage(sender *sessions.User, message string) {
 
 // Sends a discord webhook
 func (channel *Channel) sendWebhook(sender *sessions.User, message string) {
-	webhooks.SendChatMessage(channel.WebhookClient, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl, channel.Name, message)
+	webhooks.SendChatMessage(channel.WebhookClient, sender.Info.Username, sender.Info.GetProfileUrl(), sender.Info.AvatarUrl.String, channel.Name, message)
 }
 
 // Removes all users from the channel
