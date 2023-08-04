@@ -85,7 +85,7 @@ func GetUserByUsername(username string) *User {
 	userMutex.Lock()
 	defer userMutex.Unlock()
 
-	return usernameToUser[username]
+	return usernameToUser[strings.ToLower(username)]
 }
 
 // GetUserByConnection Returns a user by their connection to the server
@@ -178,7 +178,7 @@ func removeUserFromMaps(user *User) {
 	defer userMutex.Unlock()
 
 	delete(userIdToUser, user.Info.Id)
-	delete(usernameToUser, user.Info.Username)
+	delete(usernameToUser, strings.ToLower(user.Info.Username))
 	delete(connToUser, user.Conn)
 }
 
