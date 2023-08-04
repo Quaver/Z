@@ -92,7 +92,6 @@ func SendAntiCheatProcessLog(username string, userId int, url string, icon strin
 // SendChatMessage Sends a chat message webhook to Discord
 func SendChatMessage(webhook webhook.Client, senderUsername string, senderProfileUrl string, senderAvatarUrl, receiverName string, message string) {
 	if webhook == nil {
-		log.Printf("Cannot send nil webhook to receiver: %v\n", receiverName)
 		return
 	}
 
