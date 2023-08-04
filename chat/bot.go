@@ -24,7 +24,7 @@ var (
 		UserGroups:     common.UserGroupBot | common.UserGroupNormal,
 		MuteEndTime:    0,
 		Country:        "US",
-		AvatarUrl:      sql.NullString{String: "None"},
+		AvatarUrl:      sql.NullString{String: "https://i.imgur.com/ov8hhlf.jpg"},
 		TwitchUsername: sql.NullString{},
 	})
 )
