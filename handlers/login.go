@@ -81,8 +81,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			if !canUserUseCustomGameBuild(user) {
-				handleCustomGameBuildUsage(conn, user, data.Client)
+			if !handleCustomGameBuildUsage(conn, user, data.Client) {
 				return nil
 			}
 		} else {
@@ -333,13 +332,19 @@ func canUserUseCustomGameBuild(user *db.User) bool {
 		common.HasUserGroup(user.UserGroups, common.UserGroupContributor)
 }
 
-// Sends webhook and disconnects a user for invalid client usage
-func handleCustomGameBuildUsage(conn net.Conn, user *db.User, client string) {
+// Sends webhook and disconnects a user for invalid client usage. Returns if the user is allowed to login
+func handleCustomGameBuildUsage(conn net.Conn, user *db.User, client string) bool {
 	clientStr := fmt.Sprintf("```json\n%v```", formatCustomGameBuild(client))
 	webhooks.SendAntiCheat(user.Username, user.Id, user.GetProfileUrl(), user.AvatarUrl.String, "Invalid Game Build", clientStr)
 
-	utils.CloseConnection(conn)
+	if !canUserUseCustomGameBuild(user) {
+		sessions.SendPacketToConnection(packets.NewServerNotificationError("Please update your client before attempting to login."), conn)
+		utils.CloseConnectionDelayed(conn)
+		return false
+	}
+
 	log.Printf("[%v - #%v] Attempted to login, but is using an game build: \n", user.Username, user.Id)
+	return true
 }
 
 // Updates the avatar for the user and sets the new one.
