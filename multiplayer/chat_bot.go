@@ -122,6 +122,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandRoll(user)
 		case "autohost":
 			message = handleCommandAutoHost(user, game)
+		case "randmap":
+			message = handleCommandRandomMap(user, game)
 		}
 	})
 
@@ -583,6 +585,16 @@ func handleCommandAutoHost(user *sessions.User, game *Game) string {
 	}
 
 	game.SetAutoHost(user, !game.Data.IsAutoHost)
+	return ""
+}
+
+// Selects a random map in multiplayer
+func handleCommandRandomMap(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	game.selectAutohostMap()
 	return ""
 }
 
