@@ -279,7 +279,7 @@ func (game *Game) ChangeMap(requester *sessions.User, packet *packets.ClientChan
 	game.SetDonatorMapsetShared(false, false)
 	game.validateAndCacheSettings()
 
-	game.sendBotMessage(fmt.Sprintf("The map has been changed to: %v", game.Data.MapName))
+	game.sendBotMessage(fmt.Sprintf("The map has been changed to: %v.", game.Data.MapName))
 	game.sendPacketToPlayers(packets.NewServerGameMapChanged(packet))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
@@ -795,7 +795,12 @@ func (game *Game) SetAutoHost(requester *sessions.User, enabled bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 
 	if game.Data.IsAutoHost {
-		game.sendBotMessage(fmt.Sprintf("Auto Host has been enabled. Use the `!mp mindiff` and `!mp maxdiff` commands to set the difficulty range."))
+		game.sendBotMessage("Auto Host has been enabled. Use the following commands to further customize your game:\n" +
+			"- `!mp mindiff (number)` - Changes the minimum difficulty that will be selected.\n" +
+			"- `!mp maxdiff (number)` - Changes the maximum difficulty that will be selected.\n" +
+			"- `!mp allowmode (4k/7k)` - Allows a game mode to be selected.\n" +
+			"- `!mp disallowmode (4k/7k)` - Disallows a game mode to be selected.\n" +
+			"- `!mp randmap` - Selects a new random map.")
 		return
 	}
 
