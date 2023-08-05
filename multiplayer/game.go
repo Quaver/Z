@@ -1096,7 +1096,7 @@ func (game *Game) selectAutohostMap() {
 		return
 	}
 
-	song, err := db.GetRandomSongMap(game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating)
+	song, err := db.GetRandomSongMap(game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating, game.Data.FilterAllowedGameModes)
 
 	if err != nil {
 		log.Printf("error selecting random map in multiplayer - %v\n", err)

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
 	"log"
 	"testing"
@@ -15,7 +16,7 @@ func TestGetRandomSongMap(t *testing.T) {
 
 	InitializeSQL()
 
-	song, err := GetRandomSongMap(0, 100)
+	song, err := GetRandomSongMap(0, 100, []common.Mode{common.ModeKeys4, common.ModeKeys7})
 
 	if err != nil {
 		t.Fatal(err)

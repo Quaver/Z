@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"example.com/Quaver/Z/common"
 )
 
@@ -34,16 +35,30 @@ func GetSongMapById(id int) (*SongMap, error) {
 }
 
 // GetRandomSongMap Retrieves a random map from the database with min/max difficulty rating filter
-func GetRandomSongMap(minDiff float32, maxDiff float32) (*SongMap, error) {
+func GetRandomSongMap(minDiff float32, maxDiff float32, gameModes []common.Mode) (*SongMap, error) {
+	mode := ""
+
+	switch len(gameModes) {
+	case 0:
+		return nil, errors.New("no game modes provided")
+	case 1:
+		mode = "AND game_mode = ? "
+	}
+
 	query := "SELECT id, mapset_id, md5, alternative_md5, game_mode, artist, title, difficulty_name, difficulty_rating " +
 		"FROM maps " +
-		"WHERE difficulty_rating > ? AND difficulty_rating < ? AND ranked_status = 2 " +
+		"WHERE difficulty_rating > ? AND difficulty_rating < ? AND ranked_status = 2 " + mode +
 		"ORDER BY RAND() " +
 		"LIMIT 1"
 
 	var songMap SongMap
+	var err error
 
-	err := SQL.Get(&songMap, query, minDiff, maxDiff)
+	if mode != "" {
+		err = SQL.Get(&songMap, query, minDiff, maxDiff, gameModes[0])
+	} else {
+		err = SQL.Get(&songMap, query, minDiff, maxDiff)
+	}
 
 	if err != nil {
 		return nil, err
