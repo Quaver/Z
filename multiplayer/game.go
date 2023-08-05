@@ -717,6 +717,7 @@ func (game *Game) HandlePlayerJudgements(userId int, judgements []common.Judgeme
 
 	if score, ok := game.playerScores[userId]; ok {
 		score.AddJudgements(judgements)
+		game.cachePlayerScore(userId, score)
 	}
 
 	packet := packets.NewServerGameJudgements(userId, judgements)

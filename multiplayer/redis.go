@@ -1,8 +1,10 @@
 package multiplayer
 
 import (
+	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
+	"example.com/Quaver/Z/scoring"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
@@ -118,10 +120,48 @@ func (game *Game) cachePlayer(id int) {
 
 // Deletes a cached player in redis
 func (game *Game) deleteCachedPlayer(userId int) {
-	_, err := db.Redis.Del(db.RedisCtx, game.getPlayerRedisKey(userId)).Result()
+	_, err := db.Redis.Del(db.RedisCtx, game.getPlayerRedisKey(userId), game.getPlayerScoreRedisKey(userId)).Result()
 
 	if err != nil {
-		log.Printf("Failed to remove multiplayer player  in redis - %v\n", err)
+		log.Printf("Failed to remove multiplayer player in redis - %v\n", err)
 		return
 	}
+}
+
+// Returns the redis key for a player's score in redis.
+func (game *Game) getPlayerScoreRedisKey(userId int) string {
+	return fmt.Sprintf("quaver:server:multiplayer:%v:%v", game.Data.GameId, userId)
+}
+
+// Caches a player's score in redis.
+func (game *Game) cachePlayerScore(userId int, processor *scoring.ScoreProcessor) {
+	player := []string{
+		"m", strconv.FormatInt(int64(processor.Modifiers), 10),
+		"pr", strconv.FormatFloat(processor.PerformanceRating, 'f', -1, 64),
+		"a", strconv.FormatFloat(processor.Accuracy, 'f', -1, 64),
+		"mc", strconv.Itoa(processor.MaxCombo),
+		"ma", strconv.Itoa(processor.Judgements[common.JudgementMarv]),
+		"pf", strconv.Itoa(processor.Judgements[common.JudgementPerf]),
+		"gr", strconv.Itoa(processor.Judgements[common.JudgementGreat]),
+		"gd", strconv.Itoa(processor.Judgements[common.JudgementGood]),
+		"ok", strconv.Itoa(processor.Judgements[common.JudgementOkay]),
+		"ms", strconv.Itoa(processor.Judgements[common.JudgementMiss]),
+		"cm", strconv.Itoa(processor.Combo),
+		// "t", "0", - Team
+		// "sc", "0", - Score
+		// "hl", strconv.Itoa(100), - Health
+		// "fc", "0" - Boolean for full combo
+		// "lv" - Lives
+		// "hf" - Has Failed
+		// "rh" - Is Regenerating Health
+		// "br" - Battle Royale Rank
+	}
+
+	_, err := db.Redis.HSet(db.RedisCtx, game.getPlayerScoreRedisKey(userId), player).Result()
+
+	if err != nil {
+		log.Printf("Failed to cache multiplayer player score in redis - %v\n", err)
+		return
+	}
+
 }
