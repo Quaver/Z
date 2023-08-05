@@ -5,6 +5,7 @@ import (
 	"example.com/Quaver/Z/config"
 	"github.com/go-redis/redis/v8"
 	"log"
+	"time"
 )
 
 var (
@@ -24,9 +25,11 @@ func InitializeRedis() {
 	}
 
 	Redis = redis.NewClient(&redis.Options{
-		Addr:     config.Instance.Redis.Host,
-		Password: config.Instance.Redis.Password,
-		DB:       config.Instance.Redis.Database,
+		Addr:         config.Instance.Redis.Host,
+		Password:     config.Instance.Redis.Password,
+		DB:           config.Instance.Redis.Database,
+		ReadTimeout:  time.Minute,
+		WriteTimeout: time.Minute,
 	})
 
 	result := Redis.Ping(RedisCtx)
