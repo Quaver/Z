@@ -869,13 +869,12 @@ func (game *Game) isUserInGame(user *sessions.User) bool {
 
 // Clears all players that are ready.
 func (game *Game) clearReadyPlayers(sendToLobby bool) {
-	readyPlayers := game.Data.PlayersReady
-	game.Data.PlayersReady = readyPlayers
-
 	for _, id := range game.Data.PlayersReady {
 		game.cachePlayer(id)
 		game.sendPacketToPlayers(packets.NewServerGamePlayerNotReady(id))
 	}
+
+	game.Data.PlayersReady = []int{}
 
 	if sendToLobby {
 		sendLobbyUsersGameInfoPacket(game, true)
