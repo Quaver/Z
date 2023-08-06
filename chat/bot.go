@@ -48,7 +48,7 @@ func handlePublicChatBotCommands(user *sessions.User, channel *Channel, args []s
 func handlePrivateChatBotCommands(user *sessions.User, receivingUser *sessions.User, args []string) string {
 	// Only handle if the user is talking to the bot directly.
 	if receivingUser != Bot {
-		return "'"
+		return ""
 	}
 
 	return handleBotCommands(user, args)

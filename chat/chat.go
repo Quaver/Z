@@ -209,7 +209,7 @@ func runPrivateMessageHandlers(sender *sessions.User, receivingUser *sessions.Us
 			responseMsg := handler(sender, receivingUser, strings.Split(message, " "))
 
 			if responseMsg != "" {
-				sendPrivateMessage(Bot, sender, message)
+				sendPrivateMessage(Bot, sender, responseMsg)
 			}
 		}
 	}()
