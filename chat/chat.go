@@ -9,7 +9,6 @@ import (
 	"example.com/Quaver/Z/utils"
 	"example.com/Quaver/Z/webhooks"
 	"fmt"
-	"github.com/TwiN/go-away"
 	"log"
 	"strings"
 	"sync"
@@ -84,7 +83,13 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 		return
 	}
 
-	message = utils.TruncateString(goaway.Censor(message), 500)
+	message = utils.TruncateString(message, 500)
+
+	if censored, err := utils.CensorString(message); err == nil {
+		message = censored
+	} else {
+		log.Printf("Error censoring chat message string - %v - %v\n", message, err)
+	}
 
 	if receiver[0] == '#' {
 		channel := GetChannelByName(receiver)

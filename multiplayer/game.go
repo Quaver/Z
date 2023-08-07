@@ -11,7 +11,6 @@ import (
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"fmt"
-	goaway "github.com/TwiN/go-away"
 	"log"
 	"math"
 	"time"
@@ -1160,7 +1159,14 @@ func (game *Game) sendBotMessage(message string) {
 func (game *Game) validateAndCacheSettings() {
 	data := game.Data
 
-	data.Name = utils.TruncateString(goaway.Censor(data.Name), 50)
+	data.Name = utils.TruncateString(data.Name, 50)
+
+	if censored, err := utils.CensorString(data.Name); err == nil {
+		data.Name = censored
+	} else {
+		log.Printf("Error censoring chat message string - %v - %v\n", data.Name, err)
+	}
+
 	data.HasPassword = game.Password != ""
 	data.MaxPlayers = utils.Clamp(data.MaxPlayers, 2, 16)
 	data.Ruleset = objects.MultiplayerGameRulesetFreeForAll
