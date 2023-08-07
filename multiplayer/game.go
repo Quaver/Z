@@ -649,15 +649,18 @@ func (game *Game) SetPlayerWinCount(userId int, wins int) {
 
 // SetReferee Sets the referee for the game
 func (game *Game) SetReferee(requester *sessions.User, userId int) {
+	if game.Data.InProgress {
+		return
+	}
+
 	if !game.isUserHost(requester) {
 		return
 	}
 
-	if userId != -1 && !utils.Includes(game.Data.PlayerIds, userId) {
-		return
-	}
-
+	oldReferee := game.Data.RefereeId
 	game.Data.RefereeId = userId
+
+	game.spectators = utils.Filter(game.spectators, func(x int) bool { return x != oldReferee })
 
 	if !utils.Includes(game.spectators, userId) {
 		game.spectators = append(game.spectators, userId)
