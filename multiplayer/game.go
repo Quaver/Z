@@ -126,8 +126,10 @@ func (game *Game) AddPlayer(userId int, password string) {
 	RemoveUserFromLobby(user)
 
 	game.sendBotMessage(fmt.Sprintf("%v has joined the game.", user.Info.Username))
-	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
+
+	sessions.SendPacketToUser(packets.NewServerMultiplayerGameInfo(game.Data), user)
 	sessions.SendPacketToUser(packets.NewServerJoinGame(game.Data.GameId), user)
+	game.sendPacketToPlayers(packets.NewServerUserJoinedGame(user.Info.Id))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
