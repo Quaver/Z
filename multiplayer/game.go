@@ -647,7 +647,7 @@ func (game *Game) SetPlayerWinCount(userId int, wins int) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
-// SetReferee Sets the referee for the game
+// SetReferee Sets the referee for the game. Set userId to -1 to clear.
 func (game *Game) SetReferee(requester *sessions.User, userId int) {
 	if game.Data.InProgress {
 		return
@@ -662,7 +662,7 @@ func (game *Game) SetReferee(requester *sessions.User, userId int) {
 
 	game.spectators = utils.Filter(game.spectators, func(x int) bool { return x != oldReferee })
 
-	if !utils.Includes(game.spectators, userId) {
+	if game.Data.RefereeId != -1 && !utils.Includes(game.spectators, userId) {
 		game.spectators = append(game.spectators, userId)
 	}
 
