@@ -50,6 +50,7 @@ func AddUser(user *User) error {
 // RemoveUser Removes a user session
 func RemoveUser(user *User) error {
 	removeUserFromMaps(user)
+	user.StopSpectatingAll()
 
 	err := UpdateRedisOnlineUserCount()
 
