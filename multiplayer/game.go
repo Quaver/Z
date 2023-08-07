@@ -133,7 +133,6 @@ func (game *Game) AddPlayer(userId int, password string) {
 
 // RemovePlayer Removes a player from the multiplayer game and disbands the game if necessary
 func (game *Game) RemovePlayer(userId int) {
-	wasSpectator := utils.Includes(game.spectators, userId)
 	user := sessions.GetUserById(userId)
 
 	if user != nil {
@@ -152,10 +151,6 @@ func (game *Game) RemovePlayer(userId int) {
 	game.spectators = utils.Filter(game.spectators, func(x int) bool { return x != userId })
 	game.deleteCachedPlayer(userId)
 	delete(game.playerScores, userId)
-
-	if wasSpectator {
-		return
-	}
 
 	// Disband game since there are no more players left
 	if len(game.Data.PlayerIds) == 0 {
