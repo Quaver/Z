@@ -49,7 +49,7 @@ func BoolToOnOffString(b bool) string {
 func CensorString(s string) (string, error) {
 	var detector = gocensorword.NewDetector(
 		gocensorword.WithCensorReplaceChar("*"),
-		gocensorword.WithSanitizeSpecialCharacters(true),
+		gocensorword.WithSanitizeSpecialCharacters(false),
 		gocensorword.WithKeepPrefixChar(),
 		gocensorword.WithKeepSuffixChar(),
 	)
