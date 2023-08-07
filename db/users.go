@@ -76,7 +76,7 @@ func UpdateUserSteamAvatar(steamId string) (string, error) {
 		panic(err)
 	}
 
-	summaries, err := steamapi.GetPlayerSummaries([]uint64{uint64(parsedId)}, config.Instance.Steam.PublisherKey)
+	summaries, err := steamapi.GetPlayerSummaries([]uint64{uint64(parsedId)}, config.Instance.Steam.APIKey)
 
 	if err != nil {
 		return "", err

@@ -16,7 +16,8 @@
   },
   "steam": {
     "app_id": 980610,
-    "publisher_key": ""
+    "publisher_key": "",
+    "api_key": ""
   },
   "discord_webhooks": {
     "anti_cheat": "",

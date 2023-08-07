@@ -30,6 +30,7 @@ type Configuration struct {
 	Steam struct {
 		AppId        int    `json:"app_id"`
 		PublisherKey string `json:"publisher_key"`
+		APIKey       string `json:"api_key"`
 	} `json:"steam"`
 
 	DiscordWebhooks struct {
