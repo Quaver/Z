@@ -343,7 +343,7 @@ func handleCustomGameBuildUsage(conn net.Conn, user *db.User, client string) boo
 		return false
 	}
 
-	log.Printf("[%v - #%v] Attempted to login, but is using an game build: \n", user.Username, user.Id)
+	log.Printf("[%v - #%v] Attempted to login, but is using an game build: %v\n", user.Username, user.Id, clientStr)
 	return true
 }
 
