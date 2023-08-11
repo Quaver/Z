@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"github.com/pcpratheesh/go-censorword"
 	"math"
 	"math/rand"
 	"time"
@@ -43,22 +42,4 @@ func BoolToOnOffString(b bool) string {
 	}
 
 	return "off"
-}
-
-// CensorString Censors a string with gocensorword
-func CensorString(s string) (string, error) {
-	var detector = gocensorword.NewDetector(
-		gocensorword.WithCensorReplaceChar("*"),
-		gocensorword.WithSanitizeSpecialCharacters(false),
-		gocensorword.WithKeepPrefixChar(),
-		gocensorword.WithKeepSuffixChar(),
-	)
-
-	filterString, err := detector.CensorWord(s)
-
-	if err != nil {
-		return "", err
-	}
-
-	return filterString, nil
 }

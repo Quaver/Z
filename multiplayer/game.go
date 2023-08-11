@@ -1161,13 +1161,6 @@ func (game *Game) validateAndCacheSettings() {
 	data := game.Data
 
 	data.Name = utils.TruncateString(data.Name, 50)
-
-	if censored, err := utils.CensorString(data.Name); err == nil {
-		data.Name = censored
-	} else {
-		log.Printf("Error censoring chat message string - %v - %v\n", data.Name, err)
-	}
-
 	data.HasPassword = game.Password != ""
 	data.MaxPlayers = utils.Clamp(data.MaxPlayers, 2, 16)
 	data.Ruleset = objects.MultiplayerGameRulesetFreeForAll

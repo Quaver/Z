@@ -55,10 +55,6 @@ github.com/gobwas/ws/wsutil
 ## explicit; go 1.10
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
-# github.com/pcpratheesh/go-censorword v1.2.0
-## explicit; go 1.16
-github.com/pcpratheesh/go-censorword
-github.com/pcpratheesh/go-censorword/censor
 # github.com/sasha-s/go-csync v0.0.0-20210812194225-61421b77c44b
 ## explicit; go 1.16
 github.com/sasha-s/go-csync
