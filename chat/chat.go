@@ -268,6 +268,7 @@ func addSpectatorHandlers() {
 		}
 
 		channel.AddUser(spectator)
+		SendMessage(Bot, channel.Name, fmt.Sprintf("%v has started spectating.", spectator.Info.Username))
 	})
 
 	// Remove spectators from channel and delete channel
@@ -279,6 +280,7 @@ func addSpectatorHandlers() {
 		}
 
 		channel.RemoveUser(spectator)
+		SendMessage(Bot, channel.Name, fmt.Sprintf("%v has stopped spectating.", spectator.Info.Username))
 
 		if len(user.GetSpectators()) == 0 {
 			RemoveSpectatorChannel(user.Info.Id)
