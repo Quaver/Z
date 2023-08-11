@@ -402,7 +402,12 @@ func (game *Game) EndGame() {
 	game.playersFinished = []int{}
 	game.playersSkipped = []int{}
 	game.playerScores = map[int]*scoring.ScoreProcessor{}
-	game.selectAutohostMap()
+
+	if game.Data.IsAutoHost {
+		game.selectAutohostMap()
+		return
+	}
+
 	game.validateAndCacheSettings()
 
 	game.sendBotMessage("The match has ended.")
@@ -1095,10 +1100,6 @@ func (game *Game) checkAllPlayersSkipped() {
 
 // Selects a random map from the database according to difficulty filters
 func (game *Game) selectAutohostMap() {
-	if !game.Data.IsAutoHost {
-		return
-	}
-
 	song, err := db.GetRandomSongMap(game.Data.FilterMinDifficultyRating, game.Data.FilterMaxDifficultyRating, game.Data.FilterAllowedGameModes)
 
 	if err != nil {
