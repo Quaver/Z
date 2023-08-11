@@ -405,7 +405,6 @@ func (game *Game) EndGame() {
 
 	if game.Data.IsAutoHost {
 		game.selectAutohostMap()
-		return
 	}
 
 	game.validateAndCacheSettings()
