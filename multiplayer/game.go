@@ -1160,6 +1160,11 @@ func (game *Game) validateAndCacheSettings() {
 	data := game.Data
 
 	data.Name = utils.TruncateString(data.Name, 50)
+
+	if censored := utils.CensorString(data.Name); censored != "" {
+		data.Name = censored
+	}
+
 	data.HasPassword = game.Password != ""
 	data.MaxPlayers = utils.Clamp(data.MaxPlayers, 2, 16)
 	data.Ruleset = objects.MultiplayerGameRulesetFreeForAll

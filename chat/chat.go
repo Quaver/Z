@@ -85,6 +85,10 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 	message = utils.TruncateString(message, 500)
 
+	if censored := utils.CensorString(message); censored != "" {
+		message = censored
+	}
+
 	if receiver[0] == '#' {
 		channel := GetChannelByName(receiver)
 

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/TwiN/go-away"
 	"math"
 	"math/rand"
 	"time"
@@ -42,4 +43,14 @@ func BoolToOnOffString(b bool) string {
 	}
 
 	return "off"
+}
+
+func CensorString(s string) string {
+	defer func() {
+		if r := recover(); r != nil {
+			return
+		}
+	}()
+
+	return goaway.Censor(s)
 }
