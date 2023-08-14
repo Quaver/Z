@@ -110,10 +110,9 @@ func CleanupGames() {
 
 			if user == nil {
 				game.RemovePlayer(userId)
+				log.Printf("Cleaned up game with offline user: %v\n", userId)
 				return
 			}
-
-			log.Printf("Cleaned up game with offline user: %v", userId)
 		})
 	}
 }
