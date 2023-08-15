@@ -75,14 +75,7 @@ func (s *Server) Start() {
 				msg, op, err := wsutil.ReadClientData(conn)
 
 				if err != nil {
-					if strings.Contains(err.Error(), "use of closed network connection") {
-						return
-					}
-
-					if err.Error() == "EOF" || strings.Contains(err.Error(), "ws closed") {
-						_ = s.onClose(conn)
-					}
-
+					_ = s.onClose(conn)
 					return
 				}
 
