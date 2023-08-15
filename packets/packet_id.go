@@ -138,4 +138,5 @@ const (
 	PacketIdClientGameDifficultyRatings
 	PacketIdClientGameAutoHost
 	PacketIdServerGameAutoHost
+	PacketIdClientLogout
 )
