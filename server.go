@@ -182,7 +182,6 @@ func startBackgroundWorker() {
 				}
 			}
 
-			multiplayer.CleanupGames()
 			time.Sleep(500 * time.Millisecond)
 		}
 	}()

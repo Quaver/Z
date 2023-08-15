@@ -94,29 +94,6 @@ func GetGameByIdString(id string) *Game {
 	return nil
 }
 
-// CleanupGames Runs a cleanup for all the multiplayer games in case any have empty users.
-func CleanupGames() {
-	lobby.mutex.Lock()
-	defer lobby.mutex.Unlock()
-
-	for _, game := range lobby.games {
-		game.RunLocked(func() {
-			if len(game.Data.PlayerIds) != 1 {
-				return
-			}
-
-			userId := game.Data.PlayerIds[0]
-			user := sessions.GetUserById(userId)
-
-			if user == nil {
-				game.RemovePlayer(userId)
-				log.Printf("Cleaned up game with offline user: %v\n", userId)
-				return
-			}
-		})
-	}
-}
-
 // SendLobbyUsersGameInfoPacket Sends all the users in the lobby a packet with game information
 // Be careful of deadlocks when calling this. Make sure not to call the mutex twice.
 func sendLobbyUsersGameInfoPacket(game *Game, lock bool) {
