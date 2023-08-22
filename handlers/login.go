@@ -104,7 +104,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	err = updateUserAvatar(user)
 
 	if err != nil {
-		return err
+		log.Println("Failed to update steam avatar: ", err)
 	}
 
 	err = removePreviousLoginSession(user)
