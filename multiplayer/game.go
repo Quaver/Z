@@ -33,7 +33,6 @@ type Game struct {
 }
 
 const (
-	maxPlayerCount         int = 16 // The maximum amount of players allowed in a game
 	countDifficultyRatings int = 31 // The amount of difficulty ratings needed for a map (31 different rates)
 )
 
@@ -89,7 +88,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 		currentGame.RemovePlayer(user.Info.Id)
 	}
 
-	if len(game.Data.PlayerIds) >= maxPlayerCount {
+	if len(game.Data.PlayerIds) >= game.Data.MaxPlayers {
 		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorFull), user)
 		return
 	}
