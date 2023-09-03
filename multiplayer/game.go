@@ -30,6 +30,7 @@ type Game struct {
 	playerScores        map[int]*scoring.ScoreProcessor // Score processors for players in the game
 	chatChannel         *chat.Channel                   // The multiplayer chat
 	spectators          []int                           // The players who are currently spectating the game
+	isDisbanded         bool                            // If the game has been disbanded
 }
 
 const (
@@ -836,6 +837,7 @@ func (game *Game) rotateHost() {
 // Handles disbandment of the multiplayer game
 func (game *Game) disband() {
 	game.EndGame()
+	game.isDisbanded = true
 
 	// Tournament mode games are kept around and deleted manually
 	if game.Data.IsTournamentMode {
@@ -1195,4 +1197,28 @@ func (game *Game) validateAndCacheSettings() {
 	}
 
 	game.cacheMatchSettings()
+}
+
+// Removes inactive players from the game
+func (game *Game) removeInactivePlayers() {
+	go func() {
+		for !game.isDisbanded {
+			game.RunLocked(func() {
+				playerIds := make([]int, len(game.Data.PlayerIds))
+				copy(game.Data.PlayerIds, playerIds)
+
+				for _, playerId := range playerIds {
+					user := sessions.GetUserById(playerId)
+
+					if user != nil {
+						continue
+					}
+
+					game.RemovePlayer(playerId)
+				}
+			})
+
+			time.Sleep(time.Second * 5)
+		}
+	}()
 }

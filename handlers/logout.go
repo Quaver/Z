@@ -14,9 +14,6 @@ func HandleLogout(conn net.Conn) error {
 	user := sessions.GetUserByConnection(conn)
 
 	if user != nil {
-		chat.RemoveUserFromAllChannels(user)
-		multiplayer.RemoveUserFromLobby(user)
-
 		game := multiplayer.GetGameById(user.GetMultiplayerGameId())
 
 		if game != nil {
@@ -25,13 +22,15 @@ func HandleLogout(conn net.Conn) error {
 			})
 		}
 
+		chat.RemoveUserFromAllChannels(user)
+		multiplayer.RemoveUserFromLobby(user)
+
 		sessions.SendPacketToAllUsers(packets.NewServerUserDisconnected(user.Info.Id))
 
 		err := sessions.RemoveUser(user)
 
 		if err != nil {
 			log.Printf("[%v %v] Error while logging out user - %v\n", user.Info.Username, user.Info.Id, err)
-			return err
 		}
 
 		log.Printf("[%v #%v] Logged out (%v users online).\n", user.Info.Username, user.Info.Id, sessions.GetOnlineUserCount())
