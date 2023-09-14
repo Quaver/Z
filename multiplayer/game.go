@@ -1205,7 +1205,7 @@ func (game *Game) removeInactivePlayers() {
 		for !game.isDisbanded {
 			game.RunLocked(func() {
 				playerIds := make([]int, len(game.Data.PlayerIds))
-				copy(game.Data.PlayerIds, playerIds)
+				copy(playerIds, game.Data.PlayerIds)
 
 				for _, playerId := range playerIds {
 					user := sessions.GetUserById(playerId)
