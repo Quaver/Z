@@ -124,6 +124,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandAutoHost(user, game)
 		case "randmap":
 			message = handleCommandRandomMap(user, game)
+		case "debug":
+			message = handleCommandDebug(user, game)
 		}
 	})
 
@@ -596,6 +598,32 @@ func handleCommandRandomMap(user *sessions.User, game *Game) string {
 
 	game.selectAutohostMap()
 	return ""
+}
+
+func handleCommandDebug(user *sessions.User, game *Game) string {
+	if !common.HasUserGroup(user.Info.UserGroups, common.UserGroupSwan) {
+		return ""
+	}
+
+	str := fmt.Sprintf("In Progress: %v\n", game.Data.InProgress)
+	str += fmt.Sprintf("Disbanded: %v\n", game.isDisbanded)
+	str += fmt.Sprintf("Player Count: %v\n", len(game.Data.PlayerIds))
+	str += fmt.Sprintf("Players:\n")
+
+	for index, id := range game.Data.PlayerIds {
+		user := sessions.GetUserById(id)
+		userFound := user != nil
+
+		str += fmt.Sprintf("%v. Id: %v | User Online: %v", index, id, userFound)
+
+		if userFound {
+			str += fmt.Sprintf(" | Username: %v\n", user.Info.Username)
+		} else {
+			str += "\n"
+		}
+	}
+
+	return str
 }
 
 // getUserFromCommandArgs Returns a target user from command args
