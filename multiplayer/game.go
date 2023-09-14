@@ -1215,6 +1215,7 @@ func (game *Game) removeInactivePlayers() {
 					}
 
 					game.RemovePlayer(playerId)
+					log.Printf("Removing %v from game: %v (%v)\n", playerId, game.Data.Name, game.Data.Id)
 				}
 			})
 

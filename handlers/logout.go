@@ -17,9 +17,7 @@ func HandleLogout(conn net.Conn) error {
 		game := multiplayer.GetGameById(user.GetMultiplayerGameId())
 
 		if game != nil {
-			game.RunLocked(func() {
-				game.RemovePlayer(user.Info.Id)
-			})
+			game.RemovePlayer(user.Info.Id)
 		}
 
 		chat.RemoveUserFromAllChannels(user)
