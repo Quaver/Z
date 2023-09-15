@@ -65,6 +65,7 @@ func NewGame(gameData *objects.MultiplayerGame, creatorId int) (*Game, error) {
 	}
 
 	game.validateAndCacheSettings()
+	game.removeInactivePlayers()
 
 	game.chatChannel = chat.AddMultiplayerChannel(game.Data.GameId)
 	return &game, nil
