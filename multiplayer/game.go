@@ -101,6 +101,10 @@ func (game *Game) AddPlayer(userId int, password string) {
 		return
 	}
 
+	if utils.Includes(game.playersInvited, userId) {
+		game.playersInvited = utils.Filter(game.playersInvited, func(x int) bool { return x != userId })
+	}
+
 	game.Data.PlayerIds = append(game.Data.PlayerIds, user.Info.Id)
 	game.Data.PlayerModifiers = append(game.Data.PlayerModifiers, &objects.MultiplayerGamePlayerMods{Id: user.Info.Id})
 
