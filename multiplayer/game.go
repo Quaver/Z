@@ -228,6 +228,11 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 	game.sendBotMessage(fmt.Sprintf("%v has started spectating the game.", user.Info.Username))
 	sessions.SendPacketToUser(packets.NewServerSpectateMultiplayerGame(game.Data.GameId), user)
 	sendLobbyUsersGameInfoPacket(game, true)
+
+	if game.Data.InProgress {
+		game.initializeSpectators()
+		sessions.SendPacketToUser(packets.NewServerGameStart(), user)
+	}
 }
 
 // SetHost Sets the host of the game. Set requester to nil if this is meant to be a forced action.
