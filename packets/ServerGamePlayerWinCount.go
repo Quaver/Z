@@ -2,7 +2,7 @@ package packets
 
 type ServerGamePlayerWinCount struct {
 	Packet
-	UserId int `json:"u"`
+	UserId int `json:"uid"`
 	Wins   int `json:"w"`
 }
 
