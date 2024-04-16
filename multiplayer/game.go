@@ -230,7 +230,7 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 	sendLobbyUsersGameInfoPacket(game, true)
 
 	if game.Data.InProgress {
-		game.initializeSpectators()
+		game.initializeSpectator(user)
 		sessions.SendPacketToUser(packets.NewServerGameStart(), user)
 	}
 }
@@ -899,22 +899,25 @@ func (game *Game) clearReadyPlayers(sendToLobby bool) {
 func (game *Game) initializeSpectators() {
 	for _, userId := range game.spectators {
 		user := sessions.GetUserById(userId)
+		game.initializeSpectator(user)
+	}
+}
 
-		if user == nil {
-			continue
-		}
+func (game *Game) initializeSpectator(user *sessions.User) {
+	if user == nil {
+		return
+	}
 
-		user.StopSpectatingAll()
+	user.StopSpectatingAll()
 
-		if len(game.playersInMatch) != 2 && common.HasUserGroup(user.Info.UserGroups, common.UserGroupDeveloper) {
-			sessions.SendPacketToUser(packets.NewServerNotificationInfo("You can only spectate matches with two players."), user)
-			continue
-		}
+	if len(game.playersInMatch) != 2 && common.HasUserGroup(user.Info.UserGroups, common.UserGroupDeveloper) {
+		sessions.SendPacketToUser(packets.NewServerNotificationInfo("You can only spectate matches with two players."), user)
+		return
+	}
 
-		for _, playerId := range game.playersInMatch {
-			if player := sessions.GetUserById(playerId); player != nil {
-				player.AddSpectator(user)
-			}
+	for _, playerId := range game.playersInMatch {
+		if player := sessions.GetUserById(playerId); player != nil {
+			player.AddSpectator(user)
 		}
 	}
 }
