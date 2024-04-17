@@ -104,7 +104,6 @@ const (
 	PacketIdClientStopSpectatePlayer
 	PacketIdServerStartSpectatePlayer
 	PacketIdServerStopSpectatePlayer
-	PacketIdServerClearSpectateeReplayFrames
 	PacketIdServerSpectatorJoined
 	PacketIdServerSpectatorLeft
 	PacketIdClientSpectatorReplayFrames
@@ -140,4 +139,5 @@ const (
 	PacketIdClientGameAutoHost
 	PacketIdServerGameAutoHost
 	PacketIdClientLogout
+	PacketIdServerClearSpectateeReplayFrames
 )
