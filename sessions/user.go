@@ -311,6 +311,7 @@ func (u *User) AddSpectator(spectator *User) {
 	spectator.spectating = append(spectator.spectating, u)
 	SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, clientStatus), spectator)
 	SendPacketToUser(packets.NewServerStartSpectatePlayer(u.Info.Id), spectator)
+	SendPacketToUser(packets.NewServerClearSpectateeReplayFrames(u.Info.Id), spectator)
 
 	// In the event that the user is already being spectated, dump all the previous frames to them so they can join in the middle.
 	for _, frame := range u.frames {
