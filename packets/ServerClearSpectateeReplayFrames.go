@@ -7,7 +7,7 @@ type ServerClearSpectateeReplayFrames struct {
 
 func NewServerClearSpectateeReplayFrames(userId int) *ServerClearSpectateeReplayFrames {
 	return &ServerClearSpectateeReplayFrames{
-		Packet: Packet{Id: PacketIdServerStopSpectatePlayer},
+		Packet: Packet{Id: PacketIdServerClearSpectateeReplayFrames},
 		UserId: userId,
 	}
 }

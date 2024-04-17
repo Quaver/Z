@@ -104,6 +104,7 @@ const (
 	PacketIdClientStopSpectatePlayer
 	PacketIdServerStartSpectatePlayer
 	PacketIdServerStopSpectatePlayer
+	PacketIdServerClearSpectateeReplayFrames
 	PacketIdServerSpectatorJoined
 	PacketIdServerSpectatorLeft
 	PacketIdClientSpectatorReplayFrames
