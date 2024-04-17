@@ -366,6 +366,7 @@ func (u *User) HandleNewSpectatorFrames(packet *packets.ClientSpectatorReplayFra
 	for _, spectator := range u.GetSpectators() {
 		if packet.Status == packets.SpectatorFrameNewSong || packet.Status == packets.SpectatorFrameSelectingSong {
 			SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, u.status), spectator)
+			SendPacketToUser(packets.NewServerClearSpectateeReplayFrames(u.Info.Id), spectator)
 		}
 
 		SendPacketToUser(packets.NewServerSpectatorReplayFrames(u.Info.Id, packet.Status, packet.AudioTime, packet.Frames), spectator)
