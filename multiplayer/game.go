@@ -382,6 +382,12 @@ func (game *Game) StartGame() {
 		return x != game.Data.RefereeId && !utils.Includes(game.Data.PlayersWithoutMap, x)
 	})
 
+	// Force clear replay frames from the server
+	for _, playerId := range game.playersInMatch {
+		user := sessions.GetUserById(playerId)
+		user.ClearReplayFrames()
+	}
+
 	game.initializeSpectators()
 	game.createScoreProcessors()
 	game.clearCountdown()

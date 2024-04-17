@@ -341,17 +341,21 @@ func (u *User) StopSpectatingAll() {
 	}
 }
 
+func (u *User) ClearReplayFrames() {
+	u.frames = []*packets.ClientSpectatorReplayFrames{}
+}
+
 // HandleNewSpectatorFrames Handles incoming replay frames
 func (u *User) HandleNewSpectatorFrames(packet *packets.ClientSpectatorReplayFrames) {
 	u.Mutex.Lock()
 
 	if u.frames == nil {
-		u.frames = []*packets.ClientSpectatorReplayFrames{}
+		u.ClearReplayFrames()
 	}
 
 	switch packet.Status {
 	case packets.SpectatorFrameNewSong, packets.SpectatorFrameSelectingSong:
-		u.frames = []*packets.ClientSpectatorReplayFrames{}
+		u.ClearReplayFrames()
 	default:
 		u.frames = append(u.frames, packet)
 	}
