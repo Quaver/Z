@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"slices"
 	"time"
 )
 
@@ -1156,7 +1157,7 @@ func (game *Game) sendPacketToPlayers(packet interface{}) {
 
 	for _, id := range game.spectators {
 		// Referee will have already gotten the packet above.
-		if id == game.Data.RefereeId {
+		if id == game.Data.RefereeId && slices.Contains(game.Data.PlayerIds, id) {
 			continue
 		}
 
