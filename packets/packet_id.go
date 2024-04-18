@@ -139,5 +139,4 @@ const (
 	PacketIdClientGameAutoHost
 	PacketIdServerGameAutoHost
 	PacketIdClientLogout
-	PacketIdServerClearSpectateeReplayFrames
 )
