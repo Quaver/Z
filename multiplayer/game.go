@@ -174,7 +174,10 @@ func (game *Game) RemovePlayer(userId int) {
 	game.checkScreenLoadedPlayers()
 	game.checkAllPlayersSkipped()
 
-	if game.isAllPlayersFinished() {
+	// The game ends if everyone finishes the gameplay
+	// or if we're in a tournament and someone that is neither a referee or a spectator quit
+	if game.isAllPlayersFinished() ||
+		game.Data.IsTournamentMode && !game.isPlayerSpectatorOrReferee(userId) {
 		game.EndGame()
 	}
 
@@ -1101,6 +1104,10 @@ func (game *Game) isAllPlayersFinished() bool {
 	}
 
 	return true
+}
+
+func (game *Game) isPlayerSpectatorOrReferee(userId int) bool {
+	return game.Data.RefereeId == userId || slices.Contains(game.spectators, userId)
 }
 
 // Checks if all the players in the game have skipped the map and sends a packet letting them know.
