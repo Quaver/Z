@@ -311,6 +311,9 @@ func (u *User) AddSpectator(spectator *User) {
 	spectator.spectating = append(spectator.spectating, u)
 	SendPacketToUser(packets.NewServerUserStatusSingle(u.Info.Id, clientStatus), spectator)
 	SendPacketToUser(packets.NewServerStartSpectatePlayer(u.Info.Id), spectator)
+	if u.status.Status == objects.ClientStatusPLaying {
+		SendPacketToUser(packets.NewServerSpectatorReplayFrames(u.Info.Id, packets.SpectatorFrameNewSong, 0, nil), spectator)
+	}
 
 	// In the event that the user is already being spectated, dump all the previous frames to them so they can join in the middle.
 	for _, frame := range u.frames {
@@ -341,17 +344,21 @@ func (u *User) StopSpectatingAll() {
 	}
 }
 
+func (u *User) ClearReplayFrames() {
+	u.frames = []*packets.ClientSpectatorReplayFrames{}
+}
+
 // HandleNewSpectatorFrames Handles incoming replay frames
 func (u *User) HandleNewSpectatorFrames(packet *packets.ClientSpectatorReplayFrames) {
 	u.Mutex.Lock()
 
 	if u.frames == nil {
-		u.frames = []*packets.ClientSpectatorReplayFrames{}
+		u.ClearReplayFrames()
 	}
 
 	switch packet.Status {
 	case packets.SpectatorFrameNewSong, packets.SpectatorFrameSelectingSong:
-		u.frames = []*packets.ClientSpectatorReplayFrames{}
+		u.ClearReplayFrames()
 	default:
 		u.frames = append(u.frames, packet)
 	}

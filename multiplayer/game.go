@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"slices"
 	"time"
 )
 
@@ -142,6 +143,8 @@ func (game *Game) AddPlayer(userId int, password string) {
 func (game *Game) RemovePlayer(userId int) {
 	user := sessions.GetUserById(userId)
 
+	var playerWasInMatch = slices.Contains(game.playersInMatch, userId)
+
 	if user != nil {
 		user.SetMultiplayerGameId(0)
 		user.StopSpectatingAll()
@@ -173,7 +176,10 @@ func (game *Game) RemovePlayer(userId int) {
 	game.checkScreenLoadedPlayers()
 	game.checkAllPlayersSkipped()
 
-	if game.isAllPlayersFinished() {
+	// The game ends if everyone finishes the gameplay
+	// or if we're in a tournament and someone that is neither a referee or a spectator quit
+	if game.isAllPlayersFinished() ||
+		game.Data.IsTournamentMode && playerWasInMatch {
 		game.EndGame()
 	}
 
@@ -230,7 +236,7 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 	sendLobbyUsersGameInfoPacket(game, true)
 
 	if game.Data.InProgress {
-		game.initializeSpectators()
+		game.initializeSpectator(user)
 		sessions.SendPacketToUser(packets.NewServerGameStart(), user)
 	}
 }
@@ -381,6 +387,12 @@ func (game *Game) StartGame() {
 	game.playersInMatch = utils.Filter(game.Data.PlayerIds, func(x int) bool {
 		return x != game.Data.RefereeId && !utils.Includes(game.Data.PlayersWithoutMap, x)
 	})
+
+	// Force clear replay frames from the server
+	for _, playerId := range game.playersInMatch {
+		user := sessions.GetUserById(playerId)
+		user.ClearReplayFrames()
+	}
 
 	game.initializeSpectators()
 	game.createScoreProcessors()
@@ -899,22 +911,25 @@ func (game *Game) clearReadyPlayers(sendToLobby bool) {
 func (game *Game) initializeSpectators() {
 	for _, userId := range game.spectators {
 		user := sessions.GetUserById(userId)
+		game.initializeSpectator(user)
+	}
+}
 
-		if user == nil {
-			continue
-		}
+func (game *Game) initializeSpectator(user *sessions.User) {
+	if user == nil {
+		return
+	}
 
-		user.StopSpectatingAll()
+	user.StopSpectatingAll()
 
-		if len(game.playersInMatch) != 2 && common.HasUserGroup(user.Info.UserGroups, common.UserGroupDeveloper) {
-			sessions.SendPacketToUser(packets.NewServerNotificationInfo("You can only spectate matches with two players."), user)
-			continue
-		}
+	if len(game.playersInMatch) != 2 && !common.HasUserGroup(user.Info.UserGroups, common.UserGroupDeveloper) {
+		sessions.SendPacketToUser(packets.NewServerNotificationInfo("You can only spectate matches with two players."), user)
+		return
+	}
 
-		for _, playerId := range game.playersInMatch {
-			if player := sessions.GetUserById(playerId); player != nil {
-				player.AddSpectator(user)
-			}
+	for _, playerId := range game.playersInMatch {
+		if player := sessions.GetUserById(playerId); player != nil {
+			player.AddSpectator(user)
 		}
 	}
 }
@@ -1093,6 +1108,10 @@ func (game *Game) isAllPlayersFinished() bool {
 	return true
 }
 
+func (game *Game) isPlayerSpectatorOrReferee(userId int) bool {
+	return game.Data.RefereeId == userId || slices.Contains(game.spectators, userId)
+}
+
 // Checks if all the players in the game have skipped the map and sends a packet letting them know.
 func (game *Game) checkAllPlayersSkipped() {
 	if !game.Data.InProgress {
@@ -1147,7 +1166,7 @@ func (game *Game) sendPacketToPlayers(packet interface{}) {
 
 	for _, id := range game.spectators {
 		// Referee will have already gotten the packet above.
-		if id == game.Data.RefereeId {
+		if id == game.Data.RefereeId && slices.Contains(game.Data.PlayerIds, id) {
 			continue
 		}
 
