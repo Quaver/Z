@@ -143,7 +143,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 func (game *Game) RemovePlayer(userId int) {
 	user := sessions.GetUserById(userId)
 
-	var playerIsSpectatorOrReferee = game.isPlayerSpectatorOrReferee(userId)
+	var playerWasInMatch = slices.Contains(game.playersInMatch, userId)
 
 	if user != nil {
 		user.SetMultiplayerGameId(0)
@@ -179,7 +179,7 @@ func (game *Game) RemovePlayer(userId int) {
 	// The game ends if everyone finishes the gameplay
 	// or if we're in a tournament and someone that is neither a referee or a spectator quit
 	if game.isAllPlayersFinished() ||
-		game.Data.IsTournamentMode && !playerIsSpectatorOrReferee {
+		game.Data.IsTournamentMode && playerWasInMatch {
 		game.EndGame()
 	}
 
