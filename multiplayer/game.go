@@ -181,6 +181,8 @@ func (game *Game) RemovePlayer(userId int) {
 	if game.isAllPlayersFinished() ||
 		game.Data.IsTournamentMode && playerWasInMatch {
 		game.EndGame()
+	} else if playerWasInMatch && len(game.playersInMatch) == 1 {
+		game.MoveToSingleplayerSpectate()
 	}
 
 	sendLobbyUsersGameInfoPacket(game, true)
@@ -376,6 +378,21 @@ func (game *Game) StopCountdown(requester *sessions.User) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+func (game *Game) MoveToSingleplayerSpectate() {
+	if len(game.playersInMatch) != 1 {
+		return
+	}
+	var player = sessions.GetUserById(game.playersInMatch[0])
+	for _, spectatorId := range game.spectators {
+		var spectator = sessions.GetUserById(spectatorId)
+		sessions.SendPacketToUser(packets.NewServerNotificationInfo("Moving you to singleplayer spectate because there's only one player in the match!"), spectator)
+		spectator.StopSpectatingAll()
+		game.RemovePlayer(spectatorId)
+		sessions.SendPacketToUser(packets.NewServerGameKicked(), spectator)
+		player.AddSpectator(spectator)
+	}
+}
+
 // StartGame Starts the multiplayer game
 func (game *Game) StartGame() {
 	if game.Data.InProgress {
@@ -392,6 +409,10 @@ func (game *Game) StartGame() {
 	for _, playerId := range game.playersInMatch {
 		user := sessions.GetUserById(playerId)
 		user.ClearReplayFrames()
+	}
+
+	if len(game.playersInMatch) == 1 {
+		game.MoveToSingleplayerSpectate()
 	}
 
 	game.initializeSpectators()
