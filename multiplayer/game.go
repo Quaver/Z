@@ -231,6 +231,7 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 	if len(game.playersInMatch) == 1 && game.Data.InProgress {
 		var player = sessions.GetUserById(game.playersInMatch[0])
 		player.AddSpectator(user)
+		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorMatchNoExists), user)
 		sessions.SendPacketToUser(packets.NewServerNotificationInfo("Moving you to singleplayer spectate because there's only one player in the match!"), user)
 		return
 	}
