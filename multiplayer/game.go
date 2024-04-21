@@ -228,6 +228,13 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 		currGame.RemovePlayer(user.Info.Id)
 	}
 
+	if len(game.playersInMatch) == 1 && game.Data.InProgress {
+		var player = sessions.GetUserById(game.playersInMatch[0])
+		player.AddSpectator(user)
+		sessions.SendPacketToUser(packets.NewServerNotificationInfo("Moving you to singleplayer spectate because there's only one player in the match!"), user)
+		return
+	}
+
 	game.spectators = append(game.spectators, user.Info.Id)
 	game.chatChannel.AddUser(user)
 	user.SetMultiplayerGameId(game.Data.Id)
