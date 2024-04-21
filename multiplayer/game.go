@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"slices"
 	"time"
 )
 
@@ -143,7 +142,7 @@ func (game *Game) AddPlayer(userId int, password string) {
 func (game *Game) RemovePlayer(userId int) {
 	user := sessions.GetUserById(userId)
 
-	var playerWasInMatch = slices.Contains(game.playersInMatch, userId)
+	var playerWasInMatch = utils.Includes(game.playersInMatch, userId)
 
 	if user != nil {
 		user.SetMultiplayerGameId(0)
@@ -1138,7 +1137,7 @@ func (game *Game) isAllPlayersFinished() bool {
 }
 
 func (game *Game) isPlayerSpectatorOrReferee(userId int) bool {
-	return game.Data.RefereeId == userId || slices.Contains(game.spectators, userId)
+	return game.Data.RefereeId == userId || utils.Includes(game.spectators, userId)
 }
 
 // Checks if all the players in the game have skipped the map and sends a packet letting them know.
@@ -1195,7 +1194,7 @@ func (game *Game) sendPacketToPlayers(packet interface{}) {
 
 	for _, id := range game.spectators {
 		// Referee will have already gotten the packet above.
-		if id == game.Data.RefereeId && slices.Contains(game.Data.PlayerIds, id) {
+		if id == game.Data.RefereeId && utils.Includes(game.Data.PlayerIds, id) {
 			continue
 		}
 
