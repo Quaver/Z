@@ -433,6 +433,12 @@ func (game *Game) EndGame() {
 
 	game.sendBotMessage("The match has ended.")
 	game.sendPacketToPlayers(packets.NewServerGameEnded())
+
+	for _, spectatorId := range game.spectators {
+		var spectator = sessions.GetUserById(spectatorId)
+		sessions.SendPacketToUser(packets.NewServerGameEnded(), spectator)
+	}
+
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
