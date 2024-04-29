@@ -283,7 +283,7 @@ func handleCommandEndMatch(user *sessions.User, game *Game) string {
 		return "The match is not currently in progress."
 	}
 
-	game.EndGame()
+	game.EndGame(true)
 	return ""
 }
 
