@@ -179,7 +179,7 @@ func (game *Game) RemovePlayer(userId int) {
 	// or if we're in a tournament and someone that is neither a referee or a spectator quit
 	if game.isAllPlayersFinished() ||
 		game.Data.IsTournamentMode && playerWasInMatch {
-		game.EndGame()
+		game.EndGame(false)
 	} else if playerWasInMatch && len(game.playersInMatch) == 1 {
 		game.MoveToSingleplayerSpectate()
 	}
@@ -435,7 +435,7 @@ func (game *Game) StartGame() {
 }
 
 // EndGame Ends the multiplayer game
-func (game *Game) EndGame() {
+func (game *Game) EndGame(force bool) {
 	if !game.Data.InProgress {
 		return
 	}
@@ -460,7 +460,7 @@ func (game *Game) EndGame() {
 	game.validateAndCacheSettings()
 
 	game.sendBotMessage("The match has ended.")
-	game.sendPacketToPlayers(packets.NewServerGameEnded())
+	game.sendPacketToPlayers(packets.NewServerGameEnded(force))
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
@@ -745,7 +745,7 @@ func (game *Game) SetPlayerFinished(userId int) {
 	}
 
 	if game.isAllPlayersFinished() {
-		game.EndGame()
+		game.EndGame(false)
 	}
 }
 
@@ -886,7 +886,7 @@ func (game *Game) rotateHost() {
 
 // Handles disbandment of the multiplayer game
 func (game *Game) disband() {
-	game.EndGame()
+	game.EndGame(true)
 	game.isDisbanded = true
 
 	// Tournament mode games are kept around and deleted manually
