@@ -2,18 +2,19 @@ package multiplayer
 
 import (
 	"database/sql"
-	"example.com/Quaver/Z/chat"
-	"example.com/Quaver/Z/common"
-	"example.com/Quaver/Z/db"
-	"example.com/Quaver/Z/objects"
-	"example.com/Quaver/Z/sessions"
-	"example.com/Quaver/Z/utils"
 	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
+
+	"example.com/Quaver/Z/chat"
+	"example.com/Quaver/Z/common"
+	"example.com/Quaver/Z/db"
+	"example.com/Quaver/Z/objects"
+	"example.com/Quaver/Z/sessions"
+	"example.com/Quaver/Z/utils"
 )
 
 func InitializeChatBot() {
@@ -126,6 +127,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandRandomMap(user, game)
 		case "debug":
 			message = handleCommandDebug(user, game)
+		case "mods":
+			message = handleCommandMods(user, game, args)
 		}
 	})
 
@@ -624,6 +627,48 @@ func handleCommandDebug(user *sessions.User, game *Game) string {
 	}
 
 	return str
+}
+
+// Handles current map modifiers in multiplayer
+func handleCommandMods(user *sessions.User, game *Game, args []string) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	if !game.Data.IsTournamentMode {
+		return ""
+	}
+
+	if len(args) < 3 {
+		return "Incorrect arguments, usage: !mp mods <mod1,mod2,mod3>"
+	}
+
+	modMap := common.GetModStrings()
+	var mods common.Mods
+	var validatedMods []string
+
+	for _, arg := range strings.Split(args[2], ",") {
+		mod, exists := modMap[arg]
+		if !exists {
+			continue
+		}
+
+		if mods&mod != 0 {
+			continue
+		}
+
+		validatedMods = append(validatedMods, arg)
+
+		mods |= mod
+	}
+
+	game.SetGlobalModifiers(user, mods, game.Data.MapDifficultyRating)
+
+	if len(validatedMods) == 0 {
+		return "All player modifiers have been reset."
+	}
+
+	return fmt.Sprintf("Game modifiers changed to: %v.", strings.Join(validatedMods, ","))
 }
 
 // getUserFromCommandArgs Returns a target user from command args
