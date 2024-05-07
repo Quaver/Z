@@ -2,6 +2,11 @@ package multiplayer
 
 import (
 	"errors"
+	"fmt"
+	"log"
+	"math"
+	"time"
+
 	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
@@ -10,10 +15,6 @@ import (
 	"example.com/Quaver/Z/scoring"
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
-	"fmt"
-	"log"
-	"math"
-	"time"
 )
 
 type Game struct {
@@ -977,12 +978,7 @@ func (game *Game) createScoreProcessors() {
 		}
 
 		mods := game.Data.GlobalModifiers | playerMods.Modifiers
-		difficulty := game.Data.MapDifficultyRating
-		idx := utils.FindIndex(common.SpeedMods, common.GetSpeedModFromMods(mods))
-
-		if idx != -1 && len(game.Data.MapDifficultyRatingAll) > 0 {
-			difficulty = game.Data.MapDifficultyRatingAll[idx]
-		}
+		difficulty := game.findMapDifficultyRatingFromMods(mods)
 
 		game.playerScores[player] = scoring.NewScoreProcessor(difficulty, mods)
 	}
@@ -1279,4 +1275,15 @@ func (game *Game) removeInactivePlayers() {
 			time.Sleep(time.Second * 5)
 		}
 	}()
+}
+
+func (game *Game) findMapDifficultyRatingFromMods(mods common.Mods) float64 {
+	difficulty := game.Data.MapDifficultyRating
+	idx := utils.FindIndex(common.SpeedMods, common.GetSpeedModFromMods(mods))
+
+	if idx != -1 && len(game.Data.MapDifficultyRatingAll) > 0 {
+		difficulty = game.Data.MapDifficultyRatingAll[idx]
+	}
+
+	return difficulty
 }

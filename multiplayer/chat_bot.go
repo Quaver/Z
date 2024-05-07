@@ -611,6 +611,7 @@ func handleCommandDebug(user *sessions.User, game *Game) string {
 	str := fmt.Sprintf("In Progress: %v\n", game.Data.InProgress)
 	str += fmt.Sprintf("Disbanded: %v\n", game.isDisbanded)
 	str += fmt.Sprintf("Player Count: %v\n", len(game.Data.PlayerIds))
+	str += fmt.Sprintf("Map rating: %v\n", game.Data.MapDifficultyRating)
 	str += fmt.Sprintf("Players:\n")
 
 	for index, id := range game.Data.PlayerIds {
@@ -662,7 +663,9 @@ func handleCommandMods(user *sessions.User, game *Game, args []string) string {
 		mods |= mod
 	}
 
-	game.SetGlobalModifiers(user, mods, game.Data.MapDifficultyRating)
+	difficulty := game.findMapDifficultyRatingFromMods(mods)
+
+	game.SetGlobalModifiers(user, mods, difficulty)
 
 	if len(validatedMods) == 0 {
 		return "All player modifiers have been reset."
