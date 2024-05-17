@@ -227,7 +227,7 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 		currGame.RemovePlayer(user.Info.Id)
 	}
 
-	if len(game.playersInMatch) == 1 && game.Data.InProgress {
+	if len(game.playersInMatch) == 1 && game.Data.InProgress && user.Info.Id != game.Data.RefereeId {
 		var player = sessions.GetUserById(game.playersInMatch[0])
 		player.AddSpectator(user)
 		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorMatchNoExists), user)
@@ -393,6 +393,9 @@ func (game *Game) MoveToSingleplayerSpectate() {
 	var player = sessions.GetUserById(game.playersInMatch[0])
 	for _, spectatorId := range game.spectators {
 		var spectator = sessions.GetUserById(spectatorId)
+		if spectatorId == game.Data.RefereeId {
+			continue
+		}
 		sessions.SendPacketToUser(packets.NewServerNotificationInfo("Moving you to singleplayer spectate because there's only one player in the match!"), spectator)
 		spectator.StopSpectatingAll()
 		game.RemovePlayer(spectatorId)
