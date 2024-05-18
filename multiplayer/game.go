@@ -228,7 +228,7 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 		currGame.RemovePlayer(user.Info.Id)
 	}
 
-	if len(game.playersInMatch) == 1 && game.Data.InProgress {
+	if len(game.playersInMatch) == 1 && game.Data.InProgress && user.Info.Id != game.Data.RefereeId {
 		var player = sessions.GetUserById(game.playersInMatch[0])
 		player.AddSpectator(user)
 		sessions.SendPacketToUser(packets.NewServerJoinGameFailed(packets.JoinGameErrorMatchNoExists), user)
@@ -246,8 +246,9 @@ func (game *Game) AddSpectator(user *sessions.User, password string) {
 	sendLobbyUsersGameInfoPacket(game, true)
 
 	if game.Data.InProgress {
-		game.initializeSpectator(user)
-		sessions.SendPacketToUser(packets.NewServerGameStart(), user)
+		if game.initializeSpectator(user) {
+			sessions.SendPacketToUser(packets.NewServerGameStart(), user)
+		}
 	}
 }
 
@@ -393,6 +394,9 @@ func (game *Game) MoveToSingleplayerSpectate() {
 	var player = sessions.GetUserById(game.playersInMatch[0])
 	for _, spectatorId := range game.spectators {
 		var spectator = sessions.GetUserById(spectatorId)
+		if spectatorId == game.Data.RefereeId {
+			continue
+		}
 		sessions.SendPacketToUser(packets.NewServerNotificationInfo("Moving you to singleplayer spectate because there's only one player in the match!"), spectator)
 		spectator.StopSpectatingAll()
 		game.RemovePlayer(spectatorId)
@@ -431,7 +435,7 @@ func (game *Game) StartGame() {
 	game.validateAndCacheSettings()
 
 	game.sendBotMessage("The match has been started.")
-	game.sendPacketToPlayers(packets.NewServerGameStart())
+	game.sendPacketToPlayersAndActiveSpectators(packets.NewServerGameStart())
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
@@ -944,16 +948,16 @@ func (game *Game) initializeSpectators() {
 	}
 }
 
-func (game *Game) initializeSpectator(user *sessions.User) {
+func (game *Game) initializeSpectator(user *sessions.User) bool {
 	if user == nil {
-		return
+		return false
 	}
 
 	user.StopSpectatingAll()
 
 	if len(game.playersInMatch) != 2 && !common.HasUserGroup(user.Info.UserGroups, common.UserGroupDeveloper) {
 		sessions.SendPacketToUser(packets.NewServerNotificationInfo("You can only spectate matches with two players."), user)
-		return
+		return false
 	}
 
 	for _, playerId := range game.playersInMatch {
@@ -961,6 +965,7 @@ func (game *Game) initializeSpectator(user *sessions.User) {
 			player.AddSpectator(user)
 		}
 	}
+	return true
 }
 
 // Creates score processors for all the users that are playing in the match
@@ -1174,6 +1179,36 @@ func (game *Game) changeMapFromDbSong(song *db.SongMap) {
 		DifficultyRating:    song.DifficultyRating,
 		DifficultyRatingAll: []float64{},
 	})
+}
+
+// Sends a packet to all players in the game and spectators that are spectating at least one player.
+func (game *Game) sendPacketToPlayersAndActiveSpectators(packet interface{}) {
+	for _, id := range game.Data.PlayerIds {
+		user := sessions.GetUserById(id)
+
+		// We want in-game players except referee here
+		if user == nil || id == game.Data.RefereeId {
+			continue
+		}
+
+		sessions.SendPacketToUser(packet, user)
+	}
+
+	for _, id := range game.spectators {
+		// We don't want any in-game players except the referee here
+		if id != game.Data.RefereeId && utils.Includes(game.Data.PlayerIds, id) {
+			continue
+		}
+
+		user := sessions.GetUserById(id)
+
+		// User is not found, or is not spectating anyone
+		if user == nil || len(user.GetSpectating()) == 0 {
+			continue
+		}
+
+		sessions.SendPacketToUser(packet, user)
+	}
 }
 
 // Sends a packet to all players in the game.
