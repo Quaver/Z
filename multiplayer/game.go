@@ -892,13 +892,13 @@ func (game *Game) rotateHost() {
 // Handles disbandment of the multiplayer game
 func (game *Game) disband() {
 	game.EndGame(true)
-	game.isDisbanded = true
 
 	// Tournament mode games are kept around and deleted manually
 	if game.Data.IsTournamentMode {
 		return
 	}
 
+	game.isDisbanded = true
 	game.deleteCachedMatchSettings()
 	chat.RemoveMultiplayerChannel(game.Data.GameId)
 	RemoveGameFromLobby(game)
