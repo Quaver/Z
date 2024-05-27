@@ -955,11 +955,6 @@ func (game *Game) initializeSpectator(user *sessions.User) bool {
 
 	user.StopSpectatingAll()
 
-	if len(game.playersInMatch) != 2 && !common.HasUserGroup(user.Info.UserGroups, common.UserGroupDeveloper) {
-		sessions.SendPacketToUser(packets.NewServerNotificationInfo("You can only spectate matches with two players."), user)
-		return false
-	}
-
 	for _, playerId := range game.playersInMatch {
 		if player := sessions.GetUserById(playerId); player != nil {
 			player.AddSpectator(user)
