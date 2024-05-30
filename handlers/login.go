@@ -89,7 +89,14 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		}
 	}
 
-	err = db.InsertLoginIpAddress(user.Id, conn.RemoteAddr().String())
+	ip := conn.RemoteAddr().String()
+	ipHeader := r.Header.Get("X-Forwarded-For")
+
+	if ipHeader != "" {
+		ip = ipHeader
+	}
+
+	err = db.InsertLoginIpAddress(user.Id, ip)
 
 	if err != nil {
 		return err
