@@ -435,7 +435,7 @@ func (game *Game) StartGame() {
 	game.validateAndCacheSettings()
 
 	game.sendBotMessage("The match has been started.")
-	game.sendPacketToPlayersAndActiveSpectators(packets.NewServerGameStart())
+	game.sendPacketToPlayers(packets.NewServerGameStart())
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
@@ -705,7 +705,10 @@ func (game *Game) SetPlayerWinCount(userId int, wins int) {
 
 // SetReferee Sets the referee for the game. Set userId to -1 to clear.
 func (game *Game) SetReferee(requester *sessions.User, userId int) {
-	if game.Data.InProgress {
+	// If the referee stays unchanged, the referee is rejoining.
+	// We need to add the referee to game.spectators so game.initializeSpectators()
+	// 	could make the referee spectate as well.
+	if game.Data.InProgress && userId != game.Data.RefereeId {
 		return
 	}
 
@@ -1174,36 +1177,6 @@ func (game *Game) changeMapFromDbSong(song *db.SongMap) {
 		DifficultyRating:    song.DifficultyRating,
 		DifficultyRatingAll: []float64{},
 	})
-}
-
-// Sends a packet to all players in the game and spectators that are spectating at least one player.
-func (game *Game) sendPacketToPlayersAndActiveSpectators(packet interface{}) {
-	for _, id := range game.Data.PlayerIds {
-		user := sessions.GetUserById(id)
-
-		// We want in-game players except referee here
-		if user == nil || id == game.Data.RefereeId {
-			continue
-		}
-
-		sessions.SendPacketToUser(packet, user)
-	}
-
-	for _, id := range game.spectators {
-		// We don't want any in-game players except the referee here
-		if id != game.Data.RefereeId && utils.Includes(game.Data.PlayerIds, id) {
-			continue
-		}
-
-		user := sessions.GetUserById(id)
-
-		// User is not found, or is not spectating anyone
-		if user == nil || len(user.GetSpectating()) == 0 {
-			continue
-		}
-
-		sessions.SendPacketToUser(packet, user)
-	}
 }
 
 // Sends a packet to all players in the game.
