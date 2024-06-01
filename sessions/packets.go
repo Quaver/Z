@@ -2,6 +2,8 @@ package sessions
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"net"
 )
@@ -18,11 +20,21 @@ func SendPacketToConnection(data interface{}, conn net.Conn) {
 		return
 	}
 
-	err = wsutil.WriteServerText(conn, j)
+	writer := wsutil.GetWriter(conn, ws.StateServerSide, ws.OpBinary, wsutil.DefaultWriteBuffer)
+
+	_, err = writer.Write(j)
+
+	if err == nil {
+		err = writer.Flush()
+	}
+
+	wsutil.PutWriter(writer)
 
 	if err != nil {
+		fmt.Printf("error: %v\n", err)
 		return
 	}
+
 }
 
 // SendPacketToUser Sends a packet to a given user
