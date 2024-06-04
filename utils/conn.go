@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/gobwas/ws"
 	"net"
 	"time"
 )
@@ -11,6 +12,14 @@ func CloseConnection(conn net.Conn) {
 		return
 	}
 
+	var body = ws.NewCloseFrameBody(1000, "")
+	var frame = ws.NewCloseFrame(body)
+	if err := ws.WriteHeader(conn, frame.Header); err != nil {
+		return
+	}
+	if _, err := conn.Write(body); err != nil {
+		return
+	}
 	_ = conn.Close()
 }
 
