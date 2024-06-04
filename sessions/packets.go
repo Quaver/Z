@@ -12,6 +12,12 @@ func SendPacketToConnection(data interface{}, conn net.Conn) {
 		return
 	}
 
+	user := GetUserByConnection(conn)
+	if user != nil {
+		user.ConnMutex.Lock()
+		defer user.ConnMutex.Unlock()
+	}
+
 	j, err := json.Marshal(data)
 
 	if err != nil {

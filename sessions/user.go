@@ -17,6 +17,8 @@ type User struct {
 	// The connection for the user
 	Conn net.Conn
 
+	ConnMutex *sync.Mutex
+
 	// The token used to identify the user for requests.
 	token string
 
@@ -64,6 +66,7 @@ type User struct {
 func NewUser(conn net.Conn, user *db.User) *User {
 	return &User{
 		Conn:              conn,
+		ConnMutex:         &sync.Mutex{},
 		token:             utils.GenerateRandomString(64),
 		Info:              user,
 		Mutex:             &sync.Mutex{},
