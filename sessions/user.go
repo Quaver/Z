@@ -19,6 +19,8 @@ type User struct {
 
 	ConnMutex *sync.Mutex
 
+	PacketChannel chan interface{}
+
 	// The token used to identify the user for requests.
 	token string
 
@@ -36,6 +38,8 @@ type User struct {
 
 	// The last time the user sent a successful pong
 	lastPongTimestamp int64
+
+	lastTemporaryDisconnectionTimestamp int64
 
 	// The last detected processes that were discovered on the user
 	lastDetectedProcesses []string
@@ -64,15 +68,17 @@ type User struct {
 
 // NewUser Creates a new user session struct object
 func NewUser(conn net.Conn, user *db.User) *User {
-	return &User{
-		Conn:              conn,
-		ConnMutex:         &sync.Mutex{},
-		token:             utils.GenerateRandomString(64),
-		Info:              user,
-		Mutex:             &sync.Mutex{},
-		stats:             map[common.Mode]*db.UserStats{},
-		lastPingTimestamp: time.Now().UnixMilli(),
-		lastPongTimestamp: time.Now().UnixMilli(),
+	sessionUser := User{
+		Conn:                                conn,
+		ConnMutex:                           &sync.Mutex{},
+		PacketChannel:                       make(chan interface{}, 256),
+		token:                               utils.GenerateRandomString(64),
+		Info:                                user,
+		Mutex:                               &sync.Mutex{},
+		stats:                               map[common.Mode]*db.UserStats{},
+		lastPingTimestamp:                   time.Now().UnixMilli(),
+		lastPongTimestamp:                   time.Now().UnixMilli(),
+		lastTemporaryDisconnectionTimestamp: -1,
 		status: &objects.ClientStatus{
 			Status:    0,
 			MapId:     -1,
@@ -85,6 +91,15 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		spectating: []*User{},
 		frames:     []*packets.ClientSpectatorReplayFrames{},
 	}
+	go func() {
+		for packet := range sessionUser.PacketChannel {
+			for err := SendPacketToConnection(packet, sessionUser.Conn); err != nil; {
+				time.Sleep(10 * time.Millisecond)
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+	}()
+	return &sessionUser
 }
 
 // GetToken Returns the user token

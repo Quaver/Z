@@ -1,15 +1,17 @@
 package sessions
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"github.com/gobwas/ws/wsutil"
 	"net"
 )
 
 // SendPacketToConnection Sends a packet to a given connection
-func SendPacketToConnection(data interface{}, conn net.Conn) {
+func SendPacketToConnection(data interface{}, conn net.Conn) error {
 	if conn == nil {
-		return
+		return errors.New("no connection")
 	}
 
 	user := GetUserByConnection(conn)
@@ -21,20 +23,17 @@ func SendPacketToConnection(data interface{}, conn net.Conn) {
 	j, err := json.Marshal(data)
 
 	if err != nil {
-		return
+		return err
 	}
 
 	err = wsutil.WriteServerText(conn, j)
 
-	if err != nil {
-		return
-	}
+	return err
 }
 
 // SendPacketToUser Sends a packet to a given user
 func SendPacketToUser(data interface{}, user *User) {
-	SendPacketToConnection(data, user.Conn)
-	return
+	user.PacketChannel <- data
 }
 
 // SendPacketToUsers Sends a packet to a list of users

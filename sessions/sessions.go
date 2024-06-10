@@ -51,6 +51,7 @@ func AddUser(user *User) error {
 func RemoveUser(user *User) error {
 	removeUserFromMaps(user)
 	user.StopSpectatingAll()
+	close(user.PacketChannel)
 
 	err := UpdateRedisOnlineUserCount()
 
