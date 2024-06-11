@@ -165,6 +165,7 @@ func startBackgroundWorker() {
 
 				// Ping the user periodically
 				if time.Now().UnixMilli()-user.GetLastPingTimestamp() >= 40_000 {
+					_ = sessions.SendPingToUser(user)
 					sessions.SendPacketToUser(packets.NewServerPing(), user)
 					user.SetLastPingTimestamp()
 				}
