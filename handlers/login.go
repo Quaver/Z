@@ -34,6 +34,8 @@ type LoginData struct {
 
 	// Game Client file signatures
 	Client string `json:"client"`
+
+	IsReconnection bool `json:"is_reconnection"`
 }
 
 // HandleLogin Handles the login of a client
@@ -114,7 +116,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		log.Println("Failed to update steam avatar: ", err)
 	}
 
-	sessionUser, err := getOrCreateSession(conn, user)
+	sessionUser, err := getOrCreateSession(conn, user, data.IsReconnection)
 
 	if err != nil {
 		return err
@@ -369,15 +371,14 @@ func updateUserAvatar(user *db.User) error {
 	return nil
 }
 
-func getOrCreateSession(conn net.Conn, user *db.User) (sessionUser *sessions.User, err error) {
+func getOrCreateSession(conn net.Conn, user *db.User, reconnection bool) (sessionUser *sessions.User, err error) {
 	sessionUser = sessions.GetUserById(user.Id)
 	if sessionUser != nil {
-		if sessionUser.GetLastTemporaryDisconnectionTimestamp() != -1 {
+		if reconnection && sessionUser.GetLastTemporaryDisconnectionTimestamp() != -1 {
 			sessionUser.SetLastTemporaryDisconnectionTimestamp(-1)
 			sessionUser.Conn = conn
 			log.Println("User", user.Username, "reconnected after temporary disconnection")
 			return
-
 		} else {
 			log.Println("Removing previous session for", user.Username)
 			err = removePreviousLoginSession(sessionUser)
