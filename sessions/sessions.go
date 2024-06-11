@@ -2,6 +2,7 @@ package sessions
 
 import (
 	"example.com/Quaver/Z/objects"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -49,9 +50,13 @@ func AddUser(user *User) error {
 
 // RemoveUser Removes a user session
 func RemoveUser(user *User) error {
+	log.Println("Removing user", user, "from Redis")
 	removeUserFromMaps(user)
 	user.StopSpectatingAll()
+
+	log.Println("Closing packet channel")
 	close(user.PacketChannel)
+	user.SessionClosed = true
 
 	err := UpdateRedisOnlineUserCount()
 

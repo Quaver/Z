@@ -4,15 +4,34 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gobwas/ws/wsutil"
+	"io"
+	"log"
 	"net"
 )
 
 // SendPacketToConnection Sends a packet to a given connection
-func SendPacketToConnection(data interface{}, conn net.Conn) error {
+func SendPacketToConnection(data interface{}, conn net.Conn) (err error) {
 	if conn == nil {
 		return errors.New("no connection")
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+			// find out exactly what the error was and set err
+			switch x := r.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				// Fallback err (per specs, error strings should be lowercase w/o punctuation
+				err = errors.New("unknown panic")
+			}
+		}
+	}()
 
 	user := GetUserByConnection(conn)
 	if user != nil {
@@ -27,13 +46,16 @@ func SendPacketToConnection(data interface{}, conn net.Conn) error {
 	}
 
 	err = wsutil.WriteServerText(conn, j)
-
-	return err
+	return
 }
 
 // SendPacketToUser Sends a packet to a given user
 func SendPacketToUser(data interface{}, user *User) {
-	user.PacketChannel <- data
+	select {
+	case user.PacketChannel <- data:
+	default:
+		log.Println("User packet channel is full: ", user.Info.Username)
+	}
 }
 
 // SendPacketToUsers Sends a packet to a list of users

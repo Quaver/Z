@@ -21,6 +21,8 @@ type User struct {
 
 	PacketChannel chan interface{}
 
+	SessionClosed bool
+
 	// The token used to identify the user for requests.
 	token string
 
@@ -72,6 +74,7 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		Conn:                                conn,
 		ConnMutex:                           &sync.Mutex{},
 		PacketChannel:                       make(chan interface{}, 256),
+		SessionClosed:                       false,
 		token:                               utils.GenerateRandomString(64),
 		Info:                                user,
 		Mutex:                               &sync.Mutex{},
@@ -93,11 +96,19 @@ func NewUser(conn net.Conn, user *db.User) *User {
 	}
 	go func() {
 		for packet := range sessionUser.PacketChannel {
-			for err := SendPacketToConnection(packet, sessionUser.Conn); err != nil; {
-				time.Sleep(10 * time.Millisecond)
+			for {
+				if sessionUser.SessionClosed {
+					break
+				}
+				if err := SendPacketToConnection(packet, sessionUser.Conn); err != nil {
+					time.Sleep(10 * time.Millisecond)
+				} else {
+					break
+				}
 			}
 			time.Sleep(10 * time.Millisecond)
 		}
+		log.Println("Packet channel closed")
 	}()
 	return &sessionUser
 }
@@ -174,6 +185,14 @@ func (u *User) SetLastPongTimestamp() {
 	defer u.Mutex.Unlock()
 
 	u.lastPongTimestamp = time.Now().UnixMilli()
+}
+
+func (u *User) GetLastTemporaryDisconnectionTimestamp() int64 {
+	return u.lastTemporaryDisconnectionTimestamp
+}
+
+func (u *User) SetLastTemporaryDisconnectionTimestamp(lastTemporaryDisconnectionTimestamp int64) {
+	u.lastTemporaryDisconnectionTimestamp = lastTemporaryDisconnectionTimestamp
 }
 
 // GetLastDetectedProcesses Gets the last detected processes for the user
