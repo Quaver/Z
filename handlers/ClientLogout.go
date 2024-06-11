@@ -11,7 +11,7 @@ func handleClientLogout(user *sessions.User, packet *packets.ClientLogout) {
 		return
 	}
 
-	err := HandleLogout(user.Conn)
+	err := HandleLogout(user.Conn, false)
 
 	if err != nil {
 		return

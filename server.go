@@ -107,7 +107,7 @@ func (s *Server) onTextMessage(conn net.Conn, msg []byte) {
 
 // Handles when a connection has been closed
 func (s *Server) onClose(conn net.Conn) error {
-	err := handlers.HandleLogout(conn)
+	err := handlers.HandleLogout(conn, true)
 
 	if err != nil {
 		return err
@@ -167,6 +167,12 @@ func startBackgroundWorker() {
 				if time.Now().UnixMilli()-user.GetLastPingTimestamp() >= 40_000 {
 					sessions.SendPacketToUser(packets.NewServerPing(), user)
 					user.SetLastPingTimestamp()
+				}
+
+				if user.GetLastTemporaryDisconnectionTimestamp() != -1 &&
+					(time.Now().UnixMilli()-user.GetLastTemporaryDisconnectionTimestamp()) >= 10_000 {
+					_ = handlers.HandleLogout(user.Conn, false)
+					log.Printf("[%v - %v] Disconnected due to not reconnecting after temporary disconnection\n", user.Info.Username, user.Info.Id)
 				}
 
 				// User hasn't responded to pings in a while, so disconnect them
