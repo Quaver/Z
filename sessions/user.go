@@ -37,6 +37,9 @@ type User struct {
 	// The last time the user sent a successful pong
 	lastPongTimestamp int64
 
+	// The last time the user sent a successful websocket pong
+	lastWsPongTimestamp int64
+
 	// The last detected processes that were discovered on the user
 	lastDetectedProcesses []string
 
@@ -159,6 +162,14 @@ func (u *User) SetLastPongTimestamp() {
 	defer u.Mutex.Unlock()
 
 	u.lastPongTimestamp = time.Now().UnixMilli()
+}
+
+func (u *User) GetLastWsPongTimestamp() int64 {
+	return u.lastWsPongTimestamp
+}
+
+func (u *User) SetLastWsPongTimestamp(lastWsPongTimestamp int64) {
+	u.lastWsPongTimestamp = lastWsPongTimestamp
 }
 
 // GetLastDetectedProcesses Gets the last detected processes for the user

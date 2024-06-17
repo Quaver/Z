@@ -90,6 +90,9 @@ func (s *Server) Start() {
 						log.Println(err)
 					}
 					break
+				case ws.OpPong:
+					_ = s.onPong(conn)
+					break
 				}
 			}
 		}()
@@ -114,6 +117,10 @@ func (s *Server) onClose(conn net.Conn) error {
 	}
 
 	return nil
+}
+
+func (s *Server) onPong(conn net.Conn) error {
+	return handlers.HandlePong(conn)
 }
 
 // Cleans up the previous sessions (when restarting the server)
@@ -165,12 +172,14 @@ func startBackgroundWorker() {
 
 				// Ping the user periodically
 				if time.Now().UnixMilli()-user.GetLastPingTimestamp() >= 40_000 {
+					_ = sessions.SendPingToUser(user)
 					sessions.SendPacketToUser(packets.NewServerPing(), user)
 					user.SetLastPingTimestamp()
 				}
 
 				// User hasn't responded to pings in a while, so disconnect them
-				if time.Now().UnixMilli()-user.GetLastPongTimestamp() >= 120_000 {
+				if time.Now().UnixMilli()-user.GetLastPongTimestamp() >= 120_000 ||
+					time.Now().UnixMilli()-user.GetLastWsPongTimestamp() >= 120_000 {
 					utils.CloseConnection(user.Conn)
 					log.Printf("[%v - %v] Disconnected due to being unresponsive to pings (timeout)\n", user.Info.Username, user.Info.Id)
 				}
