@@ -9,7 +9,6 @@ import (
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
 	"log"
 	"net"
 	"net/http"
@@ -72,7 +71,7 @@ func (s *Server) Start() {
 			defer conn.Close()
 
 			for {
-				msg, op, err := wsutil.ReadClientData(conn)
+				msg, op, err := utils.ReadData(conn, ws.StateServerSide, ws.OpText|ws.OpClose|ws.OpPong)
 
 				if err != nil {
 					_ = s.onClose(conn)
