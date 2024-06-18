@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/handlers"
 	"example.com/Quaver/Z/multiplayer"
@@ -9,9 +10,11 @@ import (
 	"example.com/Quaver/Z/utils"
 	"fmt"
 	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 	"log"
 	"net"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -74,6 +77,18 @@ func (s *Server) Start() {
 				msg, op, err := utils.ReadData(conn, ws.StateServerSide, ws.OpText|ws.OpClose|ws.OpPong)
 
 				if err != nil {
+					var opError *net.OpError
+					var closedError wsutil.ClosedError
+					switch {
+					case errors.As(err, &opError):
+						// TCP closed from server (during logout)
+						break
+					case errors.As(err, &closedError):
+						log.Println("Websocket is closed while reading:", closedError)
+						break
+					default:
+						log.Println("Closing due to unknown error of type", reflect.TypeOf(err), ":", err)
+					}
 					_ = s.onClose(conn)
 					return
 				}
@@ -83,6 +98,7 @@ func (s *Server) Start() {
 					s.onTextMessage(conn, msg)
 					break
 				case ws.OpClose:
+					log.Println("Closing connection, msg=", msg)
 					err := s.onClose(conn)
 
 					if err != nil {
