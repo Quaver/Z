@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/handlers"
 	"example.com/Quaver/Z/multiplayer"
@@ -14,7 +13,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -74,21 +72,9 @@ func (s *Server) Start() {
 			defer conn.Close()
 
 			for {
-				msg, op, err := utils.ReadData(conn, ws.StateServerSide, ws.OpText|ws.OpClose|ws.OpPong)
+				msg, op, err := wsutil.ReadClientData(conn)
 
 				if err != nil {
-					var opError *net.OpError
-					var closedError wsutil.ClosedError
-					switch {
-					case errors.As(err, &opError):
-						// TCP closed from server (during logout)
-						break
-					case errors.As(err, &closedError):
-						log.Println("Websocket is closed while reading:", closedError)
-						break
-					default:
-						log.Println("Closing due to unknown error of type", reflect.TypeOf(err), ":", err)
-					}
 					_ = s.onClose(conn)
 					return
 				}
@@ -98,15 +84,11 @@ func (s *Server) Start() {
 					s.onTextMessage(conn, msg)
 					break
 				case ws.OpClose:
-					log.Println("Closing connection, msg=", msg)
 					err := s.onClose(conn)
 
 					if err != nil {
 						log.Println(err)
 					}
-					break
-				case ws.OpPong:
-					_ = s.onPong(conn)
 					break
 				}
 			}
@@ -132,10 +114,6 @@ func (s *Server) onClose(conn net.Conn) error {
 	}
 
 	return nil
-}
-
-func (s *Server) onPong(conn net.Conn) error {
-	return handlers.HandlePong(conn)
 }
 
 // Cleans up the previous sessions (when restarting the server)
@@ -187,14 +165,12 @@ func startBackgroundWorker() {
 
 				// Ping the user periodically
 				if time.Now().UnixMilli()-user.GetLastPingTimestamp() >= 40_000 {
-					_ = sessions.SendPingToUser(user)
 					sessions.SendPacketToUser(packets.NewServerPing(), user)
 					user.SetLastPingTimestamp()
 				}
 
 				// User hasn't responded to pings in a while, so disconnect them
-				if time.Now().UnixMilli()-user.GetLastPongTimestamp() >= 120_000 ||
-					time.Now().UnixMilli()-user.GetLastWsPongTimestamp() >= 120_000 {
+				if time.Now().UnixMilli()-user.GetLastPongTimestamp() >= 120_000 {
 					utils.CloseConnection(user.Conn)
 					log.Printf("[%v - %v] Disconnected due to being unresponsive to pings (timeout)\n", user.Info.Username, user.Info.Id)
 				}

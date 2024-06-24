@@ -37,9 +37,6 @@ type User struct {
 	// The last time the user sent a successful pong
 	lastPongTimestamp int64
 
-	// The last time the user sent a successful websocket pong
-	lastWsPongTimestamp int64
-
 	// The last detected processes that were discovered on the user
 	lastDetectedProcesses []string
 
@@ -68,15 +65,14 @@ type User struct {
 // NewUser Creates a new user session struct object
 func NewUser(conn net.Conn, user *db.User) *User {
 	return &User{
-		Conn:                conn,
-		ConnMutex:           &sync.Mutex{},
-		token:               utils.GenerateRandomString(64),
-		Info:                user,
-		Mutex:               &sync.Mutex{},
-		stats:               map[common.Mode]*db.UserStats{},
-		lastPingTimestamp:   time.Now().UnixMilli(),
-		lastPongTimestamp:   time.Now().UnixMilli(),
-		lastWsPongTimestamp: time.Now().UnixMilli(),
+		Conn:              conn,
+		ConnMutex:         &sync.Mutex{},
+		token:             utils.GenerateRandomString(64),
+		Info:              user,
+		Mutex:             &sync.Mutex{},
+		stats:             map[common.Mode]*db.UserStats{},
+		lastPingTimestamp: time.Now().UnixMilli(),
+		lastPongTimestamp: time.Now().UnixMilli(),
 		status: &objects.ClientStatus{
 			Status:    0,
 			MapId:     -1,
@@ -163,17 +159,6 @@ func (u *User) SetLastPongTimestamp() {
 	defer u.Mutex.Unlock()
 
 	u.lastPongTimestamp = time.Now().UnixMilli()
-}
-
-func (u *User) GetLastWsPongTimestamp() int64 {
-	return u.lastWsPongTimestamp
-}
-
-func (u *User) SetLastWsPongTimestamp(lastWsPongTimestamp int64) {
-	u.Mutex.Lock()
-	defer u.Mutex.Unlock()
-
-	u.lastWsPongTimestamp = lastWsPongTimestamp
 }
 
 // GetLastDetectedProcesses Gets the last detected processes for the user

@@ -2,17 +2,9 @@ package sessions
 
 import (
 	"encoding/json"
-	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"net"
 )
-
-func SendPingToUser(user *User) error {
-	user.ConnMutex.Lock()
-	defer user.ConnMutex.Unlock()
-
-	return wsutil.WriteServerMessage(user.Conn, ws.OpPing, []byte("ping"))
-}
 
 // SendPacketToConnection Sends a packet to a given connection
 func SendPacketToConnection(data interface{}, conn net.Conn) {
