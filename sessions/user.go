@@ -68,14 +68,15 @@ type User struct {
 // NewUser Creates a new user session struct object
 func NewUser(conn net.Conn, user *db.User) *User {
 	return &User{
-		Conn:              conn,
-		ConnMutex:         &sync.Mutex{},
-		token:             utils.GenerateRandomString(64),
-		Info:              user,
-		Mutex:             &sync.Mutex{},
-		stats:             map[common.Mode]*db.UserStats{},
-		lastPingTimestamp: time.Now().UnixMilli(),
-		lastPongTimestamp: time.Now().UnixMilli(),
+		Conn:                conn,
+		ConnMutex:           &sync.Mutex{},
+		token:               utils.GenerateRandomString(64),
+		Info:                user,
+		Mutex:               &sync.Mutex{},
+		stats:               map[common.Mode]*db.UserStats{},
+		lastPingTimestamp:   time.Now().UnixMilli(),
+		lastPongTimestamp:   time.Now().UnixMilli(),
+		lastWsPongTimestamp: time.Now().UnixMilli(),
 		status: &objects.ClientStatus{
 			Status:    0,
 			MapId:     -1,
@@ -169,6 +170,9 @@ func (u *User) GetLastWsPongTimestamp() int64 {
 }
 
 func (u *User) SetLastWsPongTimestamp(lastWsPongTimestamp int64) {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
 	u.lastWsPongTimestamp = lastWsPongTimestamp
 }
 
