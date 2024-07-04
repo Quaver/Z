@@ -104,7 +104,6 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 		if channel.Type == ChannelTypeMultiplayer && isMultiplayerMapCommand(message) {
 			message = uncensoredMessage
-			fmt.Println(message)
 		}
 
 		channel.SendMessage(sender, message)
