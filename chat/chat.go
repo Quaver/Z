@@ -10,6 +10,7 @@ import (
 	"example.com/Quaver/Z/webhooks"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -84,6 +85,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 	}
 
 	message = utils.TruncateString(message, 500)
+	uncensoredMessage := message
 
 	if censored := utils.CensorString(message); censored != "" {
 		message = censored
@@ -98,6 +100,11 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 		if channel.LimitedChat && !isChatModerator(sender.Info.UserGroups) {
 			return
+		}
+
+		if channel.Type == ChannelTypeMultiplayer && isMultiplayerMapCommand(message) {
+			message = uncensoredMessage
+			fmt.Println(message)
 		}
 
 		channel.SendMessage(sender, message)
@@ -300,4 +307,10 @@ func isChatModerator(userGroups common.UserGroups) bool {
 // Returns a user's spectator channel name
 func getSpectatorChannelName(userId int) string {
 	return fmt.Sprintf("#spectator_%v", userId)
+}
+
+func isMultiplayerMapCommand(message string) bool {
+	re := regexp.MustCompile(`^!mp map \d+$`)
+
+	return re.MatchString(message)
 }
