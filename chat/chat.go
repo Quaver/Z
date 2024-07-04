@@ -85,8 +85,23 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 
 	message = utils.TruncateString(message, 500)
 
-	if censored := utils.CensorString(message); censored != "" {
-		message = censored
+	var isCommand = false
+
+	if receiver[0] == '#' && strings.HasPrefix(message, "!mp ") {
+		channel := GetChannelByName(receiver)
+		if channel != nil && channel.Type == ChannelTypeMultiplayer {
+			isCommand = true
+		}
+	}
+
+	if isCommand {
+		if censored := utils.CensorCommandString(message); censored != "" {
+			message = censored
+		}
+	} else {
+		if censored := utils.CensorString(message); censored != "" {
+			message = censored
+		}
 	}
 
 	if receiver[0] == '#' {

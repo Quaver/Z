@@ -9,6 +9,7 @@ import (
 )
 
 var randomSeeded = false
+var commandProfanityDetector *goaway.ProfanityDetector
 
 // GenerateRandomString Generates a random string of a given length
 func GenerateRandomString(length int) string {
@@ -53,4 +54,17 @@ func CensorString(s string) string {
 	}()
 
 	return goaway.Censor(s)
+}
+
+func CensorCommandString(s string) string {
+	defer func() {
+		if r := recover(); r != nil {
+			return
+		}
+	}()
+	if commandProfanityDetector == nil {
+		commandProfanityDetector = goaway.NewProfanityDetector().WithSanitizeLeetSpeak(false).WithSanitizeSpaces(false)
+	}
+
+	return commandProfanityDetector.Censor(s)
 }
