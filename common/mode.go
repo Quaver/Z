@@ -101,7 +101,7 @@ func GetModeFromShortHand(str string) (Mode, error) {
 	case "9k":
 		return ModeKeys9, nil
 	case "10k":
-		return ModeKeys1, nil
+		return ModeKeys10, nil
 	default:
 		return -1, errors.New("game mode not valid")
 	}
