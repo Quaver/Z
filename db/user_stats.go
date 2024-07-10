@@ -53,6 +53,11 @@ type PacketUserStats struct {
 
 // GetUserStats Fetches the user stats for a given game mode from the database.
 func GetUserStats(userId int, country string, mode common.Mode) (*UserStats, error) {
+	// TODO: Support other game modes
+	if mode > common.ModeKeys7 {
+		return &UserStats{}, nil
+	}
+
 	modeStr, err := common.GetModeString(mode)
 
 	if err != nil {

@@ -393,13 +393,10 @@ func handleCommandModeAllowance(user *sessions.User, game *Game, args []string, 
 
 	var mode common.Mode
 
-	switch strings.ToLower(args[2]) {
-	case "4k":
-		mode = common.ModeKeys4
-	case "7k":
-		mode = common.ModeKeys7
-	default:
-		return fmt.Sprintf("Invalid mode provided. %v", errorStr)
+	mode, err := common.GetModeFromShortHand(args[2])
+
+	if err != nil {
+		return "Invalid mode provided"
 	}
 
 	if allowing && !utils.Includes(game.Data.FilterAllowedGameModes, mode) {
