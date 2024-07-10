@@ -188,10 +188,16 @@ func (u *User) SetLastPongTimestamp() {
 }
 
 func (u *User) GetLastTemporaryDisconnectionTimestamp() int64 {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
 	return u.lastTemporaryDisconnectionTimestamp
 }
 
 func (u *User) SetLastTemporaryDisconnectionTimestamp(lastTemporaryDisconnectionTimestamp int64) {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
 	u.lastTemporaryDisconnectionTimestamp = lastTemporaryDisconnectionTimestamp
 }
 
