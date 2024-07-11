@@ -106,6 +106,9 @@ func NewUser(conn net.Conn, user *db.User) *User {
 					break
 				}
 			}
+			if sessionUser.SessionClosed {
+				break
+			}
 			time.Sleep(10 * time.Millisecond)
 		}
 		log.Println("Packet channel closed")
