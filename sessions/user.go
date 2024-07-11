@@ -73,7 +73,7 @@ func NewUser(conn net.Conn, user *db.User) *User {
 	sessionUser := User{
 		Conn:                                conn,
 		ConnMutex:                           &sync.Mutex{},
-		PacketChannel:                       make(chan interface{}, 256),
+		PacketChannel:                       make(chan interface{}, 1024),
 		SessionClosed:                       false,
 		token:                               utils.GenerateRandomString(64),
 		Info:                                user,
