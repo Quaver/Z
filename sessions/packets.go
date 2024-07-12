@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/gobwas/ws/wsutil"
 	"io"
-	"log"
 	"net"
 )
 
@@ -51,11 +50,7 @@ func SendPacketToConnection(data interface{}, conn net.Conn) (err error) {
 
 // SendPacketToUser Sends a packet to a given user
 func SendPacketToUser(data interface{}, user *User) {
-	select {
-	case user.PacketChannel <- data:
-	default:
-		log.Println("User packet channel is full: ", user.Info.Username)
-	}
+	user.PacketChannel.In <- data
 }
 
 // SendPacketToUsers Sends a packet to a list of users

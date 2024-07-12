@@ -1,12 +1,14 @@
 package sessions
 
 import (
+	"context"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/utils"
 	"fmt"
+	"github.com/smallnest/chanx"
 	"log"
 	"net"
 	"sync"
@@ -19,7 +21,7 @@ type User struct {
 
 	ConnMutex *sync.Mutex
 
-	PacketChannel chan interface{}
+	PacketChannel *chanx.UnboundedChan[interface{}]
 
 	SessionClosed bool
 
@@ -73,7 +75,7 @@ func NewUser(conn net.Conn, user *db.User) *User {
 	sessionUser := User{
 		Conn:                                conn,
 		ConnMutex:                           &sync.Mutex{},
-		PacketChannel:                       make(chan interface{}, 1024),
+		PacketChannel:                       chanx.NewUnboundedChan[interface{}](context.Background(), 1024),
 		SessionClosed:                       false,
 		token:                               utils.GenerateRandomString(64),
 		Info:                                user,
@@ -95,7 +97,7 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		frames:     []*packets.ClientSpectatorReplayFrames{},
 	}
 	go func() {
-		for packet := range sessionUser.PacketChannel {
+		for packet := range sessionUser.PacketChannel.Out {
 			for {
 				if sessionUser.SessionClosed {
 					break
