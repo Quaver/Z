@@ -1,12 +1,14 @@
 package sessions
 
 import (
+	"context"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/utils"
 	"fmt"
+	"github.com/smallnest/chanx"
 	"log"
 	"net"
 	"sync"
@@ -18,6 +20,10 @@ type User struct {
 	Conn net.Conn
 
 	ConnMutex *sync.Mutex
+
+	PacketChannel *chanx.UnboundedChan[interface{}]
+
+	SessionClosed bool
 
 	// The token used to identify the user for requests.
 	token string
@@ -36,6 +42,8 @@ type User struct {
 
 	// The last time the user sent a successful pong
 	lastPongTimestamp int64
+
+	lastTemporaryDisconnectionTimestamp int64
 
 	// The last detected processes that were discovered on the user
 	lastDetectedProcesses []string
@@ -64,15 +72,18 @@ type User struct {
 
 // NewUser Creates a new user session struct object
 func NewUser(conn net.Conn, user *db.User) *User {
-	return &User{
-		Conn:              conn,
-		ConnMutex:         &sync.Mutex{},
-		token:             utils.GenerateRandomString(64),
-		Info:              user,
-		Mutex:             &sync.Mutex{},
-		stats:             map[common.Mode]*db.UserStats{},
-		lastPingTimestamp: time.Now().UnixMilli(),
-		lastPongTimestamp: time.Now().UnixMilli(),
+	sessionUser := User{
+		Conn:                                conn,
+		ConnMutex:                           &sync.Mutex{},
+		PacketChannel:                       chanx.NewUnboundedChan[interface{}](context.Background(), 1024),
+		SessionClosed:                       false,
+		token:                               utils.GenerateRandomString(64),
+		Info:                                user,
+		Mutex:                               &sync.Mutex{},
+		stats:                               map[common.Mode]*db.UserStats{},
+		lastPingTimestamp:                   time.Now().UnixMilli(),
+		lastPongTimestamp:                   time.Now().UnixMilli(),
+		lastTemporaryDisconnectionTimestamp: -1,
 		status: &objects.ClientStatus{
 			Status:    0,
 			MapId:     -1,
@@ -85,6 +96,26 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		spectating: []*User{},
 		frames:     []*packets.ClientSpectatorReplayFrames{},
 	}
+	go func() {
+		for packet := range sessionUser.PacketChannel.Out {
+			for {
+				if sessionUser.SessionClosed {
+					break
+				}
+				if err := SendPacketToConnection(packet, sessionUser.Conn); err != nil {
+					time.Sleep(10 * time.Millisecond)
+				} else {
+					break
+				}
+			}
+			if sessionUser.SessionClosed {
+				break
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+		log.Println("Packet channel closed")
+	}()
+	return &sessionUser
 }
 
 // GetToken Returns the user token
@@ -159,6 +190,20 @@ func (u *User) SetLastPongTimestamp() {
 	defer u.Mutex.Unlock()
 
 	u.lastPongTimestamp = time.Now().UnixMilli()
+}
+
+func (u *User) GetLastTemporaryDisconnectionTimestamp() int64 {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
+	return u.lastTemporaryDisconnectionTimestamp
+}
+
+func (u *User) SetLastTemporaryDisconnectionTimestamp(lastTemporaryDisconnectionTimestamp int64) {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
+	u.lastTemporaryDisconnectionTimestamp = lastTemporaryDisconnectionTimestamp
 }
 
 // GetLastDetectedProcesses Gets the last detected processes for the user

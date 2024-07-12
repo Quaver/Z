@@ -52,6 +52,9 @@ func RemoveUser(user *User) error {
 	removeUserFromMaps(user)
 	user.StopSpectatingAll()
 
+	close(user.PacketChannel.In)
+	user.SessionClosed = true
+
 	err := UpdateRedisOnlineUserCount()
 
 	if err != nil {

@@ -34,6 +34,8 @@ type LoginData struct {
 
 	// Game Client file signatures
 	Client string `json:"client"`
+
+	IsReconnection bool `json:"is_reconnection"`
 }
 
 // HandleLogin Handles the login of a client
@@ -114,13 +116,11 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		log.Println("Failed to update steam avatar: ", err)
 	}
 
-	err = removePreviousLoginSession(user)
+	sessionUser, err := getOrCreateSession(conn, user, data.IsReconnection)
 
 	if err != nil {
 		return err
 	}
-
-	sessionUser := sessions.NewUser(conn, user)
 
 	err = sessionUser.SetStats()
 
@@ -371,21 +371,37 @@ func updateUserAvatar(user *db.User) error {
 	return nil
 }
 
-// Checks to see if the user is already logged in and removes the previous sesion
-func removePreviousLoginSession(user *db.User) error {
-	u := sessions.GetUserById(user.Id)
-
-	if u == nil {
-		return nil
+func getOrCreateSession(conn net.Conn, user *db.User, reconnection bool) (sessionUser *sessions.User, err error) {
+	sessionUser = sessions.GetUserById(user.Id)
+	if sessionUser != nil {
+		if reconnection && sessionUser.GetLastTemporaryDisconnectionTimestamp() != -1 {
+			sessionUser.SetLastTemporaryDisconnectionTimestamp(-1)
+			sessionUser.Conn = conn
+			log.Println("User", user.Username, "reconnected after temporary disconnection")
+			return
+		} else {
+			log.Println("Removing previous session for", user.Username)
+			err = removePreviousLoginSession(sessionUser)
+			if err != nil {
+				return
+			}
+		}
 	}
 
+	log.Println("Creating new session for", user.Username)
+	sessionUser = sessions.NewUser(conn, user)
+	return
+}
+
+// Checks to see if the user is already logged in and removes the previous sesion
+func removePreviousLoginSession(u *sessions.User) error {
+	sessions.SendPacketToUser(packets.NewServerNotificationError("You are being logged out due to logging in from a different location"), u)
 	err := sessions.RemoveUser(u)
 
 	if err != nil {
 		return err
 	}
 
-	sessions.SendPacketToUser(packets.NewServerNotificationError("You are being logged out due to logging in from a different location"), u)
 	utils.CloseConnectionDelayed(u.Conn)
 	return nil
 }
