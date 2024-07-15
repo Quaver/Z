@@ -1,12 +1,10 @@
 package sessions
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gobwas/ws/wsutil"
-	"io"
 	"net"
 )
 
