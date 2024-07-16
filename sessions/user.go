@@ -23,7 +23,11 @@ type User struct {
 
 	PacketChannel *chanx.UnboundedChan[interface{}]
 
-	SessionClosed bool
+	ChannelWaitGroup *sync.WaitGroup
+
+	ChannelShouldClose bool
+
+	ChannelClosed bool
 
 	// The token used to identify the user for requests.
 	token string
@@ -76,7 +80,9 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		Conn:                                conn,
 		ConnMutex:                           &sync.Mutex{},
 		PacketChannel:                       chanx.NewUnboundedChan[interface{}](context.Background(), 1024),
-		SessionClosed:                       false,
+		ChannelWaitGroup:                    &sync.WaitGroup{},
+		ChannelClosed:                       false,
+		ChannelShouldClose:                  false,
 		token:                               utils.GenerateRandomString(64),
 		Info:                                user,
 		Mutex:                               &sync.Mutex{},
@@ -99,7 +105,7 @@ func NewUser(conn net.Conn, user *db.User) *User {
 	go func() {
 		for packet := range sessionUser.PacketChannel.Out {
 			for {
-				if sessionUser.SessionClosed {
+				if sessionUser.ChannelClosed {
 					break
 				}
 				if err := SendPacketToConnection(packet, sessionUser.Conn); err != nil {
@@ -108,10 +114,23 @@ func NewUser(conn net.Conn, user *db.User) *User {
 					break
 				}
 			}
-			if sessionUser.SessionClosed {
+			if sessionUser.ChannelClosed {
 				break
 			}
 			time.Sleep(10 * time.Millisecond)
+		}
+	}()
+
+	go func() {
+		for {
+			if sessionUser.ChannelShouldClose && !sessionUser.ChannelClosed {
+				sessionUser.ChannelClosed = true
+				sessionUser.ChannelShouldClose = false
+				sessionUser.ChannelWaitGroup.Wait()
+				close(sessionUser.PacketChannel.In)
+				return
+			}
+			time.Sleep(50 * time.Millisecond)
 		}
 	}()
 	return &sessionUser

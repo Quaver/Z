@@ -48,6 +48,14 @@ func SendPacketToConnection(data interface{}, conn net.Conn) (err error) {
 
 // SendPacketToUser Sends a packet to a given user
 func SendPacketToUser(data interface{}, user *User) {
+	user.ChannelWaitGroup.Add(1)
+	defer user.ChannelWaitGroup.Done()
+
+	// Manage closing
+	if user.ChannelClosed {
+		return
+	}
+
 	user.PacketChannel.In <- data
 }
 
