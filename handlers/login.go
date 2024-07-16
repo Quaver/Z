@@ -388,7 +388,6 @@ func getOrCreateSession(conn net.Conn, user *db.User, reconnection bool) (sessio
 		}
 	}
 
-	log.Println("Creating new session for", user.Username)
 	sessionUser = sessions.NewUser(conn, user)
 	return
 }
