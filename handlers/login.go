@@ -36,6 +36,10 @@ type LoginData struct {
 	Client string `json:"client"`
 }
 
+var (
+	restyClient = resty.New()
+)
+
 // HandleLogin Handles the login of a client
 func HandleLogin(conn net.Conn, r *http.Request) error {
 	data, err := parseLoginData(r)
@@ -174,7 +178,7 @@ func authenticateSteamTicket(data *LoginData) error {
 		return nil
 	}
 
-	resp, err := resty.New().R().
+	resp, err := restyClient.R().
 		SetQueryParams(map[string]string{
 			"key":    config.Instance.Steam.PublisherKey,
 			"appid":  strconv.Itoa(config.Instance.Steam.AppId),
