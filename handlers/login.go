@@ -35,6 +35,7 @@ type LoginData struct {
 	// Game Client file signatures
 	Client string `json:"client"`
 
+	// If the user is reconnecting to the server
 	IsReconnection bool `json:"is_reconnection"`
 }
 
@@ -63,7 +64,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	if err != nil {
 		// User does not exist yet, so prompt them to select a username for their account.
 		if err == sql.ErrNoRows {
-			sessions.SendPacketToConnection(packets.NewServerChooseUsername(), conn)
+			_ = sessions.SendPacketToConnection(packets.NewServerChooseUsername(), conn)
 			utils.CloseConnectionDelayed(conn)
 			log.Printf("[%v] %v logged in but does not have an account yet.\n", conn.RemoteAddr(), data.Id)
 			return nil
@@ -73,7 +74,7 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 	}
 
 	if !user.Allowed {
-		sessions.SendPacketToConnection(packets.NewServerNotificationError("You are banned. You can appeal your ban at: discord.gg/quaver"), conn)
+		_ = sessions.SendPacketToConnection(packets.NewServerNotificationError("You are banned. You can appeal your ban at: discord.gg/quaver"), conn)
 		utils.CloseConnectionDelayed(conn)
 		log.Printf("[%v - #%v] Attempted to login, but they are banned\n", user.Username, user.Id)
 		return nil
@@ -345,7 +346,7 @@ func handleCustomGameBuildUsage(conn net.Conn, user *db.User, client string) boo
 	webhooks.SendAntiCheat(user.Username, user.Id, user.GetProfileUrl(), user.AvatarUrl.String, "Invalid Game Build", clientStr)
 
 	if !canUserUseCustomGameBuild(user) {
-		sessions.SendPacketToConnection(packets.NewServerNotificationError("Please update your client before attempting to login."), conn)
+		_ = sessions.SendPacketToConnection(packets.NewServerNotificationError("Please update your client before attempting to login."), conn)
 		utils.CloseConnectionDelayed(conn)
 		return false
 	}
@@ -371,30 +372,32 @@ func updateUserAvatar(user *db.User) error {
 	return nil
 }
 
+// Checks to see if a user had a previous session and returns that, otherwise
 func getOrCreateSession(conn net.Conn, user *db.User, reconnection bool) (sessionUser *sessions.User, err error) {
 	sessionUser = sessions.GetUserById(user.Id)
-	if sessionUser != nil {
-		if reconnection && sessionUser.GetLastTemporaryDisconnectionTimestamp() != -1 {
-			sessionUser.SetLastTemporaryDisconnectionTimestamp(-1)
-			sessionUser.Conn = conn
-			log.Println("User", user.Username, "reconnected after temporary disconnection")
-			return
-		} else {
-			log.Println("Removing previous session for", user.Username)
-			err = removePreviousLoginSession(sessionUser)
-			if err != nil {
-				return
-			}
-		}
+
+	// User is logging in for the first time.
+	if sessionUser == nil {
+		return sessions.NewUser(conn, user), nil
 	}
 
-	sessionUser = sessions.NewUser(conn, user)
-	return
+	// User is reconnecting to the server, so update their existing session connection with the incoming one.
+	if reconnection && sessionUser.GetLastTemporaryDisconnectionTimestamp() != -1 {
+		sessionUser.SetLastTemporaryDisconnectionTimestamp(-1)
+		sessionUser.Conn = conn
+
+		log.Println("User", user.Username, "reconnected after temporary disconnection")
+		return sessionUser, nil
+	}
+
+	// User is logging in from another location, so disconnect the old and connect the new.
+	return sessions.NewUser(conn, user), removePreviousLoginSession(sessionUser)
 }
 
-// Checks to see if the user is already logged in and removes the previous sesion
+// Checks to see if the user is already logged in and removes the previous session
 func removePreviousLoginSession(u *sessions.User) error {
 	sessions.SendPacketToUser(packets.NewServerNotificationError("You are being logged out due to logging in from a different location"), u)
+
 	err := sessions.RemoveUser(u)
 
 	if err != nil {
