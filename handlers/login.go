@@ -242,7 +242,7 @@ func checkSteamAppOwnership(steamId string) error {
 		return nil
 	}
 
-	resp, err := resty.New().R().
+	resp, err := restyClient.R().
 		SetQueryParams(map[string]string{
 			"key":     config.Instance.Steam.PublisherKey,
 			"appid":   strconv.Itoa(config.Instance.Steam.AppId),
