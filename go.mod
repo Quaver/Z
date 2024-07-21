@@ -11,7 +11,6 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gobwas/ws v1.2.0
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/smallnest/chanx v1.2.0
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 )
 

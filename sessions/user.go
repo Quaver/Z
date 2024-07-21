@@ -1,14 +1,12 @@
 package sessions
 
 import (
-	"context"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/db"
 	"example.com/Quaver/Z/objects"
 	"example.com/Quaver/Z/packets"
 	"example.com/Quaver/Z/utils"
 	"fmt"
-	"github.com/smallnest/chanx"
 	"log"
 	"net"
 	"sync"
@@ -19,10 +17,7 @@ type User struct {
 	// The connection for the user
 	Conn net.Conn
 
-	ConnMutex *sync.Mutex
-
-	PacketChannel *chanx.UnboundedChan[interface{}]
-
+	// If the user's session is fully closed and logged out.
 	SessionClosed bool
 
 	// The token used to identify the user for requests.
@@ -74,8 +69,6 @@ type User struct {
 func NewUser(conn net.Conn, user *db.User) *User {
 	sessionUser := User{
 		Conn:                                conn,
-		ConnMutex:                           &sync.Mutex{},
-		PacketChannel:                       chanx.NewUnboundedChan[interface{}](context.Background(), 1024),
 		SessionClosed:                       false,
 		token:                               utils.GenerateRandomString(64),
 		Info:                                user,
@@ -96,24 +89,7 @@ func NewUser(conn net.Conn, user *db.User) *User {
 		spectating: []*User{},
 		frames:     []*packets.ClientSpectatorReplayFrames{},
 	}
-	go func() {
-		for packet := range sessionUser.PacketChannel.Out {
-			for {
-				if sessionUser.SessionClosed {
-					break
-				}
-				if err := SendPacketToConnection(packet, sessionUser.Conn); err != nil {
-					time.Sleep(10 * time.Millisecond)
-				} else {
-					break
-				}
-			}
-			if sessionUser.SessionClosed {
-				break
-			}
-			time.Sleep(10 * time.Millisecond)
-		}
-	}()
+
 	return &sessionUser
 }
 

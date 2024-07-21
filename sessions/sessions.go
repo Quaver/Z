@@ -49,11 +49,10 @@ func AddUser(user *User) error {
 
 // RemoveUser Removes a user session
 func RemoveUser(user *User) error {
+	user.SessionClosed = true
+
 	removeUserFromMaps(user)
 	user.StopSpectatingAll()
-
-	close(user.PacketChannel.In)
-	user.SessionClosed = true
 
 	err := UpdateRedisOnlineUserCount()
 
