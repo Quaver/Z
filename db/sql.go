@@ -25,6 +25,9 @@ func InitializeSQL() {
 
 	db, err := sqlx.Connect("mysql", connStr)
 
+	db.SetMaxIdleConns(10)
+	db.SetMaxOpenConns(10)
+
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -34,7 +37,7 @@ func InitializeSQL() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	
+
 	SQL = db
 	log.Println("Successfully connected to SQL database")
 }
