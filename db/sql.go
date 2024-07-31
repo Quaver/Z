@@ -34,8 +34,13 @@ func InitializeSQL() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	
+
 	SQL = db
+
+	SQL.DB.SetMaxOpenConns(100)
+	SQL.DB.SetMaxIdleConns(10)
+	SQL.DB.SetConnMaxLifetime(0)
+
 	log.Println("Successfully connected to SQL database")
 }
 

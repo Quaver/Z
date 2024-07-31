@@ -65,6 +65,9 @@ func (s *Server) Start() {
 				utils.CloseConnection(conn)
 				return
 			}
+		} else {
+			_ = conn.Close()
+			return
 		}
 
 		// Handle various connection events
