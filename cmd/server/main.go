@@ -7,12 +7,14 @@ import (
 	"example.com/Quaver/Z/handlers"
 	"example.com/Quaver/Z/multiplayer"
 	"example.com/Quaver/Z/webhooks"
+	"flag"
 )
 
 func main() {
-	err := config.Load("./config.json")
+	configPath := flag.String("config", "../../config.json", "path to config file")
+	flag.Parse()
 
-	if err != nil {
+	if err := config.Load(*configPath); err != nil {
 		panic(err)
 	}
 
