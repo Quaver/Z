@@ -178,8 +178,9 @@ func (game *Game) RemovePlayer(userId int) {
 
 	// The game ends if everyone finishes the gameplay
 	// or if we're in a tournament and someone that is neither a referee or a spectator quit
-	if game.isAllPlayersFinished() ||
-		game.Data.IsTournamentMode && playerWasInMatch {
+	tourneyMatchHasOnePlayerLeft := game.Data.IsTournamentMode && playerWasInMatch && len(game.playersInMatch) == 1
+
+	if game.isAllPlayersFinished() || tourneyMatchHasOnePlayerLeft {
 		game.EndGame(false)
 	} else if playerWasInMatch && len(game.playersInMatch) == 1 {
 		game.MoveToSingleplayerSpectate()
