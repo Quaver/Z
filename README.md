@@ -24,13 +24,14 @@ This server handles any and all real-time game events such as:
 
 ## Setup
 
-1. Install `Go 1.19` or later.
+1. Install `Go 1.22` or later.
 2. Clone the repository.
 3. Copy `config.example.json` and make a file named `config.json`
 4. Fill out the config file with the appropriate details.
 5. If you do not have a **Steam Publisher Account** (you are not a Quaver developer), you can set `bypass_steam_login` to `true` in the config file. This should **NOT** be used in a production environment.
-6. Start the server with `go run .` or your method of choice.
-7. The server is now available at `ws://localhost:3000`.
+6. Navigate to the `/cmd/server/` directory
+7. Start the server with `go run .` or your method of choice.
+8. The server is now available at `ws://localhost:3000`.
 
 ## LICENSE
 
