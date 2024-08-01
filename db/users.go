@@ -28,6 +28,20 @@ func (u *User) GetProfileUrl() string {
 	return fmt.Sprintf("https://quavergame.com/user/%v", u.Id)
 }
 
+// GetUserById Retrieves a user from the database by their id
+func GetUserById(id int) (*User, error) {
+	query := "SELECT id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username FROM users WHERE id = ? LIMIT 1"
+
+	var user User
+	err := SQL.Get(&user, query, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 // GetUserBySteamId Retrieves a user from the database by their Steam id
 func GetUserBySteamId(steamId string) (*User, error) {
 	query := "SELECT id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username FROM users WHERE steam_id = ? LIMIT 1"
