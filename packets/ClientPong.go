@@ -7,11 +7,12 @@ import (
 
 type ClientPong struct {
 	Packet
-	ProcessList string `json:"p"`
+	Data string `json:"p"`
 }
 
-type Processes struct {
+type PongPacketData struct {
 	Processes []Process `json:"Processes"`
+	Libraries []string  `json:"Libraries"`
 }
 
 type Process struct {
@@ -20,15 +21,15 @@ type Process struct {
 	FileName    string `json:"FileName"`
 }
 
-func (p *ClientPong) ParseProcessList() []Process {
-	var data Processes
+func (p *ClientPong) Parse() *PongPacketData {
+	var data PongPacketData
 
-	err := json.Unmarshal([]byte(p.ProcessList), &data)
+	err := json.Unmarshal([]byte(p.Data), &data)
 
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
 
-	return data.Processes
+	return &data
 }

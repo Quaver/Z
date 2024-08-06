@@ -89,6 +89,16 @@ func SendAntiCheatProcessLog(username string, userId int, url string, icon strin
 	SendAntiCheat(username, userId, url, icon, "Detected Processes", formatted)
 }
 
+func SendAntiCheatLibraries(username string, userId int, url string, icon string, libraries []string) {
+	formatted := ""
+
+	for i, library := range libraries {
+		formatted += fmt.Sprintf("**%v. %v**\n", i+1, library)
+	}
+
+	SendAntiCheat(username, userId, url, icon, "Detected Libraries", formatted)
+}
+
 // SendChatMessage Sends a chat message webhook to Discord
 func SendChatMessage(webhook webhook.Client, senderUsername string, senderProfileUrl string, senderAvatarUrl, receiverName string, message string) {
 	if webhook == nil {

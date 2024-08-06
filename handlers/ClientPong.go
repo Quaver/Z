@@ -17,22 +17,25 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 
 	user.SetLastPongTimestamp()
 
-	packetProcs := packet.ParseProcessList()
+	parsed := packet.Parse()
 
-	if packetProcs == nil || len(packetProcs) == 0 {
-		// webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.Id, user.Info.GetProfileUrl(), user.Info.AvatarUrl.String, []string{"NO PROCESSES PROVIDED"})
-		// log.Printf("[%v - %v] Sent a Pong packet without any process list\n", user.Info.Id, user.Info.Username)
+	checkProcesses(user, parsed.Processes)
+	checkLibraries(user, parsed.Libraries)
+}
+
+func checkProcesses(user *sessions.User, processes []packets.Process) {
+	if processes == nil || len(processes) == 0 {
 		return
 	}
 
-	dbProcs, err := db.FetchProcesses()
+	dbProcesses, err := db.FetchProcesses()
 
 	if err != nil {
 		log.Printf("Failed to fetch process from database - %v\n", err)
 		return
 	}
 
-	detected := detectProcesses(dbProcs, packetProcs)
+	detected := detectProcesses(dbProcesses, processes)
 
 	if len(detected) == 0 {
 		user.SetLastDetectedProcesses([]string{})
@@ -44,9 +47,27 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	}
 
 	user.SetLastDetectedProcesses(detected)
+
 	webhooks.SendAntiCheatProcessLog(user.Info.Username, user.Info.Id, user.Info.GetProfileUrl(), user.Info.AvatarUrl.String, detected)
 
 	log.Printf("[%v - #%v] Detected %v flagged processes \n", user.Info.Username, user.Info.Id, len(detected))
+}
+
+func checkLibraries(user *sessions.User, libraries []string) {
+	if libraries == nil || len(libraries) == 0 {
+		return
+	}
+
+	if slices.Equal(libraries, user.GetLastLibraries()) {
+		return
+	}
+
+	user.SetLastLibraries(libraries)
+
+	webhooks.SendAntiCheatLibraries(user.Info.Username, user.Info.Id, user.Info.GetProfileUrl(),
+		user.Info.AvatarUrl.String, libraries)
+
+	log.Printf("[%v - #%v] Detected %v libraries \n", user.Info.Username, user.Info.Id, len(libraries))
 }
 
 // Goes through both the db processes and packet processes and checks if any are found
