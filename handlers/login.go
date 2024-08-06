@@ -54,12 +54,6 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return logFailedLogin(conn, err)
 	}
 
-	err = checkSteamAppOwnership(data.Id)
-
-	if err != nil {
-		return logFailedLogin(conn, err)
-	}
-
 	user, err := db.GetUserBySteamId(data.Id)
 
 	if err != nil {

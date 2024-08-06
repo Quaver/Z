@@ -40,6 +40,9 @@ type User struct {
 	// The last detected processes that were discovered on the user
 	lastDetectedProcesses []string
 
+	// Last libraries for the user
+	lastLibraries []string
+
 	// The current client status of the user
 	status *objects.ClientStatus
 
@@ -175,6 +178,22 @@ func (u *User) SetLastDetectedProcesses(processes []string) {
 	defer u.Mutex.Unlock()
 
 	u.lastDetectedProcesses = processes
+}
+
+// GetLastLibraries Gets the user's last libraries
+func (u *User) GetLastLibraries() []string {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
+	return u.lastLibraries
+}
+
+// SetLastLibraries Sets the user's last libraries
+func (u *User) SetLastLibraries(libraries []string) {
+	u.Mutex.Lock()
+	defer u.Mutex.Unlock()
+
+	u.lastLibraries = libraries
 }
 
 // GetClientStatus Gets the current user client status
