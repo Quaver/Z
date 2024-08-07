@@ -20,7 +20,7 @@ func handleClientPong(user *sessions.User, packet *packets.ClientPong) {
 	parsed := packet.Parse()
 
 	checkProcesses(user, parsed.Processes)
-	checkLibraries(user, parsed.Libraries)
+	// checkLibraries(user, parsed.Libraries)
 }
 
 func checkProcesses(user *sessions.User, processes []packets.Process) {
