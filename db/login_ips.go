@@ -2,11 +2,13 @@ package db
 
 import (
 	"database/sql"
+	"time"
 )
 
 type LoginIp struct {
-	UserId int    `db:"user_id"`
-	Ip     string `db:"ip"`
+	UserId    int    `db:"user_id"`
+	Ip        string `db:"ip"`
+	Timestamp int64  `db:"timestamp"`
 }
 
 // InsertLoginIpAddress Logs the ip address of a user in the database
@@ -19,7 +21,8 @@ func InsertLoginIpAddress(userId int, ip string) error {
 		return err
 	}
 
-	_, err = SQL.Exec("INSERT INTO login_ips (user_id, ip) VALUES (?, ?)", userId, ip)
+	_, err = SQL.Exec("INSERT INTO login_ips (user_id, ip, timestamp) VALUES (?, ?, ?)",
+		userId, ip, time.Now().UnixMilli())
 
 	if err != nil {
 		return err
