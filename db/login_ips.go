@@ -8,7 +8,7 @@ import (
 type LoginIp struct {
 	UserId    int    `db:"user_id"`
 	Ip        string `db:"ip"`
-	Timestamp int64  `db:"timestamp"`
+	Timestamp *int64 `db:"timestamp"`
 }
 
 // InsertLoginIpAddress Logs the ip address of a user in the database
