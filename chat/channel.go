@@ -29,6 +29,7 @@ const (
 	ChannelNormal ChannelType = iota
 	ChannelTypeMultiplayer
 	ChannelTypeSpectator
+	ChannelTypeClan
 )
 
 // NewChannel Creates a new chat channel instance

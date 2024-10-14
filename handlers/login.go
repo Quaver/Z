@@ -422,6 +422,21 @@ func joinChatChannels(user *sessions.User) {
 			channel.AddUser(user)
 		}
 	}
+
+	// Add user to clan channel (creates the new clan channel if necessary)
+	if user.Info.ClanId.Valid {
+		name := fmt.Sprintf("#clan_%v", user.Info.ClanId.Int32)
+
+		channel := chat.GetChannelByName(name)
+
+		if channel != nil {
+			channel.AddUser(user)
+			return
+		}
+
+		channel = chat.AddClanChannel(int(user.Info.ClanId.Int32))
+		channel.AddUser(user)
+	}
 }
 
 // Logs a generic login failure

@@ -34,6 +34,16 @@ func Initialize() {
 		addChannel(NewChannel(ChannelNormal, channel.Name, channel.Description, channel.AdminOnly, channel.AutoJoin, channel.LimitedChat, channel.DiscordWebhook))
 	}
 
+	clans, err := db.GetAllClans()
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, clan := range clans {
+		AddClanChannel(clan.Id)
+	}
+
 	_ = sessions.AddUser(Bot)
 	addBotChatHandlers()
 	addSpectatorHandlers()
@@ -47,7 +57,10 @@ func GetAvailableChannels(userGroups common.UserGroups) []*Channel {
 	var availableChannels []*Channel
 
 	for _, channel := range channels {
-		if (channel.Type != ChannelTypeMultiplayer && channel.Type != ChannelTypeSpectator && !channel.AdminOnly) || (channel.AdminOnly && isChatModerator(userGroups)) {
+		if (channel.Type != ChannelNormal &&
+			channel.Type != ChannelTypeMultiplayer &&
+			channel.Type != ChannelTypeSpectator && !channel.AdminOnly) ||
+			(channel.AdminOnly && isChatModerator(userGroups)) {
 			availableChannels = append(availableChannels, channel)
 		}
 	}
@@ -241,6 +254,18 @@ func addChannel(channel *Channel) {
 
 	channels[channel.Name] = channel
 	log.Printf("Initialized chat channel: %v\n", channel.Name)
+}
+
+// AddClanChannel Adds a new clan channel
+func AddClanChannel(clanId int) *Channel {
+	name := fmt.Sprintf("#clan_%v", clanId)
+
+	channel := NewChannel(ChannelTypeClan, name, "Communicate with your fellow clan members",
+		false, false, false, "")
+
+	addChannel(channel)
+
+	return channel
 }
 
 // Removes a channel from channels
