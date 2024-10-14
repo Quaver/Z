@@ -158,10 +158,12 @@ func HandleFirstPlaceScores(msg *redis.Message) {
 func HandleRankedClanMap(msg *redis.Message) {
 	type payload struct {
 		Map struct {
+			Id             int    `json:"id"`
 			Artist         string `json:"artist"`
 			Title          string `json:"title"`
 			DifficultyName string `json:"difficulty_name"`
 			CreatorName    string `json:"creator_name"`
+			Mode           string `json:"mode"`
 		} `json:"map"`
 	}
 
@@ -187,8 +189,9 @@ func HandleRankedClanMap(msg *redis.Message) {
 			continue
 		}
 
-		msg := fmt.Sprintf("New Clan Ranked Map: %v - %v [%v] by %v.",
-			parsed.Map.Artist, parsed.Map.Title, parsed.Map.DifficultyName, parsed.Map.CreatorName)
+		msg := fmt.Sprintf("New %v Clan Ranked Map: %v - %v [%v] by %v (#%v).",
+			parsed.Map.Mode, parsed.Map.Artist, parsed.Map.Title, parsed.Map.DifficultyName, parsed.Map.CreatorName,
+			parsed.Map.Id)
 
 		chat.SendMessage(chat.Bot, channel.Name, msg)
 	}
