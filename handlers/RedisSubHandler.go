@@ -17,6 +17,7 @@ func AddRedisHandlers() {
 	db.AddRedisSubscriberHandler(db.RedisChannelTwitchConnection, HandleTwitchConnection)
 	db.AddRedisSubscriberHandler(db.RedisChannelMultiplayerMapShares, HandleMultiplayerMapShares)
 	db.AddRedisSubscriberHandler(db.RedisChannelFirstPlaceScores, HandleFirstPlaceScores)
+	db.AddRedisSubscriberHandler(db.RedisChannelRankedClanMap, HandleRankedClanMap)
 }
 
 func HandleTwitchSongRequest(msg *redis.Message) {
@@ -152,4 +153,46 @@ func HandleFirstPlaceScores(msg *redis.Message) {
 
 	chat.SendMessage(chat.Bot, "#first-places", fmt.Sprintf("%v has just achieved first place on %v - %v [%v]",
 		parsed.User.Username, parsed.Map.Artist, parsed.Map.Title, parsed.Map.DifficultyName))
+}
+
+func HandleRankedClanMap(msg *redis.Message) {
+	type payload struct {
+		Map struct {
+			Id             int    `json:"id"`
+			Artist         string `json:"artist"`
+			Title          string `json:"title"`
+			DifficultyName string `json:"difficulty_name"`
+			CreatorName    string `json:"creator_name"`
+			Mode           string `json:"mode"`
+		} `json:"map"`
+	}
+
+	var parsed payload
+
+	err := json.Unmarshal([]byte(msg.Payload), &parsed)
+
+	if err != nil {
+		log.Printf("Failed to parse ranked clan map - %v - %v\n", msg.Payload, err)
+		return
+	}
+
+	clans, err := db.GetAllClans()
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, clan := range clans {
+		channel := chat.GetChannelByName(fmt.Sprintf("#clan_%v", clan.Id))
+
+		if channel == nil {
+			continue
+		}
+
+		msg := fmt.Sprintf("New %v Clan Ranked Map: %v - %v [%v] by %v (#%v).",
+			parsed.Map.Mode, parsed.Map.Artist, parsed.Map.Title, parsed.Map.DifficultyName, parsed.Map.CreatorName,
+			parsed.Map.Id)
+
+		chat.SendMessage(chat.Bot, channel.Name, msg)
+	}
 }
