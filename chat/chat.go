@@ -57,7 +57,7 @@ func GetAvailableChannels(userGroups common.UserGroups) []*Channel {
 	var availableChannels []*Channel
 
 	for _, channel := range channels {
-		if (channel.Type != ChannelNormal &&
+		if (channel.Type != ChannelTypeClan &&
 			channel.Type != ChannelTypeMultiplayer &&
 			channel.Type != ChannelTypeSpectator && !channel.AdminOnly) ||
 			(channel.AdminOnly && isChatModerator(userGroups)) {
