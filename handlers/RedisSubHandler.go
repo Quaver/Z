@@ -18,6 +18,7 @@ func AddRedisHandlers() {
 	db.AddRedisSubscriberHandler(db.RedisChannelMultiplayerMapShares, HandleMultiplayerMapShares)
 	db.AddRedisSubscriberHandler(db.RedisChannelFirstPlaceScores, HandleFirstPlaceScores)
 	db.AddRedisSubscriberHandler(db.RedisChannelRankedClanMap, HandleRankedClanMap)
+	db.AddRedisSubscriberHandler(db.RedisChannelClanFirstPlace, HandleClanFirstPlace)
 }
 
 func HandleTwitchSongRequest(msg *redis.Message) {
@@ -189,10 +190,54 @@ func HandleRankedClanMap(msg *redis.Message) {
 			continue
 		}
 
-		msg := fmt.Sprintf("New %v Clan Ranked Map: %v - %v [%v] by %v (#%v).",
+		message := fmt.Sprintf("New %v Clan Ranked Map: %v - %v [%v] by %v (#%v).",
 			parsed.Map.Mode, parsed.Map.Artist, parsed.Map.Title, parsed.Map.DifficultyName, parsed.Map.CreatorName,
 			parsed.Map.Id)
 
-		chat.SendMessage(chat.Bot, channel.Name, msg)
+		chat.SendMessage(chat.Bot, channel.Name, message)
 	}
+}
+
+func HandleClanFirstPlace(msg *redis.Message) {
+	type payload struct {
+		ClanId int  `json:"clan_id"`
+		Won    bool `json:"won"`
+		Map    struct {
+			Id             int    `json:"id"`
+			Artist         string `json:"artist"`
+			Title          string `json:"title"`
+			DifficultyName string `json:"difficulty_name"`
+			CreatorName    string `json:"creator_name"`
+			Mode           string `json:"mode"`
+		} `json:"map"`
+	}
+
+	var parsed payload
+
+	err := json.Unmarshal([]byte(msg.Payload), &parsed)
+
+	if err != nil {
+		log.Printf("Failed to parse ranked clan map - %v - %v\n", msg.Payload, err)
+		return
+	}
+
+	fmt.Println(parsed)
+
+	channel := chat.GetChannelByName(fmt.Sprintf("#clan_%v", parsed.ClanId))
+
+	if channel == nil {
+		return
+	}
+
+	winStatus := "won"
+
+	if !parsed.Won {
+		winStatus = "lost"
+	}
+
+	message := fmt.Sprintf("You have %v first place on: %v - %v [%v] by %v (#%v).",
+		winStatus, parsed.Map.Artist, parsed.Map.Title, parsed.Map.DifficultyName, parsed.Map.CreatorName,
+		parsed.Map.Id)
+
+	chat.SendMessage(chat.Bot, channel.Name, message)
 }
