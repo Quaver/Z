@@ -221,8 +221,6 @@ func HandleClanFirstPlace(msg *redis.Message) {
 		return
 	}
 
-	fmt.Println(parsed)
-
 	channel := chat.GetChannelByName(fmt.Sprintf("#clan_%v", parsed.ClanId))
 
 	if channel == nil {
