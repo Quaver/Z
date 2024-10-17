@@ -17,6 +17,7 @@ var (
 	RedisChannelMultiplayerMapShares = "quaver:multiplayer_map_shares"
 	RedisChannelFirstPlaceScores     = "quaver:first_place_scores"
 	RedisChannelRankedClanMap        = "quaver:ranked_clan_map"
+	RedisChannelClanFirstPlace       = "quaver:clan_first_place"
 )
 
 // InitializeRedis Initializes a Redis client
@@ -40,7 +41,8 @@ func InitializeRedis() {
 		log.Fatalln(result.Err())
 	}
 
-	sub := Redis.Subscribe(RedisCtx, RedisChannelSongRequests, RedisChannelTwitchConnection, RedisChannelMultiplayerMapShares, RedisChannelFirstPlaceScores, RedisChannelRankedClanMap)
+	sub := Redis.Subscribe(RedisCtx, RedisChannelSongRequests, RedisChannelTwitchConnection, RedisChannelMultiplayerMapShares, RedisChannelFirstPlaceScores, RedisChannelRankedClanMap,
+		RedisChannelClanFirstPlace)
 
 	go func() {
 		for {
