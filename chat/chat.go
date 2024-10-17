@@ -41,7 +41,7 @@ func Initialize() {
 	}
 
 	for _, clan := range clans {
-		AddClanChannel(clan.Id)
+		AddClanChannel(clan)
 	}
 
 	_ = sessions.AddUser(Bot)
@@ -257,10 +257,10 @@ func addChannel(channel *Channel) {
 }
 
 // AddClanChannel Adds a new clan channel
-func AddClanChannel(clanId int) *Channel {
-	name := fmt.Sprintf("#clan_%v", clanId)
+func AddClanChannel(clan *db.Clan) *Channel {
+	name := fmt.Sprintf("#clan_%v", clan.Id)
 
-	channel := NewChannel(ChannelTypeClan, name, "Communicate with your fellow clan members",
+	channel := NewChannel(ChannelTypeClan, name, fmt.Sprintf("[%v] %v - Private Clan Chat", clan.Tag, clan.Name),
 		false, false, false, "")
 
 	addChannel(channel)

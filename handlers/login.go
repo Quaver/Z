@@ -429,12 +429,18 @@ func joinChatChannels(user *sessions.User) {
 
 		channel := chat.GetChannelByName(name)
 
-		if channel != nil {
-			channel.AddUser(user)
-			return
+		if channel == nil {
+			clan, err := db.GetClanById(int(user.Info.ClanId.Int32))
+
+			if err != nil {
+				log.Println("Error retrieving clan by id: ", err)
+				return
+			}
+
+			channel = chat.AddClanChannel(clan)
 		}
 
-		channel = chat.AddClanChannel(int(user.Info.ClanId.Int32))
+		sessions.SendPacketToUser(packets.NewServerAvailableChatChannel(channel.Name, channel.Description), user)
 		channel.AddUser(user)
 	}
 }
