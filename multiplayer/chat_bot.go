@@ -79,6 +79,8 @@ func handleMultiplayerCommands(user *sessions.User, channel *chat.Channel, args 
 			message = handleCommandChangeMap(user, game, args)
 		case "hostrotation":
 			message = handleCommandHostRotation(user, game)
+		case "preview":
+			message = handleCommandEnablePreview(user, game)
 		case "maxplayers":
 			message = handleCommandMaxPlayers(user, game, args)
 		case "start":
@@ -239,6 +241,16 @@ func handleCommandHostRotation(user *sessions.User, game *Game) string {
 	}
 
 	game.SetHostRotation(user, !game.Data.IsHostRotation)
+	return ""
+}
+
+// Handles the command to enable/disable preview
+func handleCommandEnablePreview(user *sessions.User, game *Game) string {
+	if !game.isUserHost(user) {
+		return ""
+	}
+
+	game.SetEnablePreview(user, !game.Data.EnablePreview)
 	return ""
 }
 

@@ -116,6 +116,8 @@ func HandleIncomingPackets(conn net.Conn, msg string) {
 		handleClientGameAutoHost(user, unmarshalPacket[packets.ClientGameAutoHost](msg))
 	case packets.PacketIdClientLogout:
 		handleClientLogout(user, unmarshalPacket[packets.ClientLogout](msg))
+	case packets.PacketIdClientGameChangeEnablePreview:
+		handleClientGameEnablePreview(user, unmarshalPacket[packets.ClientGameEnablePreview](msg))
 	default:
 		log.Println(fmt.Errorf("unknown packet: %v", msg))
 	}
