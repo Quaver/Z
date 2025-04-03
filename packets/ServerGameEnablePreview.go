@@ -2,7 +2,7 @@ package packets
 
 type ServerGameEnablePreview struct {
 	Packet
-	Enabled bool `json:"h"`
+	Enabled bool `json:"e"`
 }
 
 func NewServerGameEnablePreview(enabled bool) *ServerGameEnablePreview {
