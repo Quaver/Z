@@ -178,7 +178,7 @@ func authenticateSteamTicket(data *LoginData) error {
 			"appid":  strconv.Itoa(config.Instance.Steam.AppId),
 			"ticket": strings.Replace(data.PTicket, "-", "", -1),
 		}).
-		Get("https://api.steampowered.com/ISteamUserAuth/AuthenticateUserTicket/v1/")
+		Get("https://partner.steam-api.com/ISteamUserAuth/AuthenticateUserTicket/v1/")
 
 	if err != nil {
 		return err
