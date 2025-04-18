@@ -139,4 +139,6 @@ const (
 	PacketIdClientGameAutoHost
 	PacketIdServerGameAutoHost
 	PacketIdClientLogout
+	PacketIdClientGameChangeEnablePreview
+	PacketIdServerGameEnablePreviewChanged
 )

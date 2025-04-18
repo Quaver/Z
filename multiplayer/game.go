@@ -639,6 +639,20 @@ func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
+// SetEnablePreview Sets whether previewing the map would be allowed for the game
+func (game *Game) SetEnablePreview(requester *sessions.User, enabled bool) {
+	if !game.isUserHost(requester) {
+		return
+	}
+
+	game.Data.EnablePreview = enabled
+	game.sendPacketToPlayers(packets.NewServerGameEnablePreview(game.Data.EnablePreview))
+	game.validateAndCacheSettings()
+
+	game.sendBotMessage(fmt.Sprintf("Preview has been %v.", utils.BoolToEnabledString(game.Data.EnablePreview)))
+	sendLobbyUsersGameInfoPacket(game, true)
+}
+
 // SetLongNotePercent Sets the minimum and maximum long note percentage filters for the game
 func (game *Game) SetLongNotePercent(requester *sessions.User, min int, max int) {
 	if !game.isUserHost(requester) {

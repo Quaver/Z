@@ -41,6 +41,7 @@ func (game *Game) cacheMatchSettings() {
 		"host", strconv.Itoa(game.Data.HostId),
 		"r", strconv.Itoa(int(game.Data.Ruleset)),
 		"hr", strconv.Itoa(utils.BoolToInt(game.Data.IsHostRotation)),
+		"ep", strconv.Itoa(utils.BoolToInt(game.Data.EnablePreview)),
 		"gm", strconv.Itoa(int(game.Data.MapGameMode)),
 		"d", strconv.FormatFloat(game.Data.MapDifficultyRating, 'f', -1, 64),
 		"inp", strconv.Itoa(utils.BoolToInt(game.Data.InProgress)),
