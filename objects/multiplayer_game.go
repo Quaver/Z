@@ -20,7 +20,7 @@ type MultiplayerGame struct {
 	MapDifficultyRatingAll    []float64                    `json:"adr"`           // The difficulty rating for all rates of the map. Host provides this for scoring on unsubmitted maps
 	Ruleset                   MultiplayerGameRuleset       `json:"r"`             // The rules of the match (free-for-all, team, etc)
 	IsHostRotation            bool                         `json:"hr"`            // Whether the server will control host rotation for the game
-	EnablePreview             bool                         `json:"ep"`            // Whether the server will control host rotation for the game
+	EnablePreview             bool                         `json:"ep"`            // Whether previewing the map is allowed for the game
 	InProgress                bool                         `json:"inp"`           // IF the match is currently in progress
 	HostId                    int                          `json:"h"`             // The id of the host
 	RefereeId                 int                          `json:"ref"`           // The id of the referee of the game

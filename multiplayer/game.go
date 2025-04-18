@@ -639,7 +639,7 @@ func (game *Game) SetHostRotation(requester *sessions.User, enabled bool) {
 	sendLobbyUsersGameInfoPacket(game, true)
 }
 
-// SetEnablePreview Sets whether host rotation will be enabled for the game
+// SetEnablePreview Sets whether previewing the map would be allowed for the game
 func (game *Game) SetEnablePreview(requester *sessions.User, enabled bool) {
 	if !game.isUserHost(requester) {
 		return
