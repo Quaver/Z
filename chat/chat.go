@@ -1,6 +1,13 @@
 package chat
 
 import (
+	"fmt"
+	"log"
+	"regexp"
+	"strings"
+	"sync"
+	"time"
+
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
 	"example.com/Quaver/Z/db"
@@ -8,12 +15,6 @@ import (
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"example.com/Quaver/Z/webhooks"
-	"fmt"
-	"log"
-	"regexp"
-	"strings"
-	"sync"
-	"time"
 )
 
 var (
@@ -100,6 +101,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 	message = utils.TruncateString(message, 500)
 	uncensoredMessage := message
 
+	log.Printf(message)
 	if censored := utils.CensorString(message); censored != "" {
 		message = censored
 	}
@@ -115,7 +117,7 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 			return
 		}
 
-		if channel.Type == ChannelTypeMultiplayer && isMultiplayerMapCommand(message) {
+		if channel.Type == ChannelTypeMultiplayer && isMultiplayerCommand(message) {
 			message = uncensoredMessage
 		}
 
@@ -333,8 +335,8 @@ func getSpectatorChannelName(userId int) string {
 	return fmt.Sprintf("#spectator_%v", userId)
 }
 
-func isMultiplayerMapCommand(message string) bool {
-	re := regexp.MustCompile(`^!mp map \d+$`)
+func isMultiplayerCommand(message string) bool {
+	re := regexp.MustCompile(`^!mp .*$`)
 
 	return re.MatchString(message)
 }
