@@ -101,7 +101,6 @@ func SendMessage(sender *sessions.User, receiver string, message string) {
 	message = utils.TruncateString(message, 500)
 	uncensoredMessage := message
 
-	log.Printf(message)
 	if censored := utils.CensorString(message); censored != "" {
 		message = censored
 	}
