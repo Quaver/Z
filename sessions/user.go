@@ -409,12 +409,15 @@ func (u *User) SerializeForPacket() *objects.PacketUser {
 	defer u.Mutex.Unlock()
 
 	return &objects.PacketUser{
-		Id:          u.Info.Id,
-		SteamId:     u.Info.SteamId,
-		Username:    u.Info.Username,
-		UserGroups:  u.Info.UserGroups,
-		MuteEndTime: u.Info.MuteEndTime,
-		Country:     u.Info.Country,
+		Id:              u.Info.Id,
+		SteamId:         u.Info.SteamId,
+		Username:        u.Info.Username,
+		UserGroups:      u.Info.UserGroups,
+		MuteEndTime:     u.Info.MuteEndTime,
+		Country:         u.Info.Country,
+		ClanId:          int(u.Info.ClanId.Int32),
+		ClanTag:         u.Info.ClanTag.String,
+		ClanAccentColor: u.Info.ClanAccentColor.String,
 	}
 }
 

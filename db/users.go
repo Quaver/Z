@@ -11,17 +11,19 @@ import (
 )
 
 type User struct {
-	Id             int               `db:"id"`
-	SteamId        string            `db:"steam_id"`
-	Username       string            `db:"username"`
-	Allowed        bool              `db:"allowed"`
-	Privileges     common.Privileges `db:"privileges"`
-	UserGroups     common.UserGroups `db:"usergroups"`
-	MuteEndTime    int64             `db:"mute_endtime"`
-	Country        string            `db:"country"`
-	AvatarUrl      sql.NullString    `db:"avatar_url"`
-	TwitchUsername sql.NullString    `db:"twitch_username"`
-	ClanId         sql.NullInt32     `db:"clan_id"`
+	Id              int               `db:"id"`
+	SteamId         string            `db:"steam_id"`
+	Username        string            `db:"username"`
+	Allowed         bool              `db:"allowed"`
+	Privileges      common.Privileges `db:"privileges"`
+	UserGroups      common.UserGroups `db:"usergroups"`
+	MuteEndTime     int64             `db:"mute_endtime"`
+	Country         string            `db:"country"`
+	AvatarUrl       sql.NullString    `db:"avatar_url"`
+	TwitchUsername  sql.NullString    `db:"twitch_username"`
+	ClanId          sql.NullInt32     `db:"clan_id"`
+	ClanTag         sql.NullString    `db:"clan_tag"`
+	ClanAccentColor sql.NullString    `db:"clan_accent_color"`
 }
 
 // GetProfileUrl Returns the full profile url for the user
@@ -31,7 +33,7 @@ func (u *User) GetProfileUrl() string {
 
 // GetUserById Retrieves a user from the database by their id
 func GetUserById(id int) (*User, error) {
-	query := "SELECT id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id FROM users WHERE id = ? LIMIT 1"
+	query := "SELECT users.id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id, clans.tag AS clan_tag, clans.accent_color AS clan_accent_color FROM users LEFT JOIN clans ON users.clan_id = clans.id WHERE users.id = ? LIMIT 1"
 
 	var user User
 	err := SQL.Get(&user, query, id)
@@ -45,7 +47,7 @@ func GetUserById(id int) (*User, error) {
 
 // GetUserBySteamId Retrieves a user from the database by their Steam id
 func GetUserBySteamId(steamId string) (*User, error) {
-	query := "SELECT id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id FROM users WHERE steam_id = ? LIMIT 1"
+	query := "SELECT users.id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id, clans.tag AS clan_tag, clans.accent_color AS clan_accent_color FROM users LEFT JOIN clans ON users.clan_id = clans.id WHERE steam_id = ? LIMIT 1"
 
 	var user User
 	err := SQL.Get(&user, query, steamId)
@@ -59,7 +61,7 @@ func GetUserBySteamId(steamId string) (*User, error) {
 
 // GetUserByUsername Rerieves a user from the database by their username
 func GetUserByUsername(username string) (*User, error) {
-	query := "SELECT id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id FROM users WHERE username = ? LIMIT 1"
+	query := "SELECT users.id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id, clans.tag AS clan_tag, clans.accent_color AS clan_accent_color FROM users LEFT JOIN clans ON users.clan_id = clans.id WHERE username = ? LIMIT 1"
 
 	var user User
 	err := SQL.Get(&user, query, username)
