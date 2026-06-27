@@ -48,6 +48,7 @@ const (
 	ModSpeed195X
 	ModHealthAdjust
 	ModNoMiss
+	ModNoMines
 	ModEnumMaxValue // This is only in place for looping purposes (i < ModEnumMaxValue - 1; i++)
 )
 
@@ -133,6 +134,7 @@ func GetModStrings() map[string]Mods {
 		"NF":    ModNoFail,
 		"MR":    ModMirror,
 		"NLN":   ModNoLongNotes,
+		"NMN":   ModNoMines,
 		"FLN":   ModFullLN,
 		"INV":   ModInverse,
 	}
