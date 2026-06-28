@@ -294,6 +294,7 @@ func (u *User) MuteUser(duration time.Duration) error {
 	}
 
 	u.Info.MuteEndTime = endTime
+	SendPacketToUser(packets.NewServerMuteEndTime(u.Info.Id, endTime), u)
 	return nil
 }
 
