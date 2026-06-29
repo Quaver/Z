@@ -26,7 +26,7 @@ func GetAllClans() ([]*Clan, error) {
 func GetClanById(id int) (*Clan, error) {
 	var clan Clan
 
-	err := SQL.Select(&clan, "SELECT id, owner_id, name, tag, customizable FROM clans")
+	err := SQL.Get(&clan, "SELECT id, owner_id, name, tag, customizable FROM clans WHERE id = ? LIMIT 1", id)
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err

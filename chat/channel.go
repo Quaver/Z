@@ -108,7 +108,7 @@ func (channel *Channel) SendMessage(sender *sessions.User, message string) {
 	channel.mutex.Lock()
 	defer channel.mutex.Unlock()
 
-	packet := packets.NewServerChatMessage(sender.Info.Id, sender.Info.Username, channel.Name, message)
+	packet := packets.NewServerChatMessage(sender.Info.Id, sender.Info.Username, sender.Info.ClanTag.String, sender.Info.ClanAccentColor.String, channel.Name, message)
 
 	for _, user := range channel.Participants {
 		if user == sender {

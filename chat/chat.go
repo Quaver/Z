@@ -200,7 +200,7 @@ func AddPrivateMessageHandler(f func(user *sessions.User, receivingUser *session
 
 // Sends a private message to a user
 func sendPrivateMessage(sender *sessions.User, receiver *sessions.User, message string) {
-	sessions.SendPacketToUser(packets.NewServerChatMessage(sender.Info.Id, sender.Info.Username, receiver.Info.Username, message), receiver)
+	sessions.SendPacketToUser(packets.NewServerChatMessage(sender.Info.Id, sender.Info.Username, sender.Info.ClanTag.String, sender.Info.ClanAccentColor.String, receiver.Info.Username, message), receiver)
 
 	err := db.InsertPrivateChatMessage(sender.Info.Id, receiver.Info.Id, receiver.Info.Username, message)
 

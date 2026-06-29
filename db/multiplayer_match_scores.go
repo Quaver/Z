@@ -15,6 +15,7 @@ type MultiplayerMatchScore struct {
 	CountGood         int         `db:"count_good"`
 	CountOkay         int         `db:"count_okay"`
 	CountMiss         int         `db:"count_miss"`
+	CountMineHit      int         `db:"count_minehit"`
 	Won               int         `db:"won"`
 }
 
@@ -22,11 +23,11 @@ type MultiplayerMatchScore struct {
 func (s *MultiplayerMatchScore) InsertIntoDatabase() error {
 	query := "INSERT INTO multiplayer_match_scores " +
 		"(user_id, match_id, mods, performance_rating, accuracy, max_combo, count_marv, count_perf, count_great, " +
-		"count_good, count_okay, count_miss, won, team, score, has_failed, lives_left, full_combo, battle_royale_place) " +
-		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		"count_good, count_okay, count_miss, count_minehit, won, team, score, has_failed, lives_left, full_combo, battle_royale_place) " +
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	_, err := SQL.Exec(query, s.UserId, s.MatchId, s.Mods, s.PerformanceRating, s.Accuracy, s.MaxCombo, s.CountMarv, s.CountPerf, s.CountGreat,
-		s.CountGood, s.CountOkay, s.CountMiss, s.Won, 0, 0, 0, 0, 0, 0)
+		s.CountGood, s.CountOkay, s.CountMiss, s.CountMineHit, s.Won, 0, 0, 0, 0, 0, 0)
 
 	if err != nil {
 		return err
