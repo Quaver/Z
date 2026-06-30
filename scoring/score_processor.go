@@ -13,6 +13,7 @@ type ScoreProcessor struct {
 	Combo             int
 	MaxCombo          int
 	Judgements        map[common.Judgements]int
+	CountMineHit      int
 }
 
 func NewScoreProcessor(difficultyRating float64, modifiers common.Mods) *ScoreProcessor {
@@ -24,10 +25,11 @@ func NewScoreProcessor(difficultyRating float64, modifiers common.Mods) *ScorePr
 }
 
 // AddJudgements Adds new judgements to the score
-func (sp *ScoreProcessor) AddJudgements(judgements []common.Judgements) {
+func (sp *ScoreProcessor) AddJudgements(judgements []common.Judgements, mineHitDelta int) {
 	for _, j := range judgements {
 		sp.addJudgement(j)
 	}
+	sp.addMineHits(mineHitDelta)
 
 	sp.calculateAccuracy()
 	sp.calculatePerformanceRating()
@@ -46,6 +48,11 @@ func (sp *ScoreProcessor) addJudgement(judgement common.Judgements) {
 	} else {
 		sp.Combo = 0
 	}
+}
+
+// addMineHits Adds a number of new mine hits to the score
+func (sp *ScoreProcessor) addMineHits(count int) {
+	sp.CountMineHit += count
 }
 
 // Calculates the accuracy of the current score

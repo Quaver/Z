@@ -4,5 +4,6 @@ import "example.com/Quaver/Z/common"
 
 type ClientGameJudgements struct {
 	Packet
-	Judgements []common.Judgements `json:"j"`
+	Judgements   []common.Judgements `json:"j"`
+	MineHitDelta int                 `json:"m"`
 }

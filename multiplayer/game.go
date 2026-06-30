@@ -786,17 +786,17 @@ func (game *Game) SetPlayerSkippedSong(userId int) {
 }
 
 // HandlePlayerJudgements Handles when a player sends judgement data during a multiplayer match
-func (game *Game) HandlePlayerJudgements(userId int, judgements []common.Judgements) {
+func (game *Game) HandlePlayerJudgements(userId int, judgements []common.Judgements, mineHitDelta int) {
 	if !game.Data.InProgress || !utils.Includes(game.playersInMatch, userId) {
 		return
 	}
 
 	if score, ok := game.playerScores[userId]; ok {
-		score.AddJudgements(judgements)
+		score.AddJudgements(judgements, mineHitDelta)
 		game.cachePlayerScore(userId, score)
 	}
 
-	packet := packets.NewServerGameJudgements(userId, judgements)
+	packet := packets.NewServerGameJudgements(userId, judgements, mineHitDelta)
 
 	for _, playerId := range game.playersInMatch {
 		if playerId == userId {
@@ -1085,6 +1085,7 @@ func (game *Game) insertMatchIntoDatabase() {
 			CountGood:         score.Judgements[common.JudgementGood],
 			CountOkay:         score.Judgements[common.JudgementOkay],
 			CountMiss:         score.Judgements[common.JudgementMiss],
+			CountMineHit:      score.CountMineHit,
 			Won:               int(winResult),
 		}
 
