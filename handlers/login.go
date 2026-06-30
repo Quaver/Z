@@ -397,9 +397,10 @@ func handleCustomGameBuildUsage(conn net.Conn, user *db.User, client string) boo
 	}
 
 	clientStr := fmt.Sprintf("```json\n%v```", formatCustomGameBuild(client))
-	webhooks.SendAntiCheat(user.Username, user.Id, user.GetProfileUrl(), user.AvatarUrl.String, "Invalid Game Build", clientStr)
 
 	if !canUserUseCustomGameBuild(user) {
+		webhooks.SendAntiCheat(user.Username, user.Id, user.GetProfileUrl(), user.AvatarUrl.String, "Invalid Game Build", clientStr)
+
 		sessions.SendPacketToConnection(packets.NewServerNotificationError("Please update your client before attempting to login."), conn)
 		utils.CloseConnectionDelayed(conn)
 		return false
