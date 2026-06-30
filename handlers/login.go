@@ -4,6 +4,13 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"example.com/Quaver/Z/chat"
 	"example.com/Quaver/Z/common"
 	"example.com/Quaver/Z/config"
@@ -12,13 +19,7 @@ import (
 	"example.com/Quaver/Z/sessions"
 	"example.com/Quaver/Z/utils"
 	"example.com/Quaver/Z/webhooks"
-	"fmt"
 	"github.com/go-resty/resty/v2"
-	"log"
-	"net"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 // LoginData The data that the user sends to log in
@@ -34,6 +35,15 @@ type LoginData struct {
 
 	// Game Client file signatures
 	Client string `json:"client"`
+
+	// Hardware string
+	Hardware string `json:"hw"`
+}
+
+type HardwareIds struct {
+	CpuId     string
+	DiskId    string
+	CpuDiskId string
 }
 
 var (
@@ -75,7 +85,13 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		return nil
 	}
 
-	err = verifyGameBuild(data)
+	build, err := parseGameBuild(data.Client)
+
+	if err != nil {
+		return err
+	}
+
+	err = verifyGameBuild(build)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -85,6 +101,14 @@ func HandleLogin(conn net.Conn, r *http.Request) error {
 		} else {
 			return err
 		}
+	}
+
+	hardware := parseHardwareIds(data.Hardware)
+
+	err = db.InsertLoginHardwareId(user.Id, hardware.CpuId, hardware.DiskId, hardware.CpuDiskId, build)
+
+	if err != nil {
+		return err
 	}
 
 	ip := conn.RemoteAddr().String()
@@ -280,20 +304,49 @@ func checkSteamAppOwnership(steamId string) error {
 	return nil
 }
 
-// Checks the client signatures to see if the build they are using is valid
-func verifyGameBuild(data *LoginData) error {
-	split := strings.Split(data.Client, "|")
+func parseGameBuild(client string) (db.GameBuild, error) {
+	split := strings.Split(client, "|")
 
 	if len(split) != 5 {
-		return fmt.Errorf("user provided an incorrect amount of client signatures - %v", data.Client)
+		return db.GameBuild{}, fmt.Errorf("user provided an incorrect amount of client signatures - %v", client)
 	}
 
-	err := db.VerifyGameBuild(db.GameBuild{
+	return db.GameBuild{
+		QuaverDll:             split[0],
 		QuaverAPIDll:          split[1],
 		QuaverServerClientDll: split[2],
 		QuaverServerCommonDll: split[3],
 		QuaverSharedDll:       split[4],
-	})
+	}, nil
+}
+
+func parseHardwareIds(hardware string) HardwareIds {
+	split := strings.Split(hardware, "|")
+
+	ids := HardwareIds{
+		CpuId:     "none",
+		DiskId:    "none",
+		CpuDiskId: "none",
+	}
+
+	if len(split) > 0 && split[0] != "" {
+		ids.CpuId = split[0]
+	}
+
+	if len(split) > 1 && split[1] != "" {
+		ids.DiskId = split[1]
+	}
+
+	if len(split) > 2 && split[2] != "" {
+		ids.CpuDiskId = split[2]
+	}
+
+	return ids
+}
+
+// Checks the client signatures to see if the build they are using is valid
+func verifyGameBuild(build db.GameBuild) error {
+	err := db.VerifyGameBuild(build)
 
 	if err != nil {
 		return err
