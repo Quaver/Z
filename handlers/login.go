@@ -37,7 +37,7 @@ type LoginData struct {
 	Client string `json:"client"`
 
 	// Hardware string
-	Hardware string `json:"hw"`
+Hardware string `json:"hw,omitempty"`
 }
 
 type HardwareIds struct {
