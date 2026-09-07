@@ -435,7 +435,7 @@ func removePreviousLoginSession(user *db.User) error {
 		return nil
 	}
 
-	err := sessions.RemoveUser(u)
+	err := CleanupSession(u)
 
 	if err != nil {
 		return err

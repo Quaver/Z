@@ -14,18 +14,7 @@ func HandleLogout(conn net.Conn) error {
 	user := sessions.GetUserByConnection(conn)
 
 	if user != nil {
-		game := multiplayer.GetGameById(user.GetMultiplayerGameId())
-
-		if game != nil {
-			game.RemovePlayer(user.Info.Id)
-		}
-
-		chat.RemoveUserFromAllChannels(user)
-		multiplayer.RemoveUserFromLobby(user)
-
-		sessions.SendPacketToAllUsers(packets.NewServerUserDisconnected(user.Info.Id))
-
-		err := sessions.RemoveUser(user)
+		err := CleanupSession(user)
 
 		if err != nil {
 			log.Printf("[%v %v] Error while logging out user - %v\n", user.Info.Username, user.Info.Id, err)
@@ -36,4 +25,21 @@ func HandleLogout(conn net.Conn) error {
 
 	utils.CloseConnection(conn)
 	return nil
+}
+
+// CleanupSession removes a user from their game, chat channels, and the lobby, and
+// broadcasts their disconnection. Also used by removePreviousLoginSession.
+func CleanupSession(user *sessions.User) error {
+	game := multiplayer.GetGameById(user.GetMultiplayerGameId())
+
+	if game != nil {
+		game.RemovePlayer(user.Info.Id)
+	}
+
+	chat.RemoveUserFromAllChannels(user)
+	multiplayer.RemoveUserFromLobby(user)
+
+	sessions.SendPacketToAllUsers(packets.NewServerUserDisconnected(user.Info.Id))
+
+	return sessions.RemoveUser(user)
 }
