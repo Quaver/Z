@@ -470,7 +470,7 @@ func joinChatChannels(user *sessions.User) {
 	channels := chat.GetAvailableChannels(user.Info.UserGroups)
 
 	for _, channel := range channels {
-		sessions.SendPacketToUser(packets.NewServerAvailableChatChannel(channel.Name, channel.Description), user)
+		sessions.SendPacketToUser(packets.NewServerAvailableChatChannel(channel.Name, channel.Description, channel.LimitedChat), user)
 
 		if channel.AutoJoin {
 			channel.AddUser(user)
@@ -494,7 +494,7 @@ func joinChatChannels(user *sessions.User) {
 			channel = chat.AddClanChannel(clan)
 		}
 
-		sessions.SendPacketToUser(packets.NewServerAvailableChatChannel(channel.Name, channel.Description), user)
+		sessions.SendPacketToUser(packets.NewServerAvailableChatChannel(channel.Name, channel.Description, channel.LimitedChat), user)
 		channel.AddUser(user)
 	}
 }
