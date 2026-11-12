@@ -8,18 +8,20 @@ type ServerChatMessage struct {
 	SenderName            string `json:"u"`
 	SenderClanTag         string `json:"sct"`
 	SenderClanAccentColor string `json:"sca"`
+	SenderAccentColor     string `json:"sac"`
 	To                    string `json:"to"` // The #channel or player username
 	Message               string `json:"m"`
 	Time                  int64  `json:"ts"`
 }
 
-func NewServerChatMessage(senderId int, senderName string, senderClanTag string, senderClanAccentColor string, to string, message string) *ServerChatMessage {
+func NewServerChatMessage(senderId int, senderName string, senderClanTag string, senderClanAccentColor string, senderAccentColor string, to string, message string) *ServerChatMessage {
 	return &ServerChatMessage{
 		Packet:                Packet{Id: PacketIdServerChatMessage},
 		SenderId:              senderId,
 		SenderName:            senderName,
 		SenderClanTag:         senderClanTag,
 		SenderClanAccentColor: senderClanAccentColor,
+		SenderAccentColor:     senderAccentColor,
 		To:                    to,
 		Message:               message,
 		Time:                  time.Now().UnixMilli(),
