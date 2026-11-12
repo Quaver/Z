@@ -11,66 +11,63 @@ import (
 )
 
 type User struct {
-	Id              int               `db:"id"`
-	SteamId         string            `db:"steam_id"`
-	Username        string            `db:"username"`
-	Allowed         bool              `db:"allowed"`
-	Privileges      common.Privileges `db:"privileges"`
-	UserGroups      common.UserGroups `db:"usergroups"`
-	MuteEndTime     int64             `db:"mute_endtime"`
-	Country         string            `db:"country"`
-	AvatarUrl       sql.NullString    `db:"avatar_url"`
-	TwitchUsername  sql.NullString    `db:"twitch_username"`
-	ClanId          sql.NullInt32     `db:"clan_id"`
-	ClanTag         sql.NullString    `db:"clan_tag"`
-	ClanAccentColor sql.NullString    `db:"clan_accent_color"`
+	Id                      int               `db:"id"`
+	SteamId                 string            `db:"steam_id"`
+	Username                string            `db:"username"`
+	Allowed                 bool              `db:"allowed"`
+	Privileges              common.Privileges `db:"privileges"`
+	UserGroups              common.UserGroups `db:"usergroups"`
+	MuteEndTime             int64             `db:"mute_endtime"`
+	Country                 string            `db:"country"`
+	AvatarUrl               sql.NullString    `db:"avatar_url"`
+	TwitchUsername          sql.NullString    `db:"twitch_username"`
+	ClanId                  sql.NullInt32     `db:"clan_id"`
+	ClanTag                 sql.NullString    `db:"clan_tag"`
+	ClanAccentColor         sql.NullString    `db:"clan_accent_color"`
+	AccentColorCustomizable bool              `db:"accent_color_customizable"`
+	AccentColor             sql.NullString    `db:"accent_color"`
+}
+
+// GetAccentColor Returns the user's active accent color, if customizable.
+func (u *User) GetAccentColor() string {
+	if !u.AccentColorCustomizable || !u.AccentColor.Valid {
+		return ""
+	}
+
+	return u.AccentColor.String
 }
 
 // GetProfileUrl Returns the full profile url for the user
 func (u *User) GetProfileUrl() string {
-	return fmt.Sprintf("https://quavergame.com/user/%v", u.Id)
+	return fmt.Sprintf("https://quavergame.com/users/%v", u.Id)
+}
+
+func getUserBy(column string, value interface{}) (*User, error) {
+	query := "SELECT users.id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id, clans.tag AS clan_tag, clans.accent_color AS clan_accent_color, users.accent_color_customizable, users.accent_color FROM users LEFT JOIN clans ON users.clan_id = clans.id WHERE %s = ? LIMIT 1"
+
+	var user User
+	err := SQL.Get(&user, fmt.Sprintf(query, column), value)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 // GetUserById Retrieves a user from the database by their id
 func GetUserById(id int) (*User, error) {
-	query := "SELECT users.id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id, clans.tag AS clan_tag, clans.accent_color AS clan_accent_color FROM users LEFT JOIN clans ON users.clan_id = clans.id WHERE users.id = ? LIMIT 1"
-
-	var user User
-	err := SQL.Get(&user, query, id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
+	return getUserBy("users.id", id)
 }
 
 // GetUserBySteamId Retrieves a user from the database by their Steam id
 func GetUserBySteamId(steamId string) (*User, error) {
-	query := "SELECT users.id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id, clans.tag AS clan_tag, clans.accent_color AS clan_accent_color FROM users LEFT JOIN clans ON users.clan_id = clans.id WHERE steam_id = ? LIMIT 1"
-
-	var user User
-	err := SQL.Get(&user, query, steamId)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
+	return getUserBy("users.steam_id", steamId)
 }
 
 // GetUserByUsername Rerieves a user from the database by their username
 func GetUserByUsername(username string) (*User, error) {
-	query := "SELECT users.id, steam_id, username, allowed, privileges, usergroups, mute_endtime, country, avatar_url, twitch_username, clan_id, clans.tag AS clan_tag, clans.accent_color AS clan_accent_color FROM users LEFT JOIN clans ON users.clan_id = clans.id WHERE username = ? LIMIT 1"
-
-	var user User
-	err := SQL.Get(&user, query, username)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
+	return getUserBy("users.username", username)
 }
 
 // UpdateUserLatestActivity Updates the latest_activity of a user to the current time
